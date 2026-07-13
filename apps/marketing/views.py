@@ -33,4 +33,6 @@ def legacy_page(request, page):
         content = content.replace('href="/early-access/"', 'href="/pricing/"')
         content = content.replace("Join early access", "View plans")
         content = content.replace("Request early access", "View plans")
+        content = content.replace("Early Access", "Plans and account access")
+        content = content.replace("CoAppraiser%20Early%20Access", "CoAppraiser%20Support")
     return HttpResponse(content, content_type="text/html")
