@@ -4,9 +4,10 @@ from django.views.static import serve
 from django.conf import settings
 from apps.marketing.views import health, home, legacy_page
 from apps.billing.views import pricing as billing_pricing
+from apps.marketing.admin_views import dashboard as admin_dashboard
 
 urlpatterns = [
-    path("admin/", admin.site.urls), path("health/", health, name="health"), path("", home, name="home"),
+    path("admin/dashboard/", admin_dashboard, name="admin_dashboard"), path("admin/", admin.site.urls), path("health/", health, name="health"), path("", home, name="home"),
     path("assets/<path:path>", serve, {"document_root": settings.BASE_DIR / "assets"}),
     path("early-access/", legacy_page, {"page": "early-access"}, name="early_access"),
     path("pricing/", billing_pricing, name="pricing"),

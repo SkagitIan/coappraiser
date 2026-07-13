@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard | CoAppraiser{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">Operations</div><h1>Admin dashboard</h1><p>Minimal product and workflow insight for CoAppraiser.</p></div><a class="button secondary" href="{% url 'admin:index' %}">Django admin</a></div>
+<section class="grid-3">
+  <div class="card"><div class="badge">Users</div><h2>{{ user_count }}</h2><p>Registered accounts</p></div>
+  <div class="card"><div class="badge">Assignments</div><h2>{{ assignment_count }}</h2><p>Created assignments</p></div>
+  <div class="card"><div class="badge">Subscriptions</div><h2>{{ active_subscription_count }}</h2><p>Active or trialing</p></div>
+  <div class="card"><div class="badge">AI actions</div><h2>{{ action_count }}</h2><p>Logged workflow runs</p></div>
+  <div class="card"><div class="badge">Artifacts</div><h2>{{ artifact_count }}</h2><p>Saved workfile outputs</p></div>
+  <div class="card"><div class="badge">Verification</div><h2>{{ open_verification_count }}</h2><p>Open verification items</p></div>
+</section>
+<section class="card section"><h2>Recent AI actions</h2>
+  {% for action in recent_actions %}<p><strong>{{ action.skill_slug }}</strong> · {{ action.assignment.title }} · {{ action.created_at|date:"M j, Y g:i a" }} · {{ action.model_name|default:"unknown model" }}</p>
+  {% empty %}<p>No AI actions have been recorded yet.</p>{% endfor %}
+</section>
+{% endblock %}
