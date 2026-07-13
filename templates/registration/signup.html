@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block content %}<div class="narrow card"><div class="eyebrow">Start using CoAppraiser</div><h1>Create your account</h1><form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">Create account</button></form></div>{% endblock %}
