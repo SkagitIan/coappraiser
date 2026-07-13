@@ -31,7 +31,7 @@ Run tests with `python manage.py test`. Run `python manage.py check`, `python ma
 2. Deploy this repository as a web service.
 3. Set `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL`, and the LLM provider variables in Railway.
 4. Run `python manage.py migrate` and `python manage.py collectstatic --noinput` in the deployment/release setup.
-5. Railway uses the repository `Procfile`: `gunicorn config.wsgi:application`.
+5. Railway uses the repository `Procfile`: `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`.
 
 `railway.json` also documents the Nixpacks build, static collection, migration, Gunicorn start command, and `/` health check.
 

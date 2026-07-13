@@ -43,7 +43,15 @@ COAPPRAISER_LLM_PROVIDER = os.getenv("COAPPRAISER_LLM_PROVIDER", "mock")
 COAPPRAISER_LLM_MODEL = os.getenv("COAPPRAISER_LLM_MODEL", "mock-revision-response")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+# Accept the explicit private-key name used by Railway, while retaining the
+# documented STRIPE_SECRET_KEY name. Never use a webhook signing secret as an
+# API key if a misconfigured environment contains one.
+_stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_SECRET_KEY = (
+    _stripe_secret_key
+    if _stripe_secret_key.startswith("sk_")
+    else os.getenv("STRIPE_PRIVATE_KEY", "")
+)
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "")

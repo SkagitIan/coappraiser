@@ -6,6 +6,10 @@ from django.shortcuts import render
 def home(request):
     return render(request, "marketing/home.html")
 
+
+def health(request):
+    return HttpResponse("ok", content_type="text/plain")
+
 PUBLIC_PAGE_MAP = {
     "early-access": "early-access/index.html",
     "pricing": "pricing/index.html",

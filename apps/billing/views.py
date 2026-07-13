@@ -1,4 +1,5 @@
 import json
+import stripe
 from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib import messages
@@ -57,14 +58,18 @@ def checkout(request):
     if not settings.STRIPE_SECRET_KEY or not plan["price_id"]:
         messages.error(request, "Billing is not configured yet. Please try again later or contact CoAppraiser.")
         return redirect("billing:pricing")
-    stripe = stripe_client()
+    stripe_api = stripe_client()
     subscription = getattr(request.user, "subscription", None)
     customer_id = subscription.stripe_customer_id if subscription else ""
-    if not customer_id:
-        customer = stripe.Customer.create(email=request.user.email or None, metadata={"user_id": str(request.user.pk)})
-        customer_id = customer.id
-        Subscription.objects.update_or_create(user=request.user, defaults={"stripe_customer_id": customer_id})
-    session = stripe.checkout.Session.create(mode="subscription", customer=customer_id, line_items=[{"price": plan["price_id"], "quantity": 1}], success_url=request.build_absolute_uri(reverse("billing:success")) + "?session_id={CHECKOUT_SESSION_ID}", cancel_url=request.build_absolute_uri(reverse("billing:cancel")), metadata={"user_id": str(request.user.pk), "plan": plan_slug}, subscription_data={"metadata": {"user_id": str(request.user.pk), "plan": plan_slug}})
+    try:
+        if not customer_id:
+            customer = stripe_api.Customer.create(email=request.user.email or None, metadata={"user_id": str(request.user.pk)})
+            customer_id = customer.id
+            Subscription.objects.update_or_create(user=request.user, defaults={"stripe_customer_id": customer_id})
+        session = stripe_api.checkout.Session.create(mode="subscription", customer=customer_id, line_items=[{"price": plan["price_id"], "quantity": 1}], success_url=request.build_absolute_uri(reverse("billing:success")) + "?session_id={CHECKOUT_SESSION_ID}", cancel_url=request.build_absolute_uri(reverse("billing:cancel")), metadata={"user_id": str(request.user.pk), "plan": plan_slug}, subscription_data={"metadata": {"user_id": str(request.user.pk), "plan": plan_slug}})
+    except stripe.error.StripeError:
+        messages.error(request, "Stripe could not start checkout. Verify that this plan uses a recurring Price ID from the configured Stripe account and mode.")
+        return redirect("billing:pricing")
     return redirect(session.url)
 
 @login_required
@@ -88,7 +93,11 @@ def portal(request):
     if not subscription or not subscription.stripe_customer_id or not settings.STRIPE_SECRET_KEY:
         messages.error(request, "No Stripe billing account is connected yet.")
         return redirect("billing:account")
-    session = stripe_client().billing_portal.Session.create(customer=subscription.stripe_customer_id, return_url=request.build_absolute_uri(reverse("billing:account")))
+    try:
+        session = stripe_client().billing_portal.Session.create(customer=subscription.stripe_customer_id, return_url=request.build_absolute_uri(reverse("billing:account")))
+    except stripe.error.StripeError:
+        messages.error(request, "Stripe could not open the customer portal. Please try again after billing is connected.")
+        return redirect("billing:account")
     return redirect(session.url)
 
 @csrf_exempt
