@@ -589,6 +589,20 @@
   .page-hero h1 { font-size:clamp(2.45rem,14vw,3.5rem); }
 }
 
+/* In-app pages (dashboard, assignment forms, billing, tools) */
+.page-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px 24px; margin:30px 0 26px; }
+.page-heading h1 { font-size:clamp(2.1rem,4vw,3rem); line-height:1.06; letter-spacing:-0.045em; }
+.page-heading .eyebrow { margin-bottom:0.7rem; }
+.page-heading .button { flex:0 0 auto; }
+.card h1 { font-size:clamp(1.75rem,3vw,2.3rem); line-height:1.12; letter-spacing:-0.04em; margin:6px 0 18px; }
+.card.empty { padding:34px; }
+.card.empty h2 { font-size:clamp(1.5rem,2.4vw,1.9rem); line-height:1.15; letter-spacing:-0.03em; margin-bottom:10px; }
+.card.empty .button { margin-top:16px; }
+.card small { color:var(--muted); }
+.section > h2 { font-size:clamp(1.6rem,2.8vw,2.2rem); line-height:1.12; margin-bottom:16px; }
+.narrow.card form .button { margin-top:6px; }
+@media (max-width:620px) { .page-heading { display:block; } .page-heading .button { margin-top:14px; } }
+
 /* Marketing redesign components */
 .cta .actions { justify-content: center; margin-top: 26px; }
 .kicker { display:block; margin-bottom:10px; color:#413bd1; font-size:.78rem; font-weight:850; letter-spacing:.09em; text-transform:uppercase; }
