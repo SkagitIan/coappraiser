@@ -52,7 +52,9 @@ if STORAGE_BACKEND == "r2":
                 "access_key": os.getenv("R2_ACCESS_KEY_ID", ""),
                 "secret_key": os.getenv("R2_SECRET_ACCESS_KEY", ""),
                 "querystring_auth": True,
-                "file_overwrite": False,
+                # Preflight assigns unique names before saving. Avoid an R2 HEAD
+                # existence check, which can block an upload until Gunicorn times out.
+                "file_overwrite": True,
                 "default_acl": None,
                 "addressing_style": "path",
                 "object_parameters": {"CacheControl": "private, max-age=0, no-store"},

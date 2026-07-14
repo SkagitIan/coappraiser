@@ -4,6 +4,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import zipfile
+from uuid import uuid4
 from pathlib import PurePosixPath
 
 from django.core.files.base import ContentFile
@@ -124,7 +125,8 @@ def ingest_files(version, uploaded_files):
             continue
         seen.add(digest)
         record = ReviewFile(version=version, original_name=os.path.basename(name), kind=classify(name, raw), sha256=digest)
-        record.file.save(os.path.basename(name), ContentFile(raw), save=False)
+        storage_name = f"{uuid4().hex}_{os.path.basename(name)}"
+        record.file.save(storage_name, ContentFile(raw), save=False)
         if record.kind == "pdf":
             try:
                 record.extracted_text = extract_pdf_text(io.BytesIO(raw))
