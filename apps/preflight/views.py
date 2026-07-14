@@ -1,4 +1,5 @@
 import json
+import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, HttpResponse
@@ -8,6 +9,8 @@ from .forms import PreflightReviewForm
 from .models import FindingDecision, PreflightReview, ReviewFile, ReviewFinding
 from .services import build_workfile_record, delete_review_with_files, ingest_files, run_deterministic_review
 from apps.billing.views import billing_mode, has_active_subscription
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -31,10 +34,11 @@ def create(request):
             version.save(update_fields=["package_hash"])
             ingest_files(version, uploaded)
             run_deterministic_review(version)
-        except (ValueError, OSError) as exc:
+        except Exception as exc:
+            logger.exception("Preflight upload failed for review %s", review.pk)
             review.status = "failed"
             review.save(update_fields=["status", "updated_at"])
-            form.add_error("files", str(exc))
+            form.add_error("files", "CoAppraiser could not process this package. The failed attempt was saved; try again with the exported ZIP or separate files.")
             return render(request, "preflight/form.html", {"form": form})
         return redirect("preflight:detail", review.pk)
     return render(request, "preflight/form.html", {"form": form})
@@ -73,7 +77,8 @@ def revise(request, pk):
     try:
         ingest_files(version, files)
         run_deterministic_review(version)
-    except ValueError:
+    except Exception:
+        logger.exception("Preflight revised upload failed for review %s", review.pk)
         review.status = "failed"
         review.save(update_fields=["status", "updated_at"])
     return redirect("preflight:detail", pk)

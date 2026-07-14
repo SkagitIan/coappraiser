@@ -28,6 +28,18 @@ class PreflightTests(TestCase):
         self.assertEqual(review.status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
 
+    def test_zip_upload_extracts_package_members(self):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w") as archive:
+            archive.writestr("report.xml", "<?xml version='1.0'?><report />")
+            archive.writestr("report.pdf", "%PDF-1.4 synthetic")
+            archive.writestr("front.jpg", "synthetic image")
+        package = SimpleUploadedFile("synthetic-package.zip", stream.getvalue(), content_type="application/zip")
+        response = self.client.post(reverse("preflight:create"), {"title": "ZIP package", "files": [package]})
+        self.assertEqual(response.status_code, 302)
+        review = PreflightReview.objects.get(user=self.user, title="ZIP package")
+        self.assertEqual(review.versions.first().files.count(), 3)
+
     def test_user_cannot_open_another_users_review(self):
         other = User.objects.create_user("other", password="pass12345")
         review = PreflightReview.objects.create(user=other, title="Private")
