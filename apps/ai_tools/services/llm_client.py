@@ -60,6 +60,13 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None)
     if settings.COAPPRAISER_LLM_PROVIDER == "openai":
         from openai import OpenAI
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = client.chat.completions.create(model=settings.COAPPRAISER_LLM_MODEL, temperature=0.1, response_format={"type": "json_object"}, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}])
+        request = {
+            "model": settings.COAPPRAISER_LLM_MODEL,
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+        }
+        if not settings.COAPPRAISER_LLM_MODEL.startswith("gpt-5"):
+            request["temperature"] = 0.1
+        response = client.chat.completions.create(**request)
         return validate_output(json.loads(response.choices[0].message.content), required_keys or [])
     raise RuntimeError("No supported LLM provider is configured.")
