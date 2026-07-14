@@ -33,3 +33,33 @@ def run_skill(*, system_prompt, user_prompt, output_schema):
         response = client.chat.completions.create(model=settings.COAPPRAISER_LLM_MODEL, temperature=0.2, response_format={"type": "json_object"}, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}])
         return validate_output(json.loads(response.choices[0].message.content), REQUIRED_REVISION_KEYS)
     raise RuntimeError("No supported LLM provider is configured.")
+
+
+def mock_preflight_review():
+    return {
+        "summary": "Structured evidence was reviewed for possible report consistency concerns. This development response is not a conclusion about compliance or appraisal accuracy.",
+        "findings": [{
+            "rule_code": "AI_COHERENCE_REVIEW",
+            "title": "Review whether the report tells one consistent story",
+            "category": "judgment_review",
+            "severity": "advisory",
+            "observed": "The uploaded XML and PDF evidence were available for a focused consistency review.",
+            "location": "XML/PDF evidence set",
+            "why_it_matters": "A reviewer may question a report when structured fields, commentary, and exhibits do not support the same explanation.",
+            "recommended_action": "Review the relevant report commentary and confirm it accurately explains the extracted evidence.",
+            "evidence": ["Structured XML/PDF observations"],
+            "guidance": ["Appraiser judgment required; this is not official validation."]
+        }],
+        "missing_information": []
+    }
+
+
+def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None):
+    if settings.COAPPRAISER_LLM_PROVIDER == "mock" or (settings.DEBUG and not settings.OPENAI_API_KEY):
+        return validate_output(mock_preflight_review() if schema_name == "preflight_review" else {}, required_keys or [])
+    if settings.COAPPRAISER_LLM_PROVIDER == "openai":
+        from openai import OpenAI
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(model=settings.COAPPRAISER_LLM_MODEL, temperature=0.1, response_format={"type": "json_object"}, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}])
+        return validate_output(json.loads(response.choices[0].message.content), required_keys or [])
+    raise RuntimeError("No supported LLM provider is configured.")

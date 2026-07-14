@@ -50,11 +50,12 @@ def detail(request, pk):
     version = review.versions.first()
     findings = version.findings.all() if version else []
     observations = version.observations.all() if version else []
+    ai_execution = version.ai_executions.first() if version else None
     previous = review.versions.all()[1] if review.versions.count() > 1 else None
     current_signatures = {f.signature for f in findings}
     prior_signatures = {f.signature for f in previous.findings.all()} if previous else set()
     comparison = {"fixed": len(prior_signatures - current_signatures), "still_present": len(prior_signatures & current_signatures), "new": len(current_signatures - prior_signatures)} if previous else None
-    return render(request, "preflight/detail.html", {"review": review, "version": version, "findings": findings, "observations": observations, "comparison": comparison, "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier})})
+    return render(request, "preflight/detail.html", {"review": review, "version": version, "findings": findings, "observations": observations, "ai_execution": ai_execution, "comparison": comparison, "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier})})
 
 
 @login_required

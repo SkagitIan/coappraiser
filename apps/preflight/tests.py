@@ -1,11 +1,12 @@
 import io
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
-from .models import PreflightReview, ReviewFile
+from .models import AIExecution, PreflightReview, ReviewFile
 from .services import run_deterministic_review, safe_zip_members
 
 
@@ -39,6 +40,29 @@ class PreflightTests(TestCase):
         detail = self.client.get(response.url)
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "Extracted evidence")
+        self.assertContains(detail, "AI consistency review")
+
+    def test_ai_review_is_saved_and_adds_interpretation_finding(self):
+        fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
+        package = SimpleUploadedFile("synthetic-ai-package.zip", fixture.read_bytes(), content_type="application/zip")
+        response = self.client.post(reverse("preflight:create"), {"title": "AI package", "files": [package]})
+        self.assertEqual(response.status_code, 302)
+        review = PreflightReview.objects.get(user=self.user, title="AI package")
+        execution = AIExecution.objects.get(version=review.versions.first())
+        self.assertEqual(execution.status, "completed")
+        self.assertEqual(execution.provider, "mock")
+        self.assertTrue(review.findings.filter(basis="ai_interpretation").exists())
+
+    def test_ai_failure_does_not_discard_deterministic_findings(self):
+        review = PreflightReview.objects.create(user=self.user, title="AI failure")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(version=version, original_name="report.xml", kind="xml", sha256="xml", extracted_text="<report />")
+        ReviewFile.objects.create(version=version, original_name="report.pdf", kind="pdf", sha256="pdf", extracted_text="Subject Identifier: 123")
+        with patch("apps.preflight.ai_review.run_llm_json", side_effect=RuntimeError("provider unavailable")):
+            run_deterministic_review(version)
+        self.assertEqual(review.status, "completed")
+        self.assertTrue(review.findings.filter(rule_code="PACKAGE_IMAGES_MISSING").exists())
+        self.assertEqual(version.ai_executions.get().status, "failed")
 
     def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
         review = PreflightReview.objects.create(user=self.user, title="Conflict package")

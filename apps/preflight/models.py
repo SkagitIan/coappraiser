@@ -62,6 +62,23 @@ class ExtractedObservation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class AIExecution(models.Model):
+    STATUS_CHOICES = [(x, x.title()) for x in ["running", "completed", "failed", "skipped"]]
+    version = models.ForeignKey(ReviewVersion, on_delete=models.CASCADE, related_name="ai_executions")
+    operation = models.CharField(max_length=80)
+    provider = models.CharField(max_length=50, blank=True)
+    model_name = models.CharField(max_length=120, blank=True)
+    prompt_version = models.CharField(max_length=30, default="preflight-ai-1")
+    system_prompt = models.TextField(blank=True)
+    input_snapshot = models.JSONField(default=dict)
+    raw_response = models.TextField(blank=True)
+    parsed_response = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="running")
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+
 class ReviewFinding(models.Model):
     SEVERITIES = [(x, x.title()) for x in ["critical", "warning", "advisory"]]
     CATEGORIES = [(x, x.replace("_", " ").title()) for x in ["fix_before_delivery", "judgment_review", "cleanup"]]
