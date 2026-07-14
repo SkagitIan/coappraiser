@@ -1,12 +1,12 @@
 import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from .forms import PreflightReviewForm
-from .models import FindingDecision, PreflightReview, ReviewFinding
-from .services import build_workfile_record, ingest_files, run_deterministic_review
+from .models import FindingDecision, PreflightReview, ReviewFile, ReviewFinding
+from .services import build_workfile_record, delete_review_with_files, ingest_files, run_deterministic_review
 from apps.billing.views import billing_mode, has_active_subscription
 
 
@@ -87,3 +87,18 @@ def workfile_record(request, pk):
     response = HttpResponse(json.dumps(record.snapshot, indent=2), content_type="application/json")
     response["Content-Disposition"] = f'attachment; filename="preflight-review-{review.pk}.json"'
     return response
+
+
+@login_required
+@require_POST
+def delete_review(request, pk):
+    review = get_object_or_404(PreflightReview, pk=pk, user=request.user)
+    delete_review_with_files(review)
+    messages.success(request, "The Preflight review and its uploaded files were deleted.")
+    return redirect("preflight:dashboard")
+
+
+@login_required
+def download_file(request, pk):
+    review_file = get_object_or_404(ReviewFile, pk=pk, version__review__user=request.user)
+    return FileResponse(review_file.file.open("rb"), as_attachment=True, filename=review_file.original_name)

@@ -120,3 +120,11 @@ def build_workfile_record(review):
     record, _ = WorkfileReviewRecord.objects.update_or_create(review=review, defaults={"snapshot": snapshot})
     return record
 
+
+def delete_review_with_files(review):
+    """Delete remote/local file objects before deleting their database rows."""
+    for version in review.versions.all():
+        for review_file in version.files.all():
+            if review_file.file:
+                review_file.file.delete(save=False)
+    review.delete()

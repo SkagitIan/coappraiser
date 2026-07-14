@@ -39,7 +39,7 @@ Run tests with `python manage.py test`. Run `python manage.py check`, `python ma
 
 `railway.json` also documents the Nixpacks build, static collection, migration, Gunicorn start command, and `/` health check.
 
-The MVP defaults to SQLite locally and mock AI mode. Production should use Railway PostgreSQL and a persistent media strategy before confidential document uploads are enabled for real users.
+The MVP defaults to SQLite locally and mock AI mode. Production should use Railway PostgreSQL and Cloudflare R2 before confidential document uploads are enabled for real users. See `docs/preflight_storage.md` for the required environment variables and privacy behavior.
 
 ## Preflight pricing and billing
 

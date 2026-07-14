@@ -35,6 +35,35 @@ STATICFILES_DIRS = [BASE_DIR / "assets"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+STORAGE_BACKEND = os.getenv("COAPPRAISER_STORAGE_BACKEND", "r2" if os.getenv("R2_BUCKET_NAME") else "local")
+STATIC_STORAGE_BACKEND = "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+if STORAGE_BACKEND == "r2":
+    R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "")
+    R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "")
+    R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL", f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com")
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": R2_BUCKET_NAME,
+                "endpoint_url": R2_ENDPOINT_URL,
+                "region_name": "auto",
+                "access_key": os.getenv("R2_ACCESS_KEY_ID", ""),
+                "secret_key": os.getenv("R2_SECRET_ACCESS_KEY", ""),
+                "querystring_auth": True,
+                "file_overwrite": False,
+                "default_acl": None,
+                "addressing_style": "path",
+                "object_parameters": {"CacheControl": "private, max-age=0, no-store"},
+            },
+        },
+        "staticfiles": {"BACKEND": STATIC_STORAGE_BACKEND},
+    }
+else:
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage", "OPTIONS": {"location": MEDIA_ROOT}},
+        "staticfiles": {"BACKEND": STATIC_STORAGE_BACKEND},
+    }
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/app/preflight/"
 LOGOUT_REDIRECT_URL = "/"

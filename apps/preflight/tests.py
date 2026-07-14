@@ -41,3 +41,15 @@ class PreflightTests(TestCase):
         self.assertContains(self.client.get(reverse("login")), "Start your free scan")
         self.assertContains(self.client.get(reverse("accounts:signup")), "Your first Preflight scan is free")
         self.assertRedirects(self.client.get(reverse("uad_solution_legacy")), reverse("home"))
+
+    def test_file_download_is_authorized_and_review_delete_cleans_records(self):
+        xml = SimpleUploadedFile("private.xml", b"<?xml version='1.0'?><report />", content_type="application/xml")
+        self.client.post(reverse("preflight:create"), {"title": "Private package", "files": [xml]})
+        review = PreflightReview.objects.get(user=self.user)
+        review_file = review.versions.first().files.first()
+        download = self.client.get(reverse("preflight:download_file", args=[review_file.pk]))
+        self.assertEqual(download.status_code, 200)
+        b"".join(download.streaming_content)
+        download.close()
+        self.client.post(reverse("preflight:delete_review", args=[review.pk]))
+        self.assertFalse(PreflightReview.objects.filter(pk=review.pk).exists())

@@ -8,3 +8,4 @@ pandas>=2.2
 pypdf>=4.3
 psycopg[binary]>=3.2
 stripe>=11.0
+django-storages[boto3]>=1.14
