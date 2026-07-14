@@ -1,9 +1,43 @@
 {% extends "base.html" %}
 {% block title %}CoAppraiser Pricing | Plans for Residential Appraisers{% endblock %}
-{% block extra_head %}<meta name="description" content="Compare CoAppraiser plans for revision response, UAD 3.6 readiness, market evidence, and workfile documentation for residential appraisers."><link rel="canonical" href="https://coappraiser.com/pricing/"><meta property="og:title" content="CoAppraiser Pricing"><meta property="og:description" content="Monthly plans for practical appraisal workflow support.">{% endblock %}
+{% block extra_head %}<meta name="description" content="CoAppraiser plans from $39/month. Revision response, UAD 3.6 readiness, market evidence, and workfile documentation. Cancel anytime."><link rel="canonical" href="https://coappraiser.com/pricing/"><meta property="og:title" content="CoAppraiser Pricing"><meta property="og:description" content="Plans from $39/month. One cleared revision pays for the month. Cancel anytime.">{% endblock %}
 {% block content %}
-<section class="hero page-hero"><div><div class="eyebrow"><span class="dot"></span> Plans for real appraisal workflows</div><h1>Choose the level of workflow support you need.</h1><p class="lead">Start free, then subscribe when you are ready to run paid workflows. Every plan works alongside your existing appraisal software.</p><p class="muted">Monthly billing through Stripe. Cancel from your billing portal. No long-term contract.</p></div><aside class="mini-panel"><b>Built to assist—not replace—the appraiser.</b><p>CoAppraiser creates drafts, organization, and verification support. You remain responsible for the analysis, opinions, and final report.</p></aside></section>
-<section class="grid-3">{% for slug, plan in plans.items %}<article class="card {% if slug == 'pro' %}featured{% endif %}"><div class="badge">{% if slug == 'pro' %}Most complete{% else %}{{ plan.name }}{% endif %}</div><h2>{{ plan.name }}</h2><div class="price">{{ plan.price }}</div><p>{{ plan.description }}</p><ul>{% for feature in plan.features %}<li>{{ feature }}</li>{% endfor %}</ul><a class="button primary" href="{% url 'accounts:signup' %}?next={% url 'billing:start_checkout' %}?plan={{ slug }}">Create account and choose {{ plan.name }}</a><small>Secure checkout through Stripe</small></article>{% endfor %}</section>
-<section class="card section"><h2>Every plan includes</h2><div class="grid-3"><div><h3>Traceable workfile</h3><p>Save source inputs, AI actions, artifacts, and verification items with the assignment.</p></div><div><h3>Appraiser control</h3><p>Generated content is clearly presented as draft support for your review.</p></div><div><h3>Practical boundaries</h3><p>No value conclusion, final adjustment, official UAD validation, or acceptance guarantee.</p></div></div></section>
-<section class="section"><div class="card"><h2>Not sure where to start?</h2><p>Start with the Revision Response Agent. It is the clearest first workflow for turning a real reviewer request into a useful workfile artifact.</p><a class="button secondary" href="{% url 'accounts:signup' %}">Create your free account</a></div></section>
+<section class="hero page-hero">
+<div>
+<div class="eyebrow"><span class="dot"></span> Plans from $39/month · Cancel anytime</div>
+<h1>One cleared revision pays for the month.</h1>
+<p class="lead">Think about what your time is worth on a $450 assignment that comes back with three stips. Every plan works alongside the appraisal software you already own — no migration, no training seminar, no sales call.</p>
+<p class="muted">Monthly billing through Stripe. Cancel yourself from the billing portal in two clicks. No long-term contract.</p>
+</div>
+<aside class="mini-panel">
+<b>Not sure yet?</b>
+<p>Create a free account first and look around. Pick a plan when you're ready to run your first real workflow.</p>
+<a class="button secondary" href="{% url 'accounts:signup' %}">Create a free account</a>
+</aside>
+</section>
+<section class="grid-3 pricing-grid">{% for slug, plan in plans.items %}<article class="card pricing-card {% if slug == 'pro' %}featured{% endif %}"><div class="badge">{% if slug == 'pro' %}Most popular{% else %}{{ plan.name }}{% endif %}</div><h2>{{ plan.name }}</h2><div class="price">{{ plan.price }}</div><p>{{ plan.description }}</p><ul>{% for feature in plan.features %}<li>{{ feature }}</li>{% endfor %}</ul><div class="pricing-action"><a class="button primary" href="{% url 'accounts:signup' %}?next={% url 'billing:start_checkout' %}?plan={{ slug }}">Start with {{ plan.name }}</a><small>Secure monthly billing through Stripe. Cancel anytime.</small></div></article>{% endfor %}</section>
+<section class="card section">
+<h2>Every plan includes</h2>
+<div class="grid-3">
+<div><h3>A workfile that holds up</h3><p>Sources, prompts, drafts, and your sign-offs stay with the assignment — the documentation trail you'd want if a board letter ever arrived.</p></div>
+<div><h3>You stay the appraiser</h3><p>Everything comes back as a draft with a verification checklist. No value opinions, no comp picks, no adjustments made for you.</p></div>
+<div><h3>Your current software</h3><p>Runs in the browser next to TOTAL, ClickFORMS, ACI, or whatever you use today. Nothing to install, nothing to replace.</p></div>
+</div>
+</section>
+<section class="section">
+<div class="faq">
+<details><summary>Which plan should I start with?</summary><p>Starter, if revisions are the thing eating your evenings — that's most people. Move up to Pro when you want the UAD 3.6 readiness review and market evidence packs in the same workflow. Upgrading later takes one click.</p></details>
+<details><summary>What if it doesn't work for me?</summary><p>Cancel from your own billing portal, no email or phone call required. You keep access through the end of the month you paid for.</p></details>
+<details><summary>Do you offer office or team plans?</summary><p>Team plans for offices that want shared QA workflows are coming. <a href="{% url 'contact' %}">Tell us about your office</a> and we'll set you up when they land — Elite covers most 2–3 person shops today.</p></details>
+</div>
+</section>
+<section class="cta">
+<h2>Your next revision request is already in someone's outbox.</h2>
+<p>Set up your account now so that when it lands, the response takes ten minutes instead of your evening.</p>
+<div class="actions">
+<a class="button primary" href="{% url 'accounts:signup' %}">Create your free account →</a>
+<a class="button secondary" href="{% url 'contact' %}">Ask us a question</a>
+</div>
+</section>
+<p class="disclaimer-line">CoAppraiser assists with drafting, review, and documentation. The analysis, the opinion of value, and compliance remain the appraiser's responsibility.</p>
 {% endblock %}

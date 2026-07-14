@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Contact | CoAppraiser{% endblock %}
+{% block extra_head %}<meta name="description" content="Questions about CoAppraiser, plans, or your account? Send a message — a working appraiser reads every one."><link rel="canonical" href="https://coappraiser.com/contact/">{% endblock %}
+{% block content %}
+<section class="auth-layout">
+<div class="auth-copy">
+<div class="eyebrow"><span class="dot"></span> We answer fast</div>
+<h1>Talk to a person who's written an appraisal.</h1>
+<p class="lead">Questions about plans, a workflow that isn't behaving, an office setup, or whether CoAppraiser fits how you work — send it over. Every message is read by a working residential appraiser, not a ticket queue.</p>
+<div class="auth-benefits">
+<span>Plan questions</span>
+<span>Office &amp; team setups</span>
+<span>Workflow help</span>
+<span>Press &amp; partnerships</span>
+</div>
+</div>
+<div class="auth-card">
+{% if sent %}
+<h2>Got it. Thanks.</h2>
+<p>Your message is in. You'll hear back at the email you gave us — usually within one business day.</p>
+<a class="button primary" href="{% url 'home' %}">Back to the site</a>
+{% else %}
+<h2>Send us a message</h2>
+<p>We'll reply by email, usually within one business day.</p>
+<form class="styled-form" method="post">
+{% csrf_token %}
+<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+<p><label for="id_name">Name</label><input type="text" id="id_name" name="name" maxlength="120" placeholder="Your name"></p>
+<p><label for="id_email">Email</label><input type="email" id="id_email" name="email" required placeholder="you@yourappraisalshop.com"></p>
+<p><label for="id_message">Message</label><textarea id="id_message" name="message" rows="6" required placeholder="What can we help with?"></textarea></p>
+<button class="button primary" type="submit">Send message →</button>
+</form>
+<p class="fine-print">Prefer email? <a href="mailto:hello@coappraiser.com">hello@coappraiser.com</a></p>
+{% endif %}
+</div>
+</section>
+<p class="disclaimer-line">CoAppraiser assists with drafting, review, and documentation. The analysis, the opinion of value, and compliance remain the appraiser's responsibility.</p>
+{% endblock %}

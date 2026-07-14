@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.static import serve
 from django.conf import settings
-from apps.marketing.views import health, home, legacy_page
+from apps.marketing.views import checklist_signup, contact, health, home, legacy_page, skill_page
 from apps.billing.views import pricing as billing_pricing
 from apps.marketing.admin_views import dashboard as admin_dashboard
 
@@ -10,6 +10,10 @@ urlpatterns = [
     path("admin/dashboard/", admin_dashboard, name="admin_dashboard"), path("admin/", admin.site.urls), path("health/", health, name="health"), path("", home, name="home"),
     path("assets/<path:path>", serve, {"document_root": settings.BASE_DIR / "assets"}),
     path("early-access/", legacy_page, {"page": "early-access"}, name="early_access"),
+    path("starter-pack/", legacy_page, {"page": "starter-pack"}, name="starter_pack"),
+    path("skills/<path:path>/", skill_page, name="skill_page"),
+    path("contact/", contact, name="contact"),
+    path("uad-36-readiness-checklist/signup/", checklist_signup, name="checklist_signup"),
     path("pricing/", billing_pricing, name="pricing"),
     path("skill-library/", legacy_page, {"page": "skill-library"}, name="skill_library"),
     path("uad-36-readiness-checklist/", legacy_page, {"page": "uad-36-readiness-checklist"}, name="uad_checklist"),
