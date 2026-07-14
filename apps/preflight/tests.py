@@ -1,11 +1,12 @@
 import io
 import zipfile
+from pathlib import Path
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
-from .models import PreflightReview
-from .services import safe_zip_members
+from .models import PreflightReview, ReviewFile
+from .services import run_deterministic_review, safe_zip_members
 
 
 class PreflightTests(TestCase):
@@ -29,16 +30,26 @@ class PreflightTests(TestCase):
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
 
     def test_zip_upload_extracts_package_members(self):
-        stream = io.BytesIO()
-        with zipfile.ZipFile(stream, "w") as archive:
-            archive.writestr("report.xml", "<?xml version='1.0'?><report />")
-            archive.writestr("report.pdf", "%PDF-1.4 synthetic")
-            archive.writestr("front.jpg", "synthetic image")
-        package = SimpleUploadedFile("synthetic-package.zip", stream.getvalue(), content_type="application/zip")
+        fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
+        package = SimpleUploadedFile("synthetic-package.zip", fixture.read_bytes(), content_type="application/zip")
         response = self.client.post(reverse("preflight:create"), {"title": "ZIP package", "files": [package]})
         self.assertEqual(response.status_code, 302)
         review = PreflightReview.objects.get(user=self.user, title="ZIP package")
-        self.assertEqual(review.versions.first().files.count(), 3)
+        self.assertEqual(review.versions.first().files.count(), 4)
+        detail = self.client.get(response.url)
+        self.assertEqual(detail.status_code, 200)
+        self.assertContains(detail, "Extracted evidence")
+
+    def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
+        review = PreflightReview.objects.create(user=self.user, title="Conflict package")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(version=version, original_name="report.xml", kind="xml", sha256="xml", extracted_text="<report><areas><above_grade_gla>1800</above_grade_gla></areas></report>")
+        ReviewFile.objects.create(version=version, original_name="report.pdf", kind="pdf", sha256="pdf", extracted_text="Above-grade GLA: 2000 sq ft")
+        ReviewFile.objects.create(version=version, original_name="front.jpg", kind="image", sha256="jpg")
+        run_deterministic_review(version)
+        finding = review.findings.get(rule_code="CROSS_SOURCE_AREAS_ABOVE_GRADE_GLA")
+        self.assertIn("1800", finding.observed)
+        self.assertEqual(len(finding.evidence), 2)
 
     def test_user_cannot_open_another_users_review(self):
         other = User.objects.create_user("other", password="pass12345")

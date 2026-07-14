@@ -1,13 +1,15 @@
 import hashlib
 import io
 import os
+import re
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import PurePosixPath
 
 from django.core.files.base import ContentFile
 
 from apps.ai_tools.services.file_tools import extract_pdf_text
-from .models import FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
+from .models import ExtractedObservation, FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
 
 MAX_EXPANDED_BYTES = 100 * 1024 * 1024
 MAX_FILES = 500
@@ -47,6 +49,63 @@ def _hash(content):
     return hashlib.sha256(content).hexdigest()
 
 
+XML_FIELD_MAP = {
+    "identifier": "subject.identifier",
+    "condition": "subject.condition",
+    "above_grade_gla": "areas.above_grade_gla",
+    "below_grade_finished": "areas.below_grade_finished",
+    "property_type": "subject.property_type",
+    "defect": "subject.defect",
+}
+
+
+def _normalized(value):
+    return re.sub(r"[^a-z0-9.]", "", str(value).lower())
+
+
+def extract_xml_observations(version, record):
+    try:
+        root = ET.fromstring(record.extracted_text)
+    except (ET.ParseError, ValueError):
+        return []
+    observations = []
+    for element in root.iter():
+        field_code = XML_FIELD_MAP.get(element.tag.rsplit("}", 1)[-1])
+        value = (element.text or "").strip()
+        if field_code and value:
+            observations.append(ExtractedObservation.objects.create(version=version, source_file=record, field_code=field_code, value=value, normalized_value=_normalized(value), source_kind="xml", source_location=f"XML path: {field_code}"))
+    return observations
+
+
+PDF_PATTERNS = {
+    "subject.identifier": r"Subject\s+Identifier\s*:\s*([^\r\n]+)",
+    "areas.above_grade_gla": r"Above[- ]grade\s+GLA\s*:\s*([\d,]+)",
+    "subject.condition": r"Condition\s*:\s*([^\r\n]+)",
+    "subject.defect": r"Defect\s*:\s*([^\r\n]+)",
+}
+
+
+def extract_pdf_observations(version, record):
+    observations = []
+    for field_code, pattern in PDF_PATTERNS.items():
+        match = re.search(pattern, record.extracted_text or "", re.IGNORECASE)
+        if match:
+            value = match.group(1).strip()
+            observations.append(ExtractedObservation.objects.create(version=version, source_file=record, field_code=field_code, value=value, normalized_value=_normalized(value), source_kind="pdf", source_location=f"PDF: {record.original_name}"))
+    return observations
+
+
+def extract_observations(version):
+    version.observations.all().delete()
+    observations = []
+    for record in version.files.all():
+        if record.kind == "xml":
+            observations.extend(extract_xml_observations(version, record))
+        elif record.kind == "pdf":
+            observations.extend(extract_pdf_observations(version, record))
+    return observations
+
+
 def ingest_files(version, uploaded_files):
     entries = []
     for uploaded in uploaded_files:
@@ -84,6 +143,7 @@ def run_deterministic_review(version):
     files = list(version.files.all())
     kinds = {f.kind for f in files}
     findings = []
+    observations = extract_observations(version)
 
     def add(code, title, category, severity, observed, location, why, action, evidence=None, basis="deterministic"):
         finding = ReviewFinding.objects.create(review=review, version=version, rule_code=code, signature=f"{code}:{location}", title=title, category=category, severity=severity, observed=observed, location=location, why_it_matters=why, recommended_action=action, evidence=evidence or [], basis=basis, guidance=[{"label": "UAD 3.6 readiness support", "url": "https://singlefamily.fanniemae.com/delivering/uniform-mortgage-data-program/uniform-appraisal-dataset"}])
@@ -96,6 +156,22 @@ def run_deterministic_review(version):
         add("PACKAGE_PDF_MISSING", "No rendered PDF was found", "fix_before_delivery", "warning", "The uploaded package contains no rendered report PDF.", "Package contents", "Cross-checking structured data against the report requires the rendered report.", "Export and upload the completed report PDF.")
     if "image" not in kinds:
         add("PACKAGE_IMAGES_MISSING", "No report images were found", "judgment_review", "warning", "No image files were found in the uploaded package.", "Package contents", "Photo and exhibit support cannot be reviewed from the files provided.", "Confirm whether images are embedded elsewhere or upload the package Images folder.")
+    by_field = {}
+    for observation in observations:
+        by_field.setdefault(observation.field_code, {}).setdefault(observation.source_kind, []).append(observation)
+
+    def compare_field(field_code, label, location):
+        xml_value = (by_field.get(field_code, {}).get("xml") or [None])[0]
+        pdf_value = (by_field.get(field_code, {}).get("pdf") or [None])[0]
+        if xml_value and pdf_value and xml_value.normalized_value != pdf_value.normalized_value:
+            add("CROSS_SOURCE_" + field_code.upper().replace(".", "_"), f"{label} differs between XML and PDF", "fix_before_delivery", "warning", f"XML reports {xml_value.value}; PDF reports {pdf_value.value}.", location, "Conflicting source values can create a revision trigger or make the report difficult to reconcile.", f"Review the {label.lower()} in the appraisal software and confirm which source is correct.", [xml_value.source_location, pdf_value.source_location])
+
+    compare_field("subject.identifier", "Subject identifier", "Subject section")
+    compare_field("areas.above_grade_gla", "Above-grade GLA", "Area section")
+    compare_field("subject.condition", "Condition", "Condition section")
+    if by_field.get("subject.defect", {}).get("xml") and "image" not in kinds:
+        defect = by_field["subject.defect"]["xml"][0]
+        add("DEFECT_WITHOUT_PHOTO_SUPPORT", "Reported defect has no photo support", "judgment_review", "warning", f"The XML reports: {defect.value}", defect.source_location, "A reported defect may need supporting exhibit or photo documentation.", "Confirm whether the report package includes the relevant photo and that it is connected to the correct report section.", [defect.source_location])
     xmls = [f for f in files if f.kind == "xml"]
     for xml in xmls:
         if not xml.extracted_text.strip():

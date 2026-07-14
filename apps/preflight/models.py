@@ -49,6 +49,19 @@ class ReviewFile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ExtractedObservation(models.Model):
+    SOURCE_CHOICES = [(x, x.upper()) for x in ["xml", "pdf", "image", "ssr", "other"]]
+    version = models.ForeignKey(ReviewVersion, on_delete=models.CASCADE, related_name="observations")
+    source_file = models.ForeignKey(ReviewFile, on_delete=models.CASCADE, related_name="observations", null=True, blank=True)
+    field_code = models.CharField(max_length=100)
+    value = models.TextField(blank=True)
+    normalized_value = models.CharField(max_length=255, blank=True)
+    source_kind = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    source_location = models.CharField(max_length=300, blank=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 class ReviewFinding(models.Model):
     SEVERITIES = [(x, x.title()) for x in ["critical", "warning", "advisory"]]
     CATEGORIES = [(x, x.replace("_", " ").title()) for x in ["fix_before_delivery", "judgment_review", "cleanup"]]
