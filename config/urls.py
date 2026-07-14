@@ -26,5 +26,6 @@ urlpatterns = [
     path("app/", include("apps.assignments.urls")),
     path("app/assignments/", include("apps.ai_tools.urls")),
     path("app/workfile/", include("apps.workfile.urls")),
+    path("app/preflight/", include("apps.preflight.urls")),
     path("billing/", include("apps.billing.urls")),
 ]

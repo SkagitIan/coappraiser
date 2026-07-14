@@ -11,7 +11,7 @@ CSRF_TRUSTED_ORIGINS = [h.strip() for h in os.getenv("CSRF_TRUSTED_ORIGINS", "")
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "apps.assignments", "apps.ai_tools", "apps.workfile", "apps.marketing", "apps.billing",
+    "apps.assignments", "apps.ai_tools", "apps.workfile", "apps.marketing", "apps.billing", "apps.preflight",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -36,7 +36,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/app/"
+LOGIN_REDIRECT_URL = "/app/preflight/"
 LOGOUT_REDIRECT_URL = "/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 COAPPRAISER_LLM_PROVIDER = os.getenv("COAPPRAISER_LLM_PROVIDER", "mock")
@@ -57,6 +57,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "")
 STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "")
 STRIPE_PRICE_ELITE = os.getenv("STRIPE_PRICE_ELITE", "")
+STRIPE_PRICE_PREFLIGHT = os.getenv("STRIPE_PRICE_PREFLIGHT", "")
 COAPPRAISER_BILLING_MODE = os.getenv("COAPPRAISER_BILLING_MODE", "mock" if DEBUG else "stripe")
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

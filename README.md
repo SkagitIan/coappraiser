@@ -2,6 +2,10 @@
 
 CoAppraiser is a compliance-first AI copilot for residential appraisers. It helps prepare revision-response drafts and traceable workfile artifacts without determining value or replacing professional judgment.
 
+## CoAppraiser Preflight
+
+The primary logged-in workflow is now Preflight: upload a completed UAD ZIP, or separate XML, PDF, and image files, to receive prioritized intake findings before delivery. Correct the report in the existing appraisal software, upload a revised version, record finding decisions, and download a concise workfile review record. Preflight is readiness support, not official GSE validation or a guarantee of acceptance.
+
 ## Local setup
 
 ```powershell
@@ -17,11 +21,11 @@ With `COAPPRAISER_LLM_PROVIDER=mock` and `DEBUG=True`, the complete first workfl
 
 ## First workflow
 
-Create an account, create an assignment, open Revision Response Agent, paste a reviewer request, generate the structured response, and open the assignment workfile. Generated output is stored with its input snapshot, skill instructions, artifact, and verification items.
+Create an account, open Preflight from the dashboard, upload a completed appraisal package, review the prioritized findings, and download the workfile record. Legacy assignment-based workflows remain available under Legacy tools while their parsing, AI logging, and workfile capabilities are folded into the Preflight roadmap.
 
 ## Project structure
 
-`apps/assignments` owns assignments and sources. `apps/ai_tools` owns skills, deterministic tools, and AI actions. `apps/workfile` owns artifacts and verification. Existing public HTML and shared styling remain in the repository.
+`apps/preflight` owns review lifecycle, immutable versions, package files, findings, decisions, and workfile records. `apps/assignments` owns legacy assignments and sources. `apps/ai_tools` owns reusable skills, parsing, and AI actions. `apps/workfile` owns legacy artifacts and verification. Existing public HTML and shared styling remain in the repository. See `docs/preflight_transition_plan.md` for the audit and migration strategy.
 
 Run tests with `python manage.py test`. Run `python manage.py check`, `python manage.py makemigrations --check`, and `python manage.py collectstatic --noinput` before deployment. The existing `assets/styles.css` is retained as the current frontend styling; no frontend build step is required for the server-rendered MVP.
 
@@ -36,6 +40,10 @@ Run tests with `python manage.py test`. Run `python manage.py check`, `python ma
 `railway.json` also documents the Nixpacks build, static collection, migration, Gunicorn start command, and `/` health check.
 
 The MVP defaults to SQLite locally and mock AI mode. Production should use Railway PostgreSQL and a persistent media strategy before confidential document uploads are enabled for real users.
+
+## Preflight pricing and billing
+
+Preflight has one public plan: `$59/month` after one free scan. Set `STRIPE_PRICE_PREFLIGHT` to the recurring Stripe Price ID before enabling Stripe billing in production. Development can use `COAPPRAISER_BILLING_MODE=mock`; production should use Stripe and private persistent media storage before confidential appraisal uploads.
 
 ## Stripe billing
 
