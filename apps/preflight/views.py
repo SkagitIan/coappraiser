@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def dashboard(request):
     reviews = PreflightReview.objects.filter(user=request.user).prefetch_related("versions")
-    return render(request, "preflight/dashboard.html", {"reviews": reviews})
+    return render(request, "preflight/dashboard.html", {"reviews": reviews, "review_count": reviews.count(), "completed_count": reviews.filter(status="completed").count(), "processing_count": reviews.filter(status="processing").count()})
 
 
 @login_required

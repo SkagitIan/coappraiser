@@ -40,7 +40,7 @@ class PreflightTests(TestCase):
         detail = self.client.get(response.url)
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, "Extracted evidence")
-        self.assertContains(detail, "AI consistency review")
+        self.assertContains(detail, "Consistency review")
 
     def test_ai_review_is_saved_and_adds_interpretation_finding(self):
         fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
