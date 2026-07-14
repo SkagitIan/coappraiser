@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Preflight Reviews | CoAppraiser{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">CoAppraiser Preflight</span><h1>Run Preflight before delivery.</h1><p class="lead">Upload the completed UAD package and get a focused second set of eyes on likely revision triggers, conflicts, and missing support.</p></div><a class="button primary" href="{% url 'preflight:create' %}">New Preflight Review</a></div>
+<section class="section"><div class="section-heading"><div><h2>Review history</h2><p class="muted">Your completed and in-progress report reviews stay together here. CoAppraiser does not modify your appraisal.</p></div></div>
+<div class="grid-2">{% for review in reviews %}<a class="card" href="{% url 'preflight:detail' review.pk %}"><span class="badge">{{ review.get_status_display }}</span><h3>{{ review.title }}</h3><p>{{ review.subject_identifier|default:"No subject identifier" }}</p><small>{{ review.versions.count }} uploaded version{{ review.versions.count|pluralize }}</small></a>{% empty %}<div class="card empty"><h2>Start with a completed appraisal package</h2><p>Upload a UAD ZIP, or separate XML, PDF, and images. Correct the report in your existing software and upload a revised version later.</p><a class="button primary" href="{% url 'preflight:create' %}">Create first review</a></div>{% endfor %}</div></section>
+<p class="disclaimer-line">Preflight is readiness support, not official GSE validation or a guarantee of acceptance. The appraiser remains responsible for the report.</p>
+{% endblock %}

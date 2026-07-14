@@ -1,43 +1,10 @@
 {% extends "base.html" %}
-{% block title %}CoAppraiser Pricing | Plans for Residential Appraisers{% endblock %}
-{% block extra_head %}<meta name="description" content="CoAppraiser plans from $39/month. Revision response, UAD 3.6 readiness, market evidence, and workfile documentation. Cancel anytime."><link rel="canonical" href="https://coappraiser.com/pricing/"><meta property="og:title" content="CoAppraiser Pricing"><meta property="og:description" content="Plans from $39/month. One cleared revision pays for the month. Cancel anytime.">{% endblock %}
+{% block title %}Pricing | CoAppraiser Preflight{% endblock %}
+{% block extra_head %}<meta name="description" content="CoAppraiser Preflight is $59/month after your first free scan. Review completed UAD appraisal packages before delivery."><link rel="canonical" href="https://coappraiser.com/pricing/">{% endblock %}
 {% block content %}
-<section class="hero page-hero">
-<div>
-<div class="eyebrow"><span class="dot"></span> Plans from $39/month · Cancel anytime</div>
-<h1>One cleared revision pays for the month.</h1>
-<p class="lead">Think about what your time is worth on a $450 assignment that comes back with three stips. Every plan works alongside the appraisal software you already own — no migration, no training seminar, no sales call.</p>
-<p class="muted">Monthly billing through Stripe. Cancel yourself from the billing portal in two clicks. No long-term contract.</p>
-</div>
-<aside class="mini-panel">
-<b>Not sure yet?</b>
-<p>Create a free account first and look around. Pick a plan when you're ready to run your first real workflow.</p>
-<a class="button secondary" href="{% url 'accounts:signup' %}">Create a free account</a>
-</aside>
-</section>
-<section class="grid-3 pricing-grid">{% for slug, plan in plans.items %}<article class="card pricing-card {% if slug == 'pro' %}featured{% endif %}"><div class="badge">{% if slug == 'pro' %}Most popular{% else %}{{ plan.name }}{% endif %}</div><h2>{{ plan.name }}</h2><div class="price">{{ plan.price }}</div><p>{{ plan.description }}</p><ul>{% for feature in plan.features %}<li>{{ feature }}</li>{% endfor %}</ul><div class="pricing-action"><a class="button primary" href="{% url 'accounts:signup' %}?next={% url 'billing:start_checkout' %}?plan={{ slug }}">Start with {{ plan.name }}</a><small>Secure monthly billing through Stripe. Cancel anytime.</small></div></article>{% endfor %}</section>
-<section class="card section">
-<h2>Every plan includes</h2>
-<div class="grid-3">
-<div><h3>A workfile that holds up</h3><p>Sources, prompts, drafts, and your sign-offs stay with the assignment — the documentation trail you'd want if a board letter ever arrived.</p></div>
-<div><h3>You stay the appraiser</h3><p>Everything comes back as a draft with a verification checklist. No value opinions, no comp picks, no adjustments made for you.</p></div>
-<div><h3>Your current software</h3><p>Runs in the browser next to TOTAL, ClickFORMS, ACI, or whatever you use today. Nothing to install, nothing to replace.</p></div>
-</div>
-</section>
-<section class="section">
-<div class="faq">
-<details><summary>Which plan should I start with?</summary><p>Starter, if revisions are the thing eating your evenings — that's most people. Move up to Pro when you want the UAD 3.6 readiness review and market evidence packs in the same workflow. Upgrading later takes one click.</p></details>
-<details><summary>What if it doesn't work for me?</summary><p>Cancel from your own billing portal, no email or phone call required. You keep access through the end of the month you paid for.</p></details>
-<details><summary>Do you offer office or team plans?</summary><p>Team plans for offices that want shared QA workflows are coming. <a href="{% url 'contact' %}">Tell us about your office</a> and we'll set you up when they land — Elite covers most 2–3 person shops today.</p></details>
-</div>
-</section>
-<section class="cta">
-<h2>Your next revision request is already in someone's outbox.</h2>
-<p>Set up your account now so that when it lands, the response takes ten minutes instead of your evening.</p>
-<div class="actions">
-<a class="button primary" href="{% url 'accounts:signup' %}">Create your free account →</a>
-<a class="button secondary" href="{% url 'contact' %}">Ask us a question</a>
-</div>
-</section>
-<p class="disclaimer-line">CoAppraiser assists with drafting, review, and documentation. The analysis, the opinion of value, and compliance remain the appraiser's responsibility.</p>
+<section class="hero page-hero"><div><div class="eyebrow"><span class="dot"></span> One plan · One free scan</div><h1>Simple pricing for a focused review.</h1><p class="lead">Try one completed appraisal package free. Then use CoAppraiser Preflight for $59/month to review reports before delivery and compare revised packages.</p><p class="muted">No migration. No replacement for your appraisal software. Cancel anytime.</p></div><aside class="mini-panel"><b>What counts as a scan?</b><p>One uploaded appraisal package and its resulting Preflight review. A revised upload stays part of that review history.</p></aside></section>
+<section class="grid-3 pricing-grid"><article class="card pricing-card featured"><div class="badge">Preflight</div><h2>$59/month</h2><p>For independent residential appraisers who want a second set of eyes before delivery.</p><ul><li>Your first scan is free</li><li>XML, PDF, and photo package review</li><li>Prioritized findings with evidence locations</li><li>Revised-package comparison</li><li>Downloadable workfile review record</li><li>Cancel anytime</li></ul><div class="pricing-action"><a class="button primary" href="{% url 'accounts:signup' %}">Start your free scan</a><small>Secure billing through Stripe after the free scan.</small></div></article><article class="card"><h2>Built around your workflow</h2><p>Keep using TOTAL, ACI, ClickFORMS, or another established appraisal platform. Preflight reviews the finished export and tells you what deserves attention.</p><p class="muted">It does not complete forms, choose comps, determine value, or guarantee acceptance.</p></article><article class="card"><h2>No feature maze</h2><p>Revision response, UAD explanation, evidence support, and workfile documentation are becoming internal capabilities of one product: Preflight.</p><p class="muted">The customer experience stays focused on one action: run Preflight before delivery.</p></article></section>
+<section class="section"><div class="faq"><details><summary>Is the first scan really free?</summary><p>Yes. You can create an account and run one Preflight review before choosing the $59/month plan.</p></details><details><summary>What happens after my free scan?</summary><p>Subscribe to continue reviewing packages. The account and your existing review history remain available while you decide.</p></details><details><summary>Does this guarantee UAD or lender acceptance?</summary><p>No. Preflight is automated readiness support and a second set of eyes. The appraiser remains responsible for analysis, reporting, and final conclusions.</p></details></div></section>
+<section class="cta"><h2>Start with one real package.</h2><p>Upload a redacted or synthetic package first, see the workflow, then decide whether the monthly plan earns a place in your process.</p><div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">Create your account →</a><a class="button secondary" href="{% url 'contact' %}">Ask a question</a></div></section>
+<p class="disclaimer-line">CoAppraiser Preflight is automated readiness support, not official GSE validation. The appraiser remains responsible for the report.</p>
 {% endblock %}

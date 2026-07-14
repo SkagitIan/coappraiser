@@ -7,9 +7,7 @@ from apps.ai_tools.services.file_tools import extract_pdf_text
 
 @login_required
 def dashboard(request):
-    assignments = Assignment.objects.filter(user=request.user)
-    open_items = VerificationItem.objects.filter(assignment__user=request.user, status="open")[:8]
-    return render(request, "assignments/dashboard.html", {"assignments": assignments, "open_items": open_items})
+    return redirect("preflight:dashboard")
 
 @login_required
 def assignment_create(request):
@@ -44,9 +42,4 @@ def assignment_detail(request, pk):
             doc.file.close()
             doc.save(update_fields=["extracted_text"])
         return redirect("assignments:detail", pk)
-    skills = [
-        {"slug": "revision-response", "name": "Revision Response Agent", "description": "Turn a reviewer or lender comment into a neutral response package.", "url": "ai_tools:revision_response"},
-        {"slug": "uad-readiness", "name": "UAD 3.6 Readiness Review", "description": "Explain a potential issue without claiming official validation.", "url": "ai_tools:uad_issue_explainer"},
-        {"slug": "market-evidence", "name": "Market Evidence Pack", "description": "Organize appraiser-provided MLS CSV evidence with cautious observations.", "url": "ai_tools:market_evidence"},
-    ]
-    return render(request, "assignments/detail.html", {"assignment": assignment, "document_form": doc_form, "skills": skills})
+    return render(request, "assignments/detail.html", {"assignment": assignment, "document_form": doc_form})

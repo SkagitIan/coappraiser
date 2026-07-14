@@ -30,6 +30,8 @@ PUBLIC_PAGE_MAP = {
 
 
 def legacy_page(request, page):
+    if page in {"early-access", "starter-pack", "skill-library"} or page.startswith("solutions/"):
+        return redirect("home")
     relative = PUBLIC_PAGE_MAP.get(page)
     if not relative:
         raise Http404
@@ -40,12 +42,7 @@ def legacy_page(request, page):
 
 
 def skill_page(request, path):
-    # Serve the static skill-library pages (skills/<category>/[<skill>/]) from disk.
-    base = (Path(settings.BASE_DIR) / "skills").resolve()
-    target = (base / path.strip("/") / "index.html").resolve()
-    if base not in target.parents or not target.exists():
-        raise Http404
-    return HttpResponse(target.read_text(encoding="utf-8"), content_type="text/html")
+    return redirect("home")
 
 
 def _client_is_bot(request):
