@@ -1,1 +1,18 @@
-<form method="post" action="{% url 'preflight:decision' finding.pk %}" hx-post="{% url 'preflight:decision' finding.pk %}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" class="styled-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"><p><label for="status-{{ finding.pk }}">Decision</label><select id="status-{{ finding.pk }}" name="status"><option value="open" {% if finding.decision.status == "open" %}selected{% endif %}>Keep open</option><option value="resolved" {% if finding.decision.status == "resolved" %}selected{% endif %}>Mark resolved</option><option value="dismissed" {% if finding.decision.status == "dismissed" %}selected{% endif %}>Dismiss</option><option value="accepted_risk" {% if finding.decision.status == "accepted_risk" %}selected{% endif %}>Accept risk</option></select></p><button class="button secondary" type="submit">Save decision</button><small>Current: {{ finding.decision.get_status_display }}</small></form>
+<form method="post" action="{% url 'preflight:decision' finding.pk %}" hx-post="{% url 'preflight:decision' finding.pk %}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" class="styled-form finding-decision-form">
+  {% csrf_token %}
+  <p>
+    <label for="status-{{ finding.pk }}">Decision</label>
+    <select id="status-{{ finding.pk }}" name="status">
+      <option value="open" {% if finding.decision.status == "open" %}selected{% endif %}>Keep open</option>
+      <option value="resolved" {% if finding.decision.status == "resolved" %}selected{% endif %}>Resolved</option>
+      <option value="deferred" {% if finding.decision.status == "deferred" %}selected{% endif %}>Deferred</option>
+      <option value="not_applicable" {% if finding.decision.status == "not_applicable" %}selected{% endif %}>Not applicable</option>
+    </select>
+  </p>
+  <p>
+    <label for="note-{{ finding.pk }}">Decision note</label>
+    <textarea id="note-{{ finding.pk }}" name="note" rows="2" maxlength="2000" placeholder="Briefly record why you made this decision.">{{ finding.decision.note }}</textarea>
+  </p>
+  <button class="button secondary" type="submit">Save decision</button>
+  <small>Current: {{ finding.decision.get_status_display }}{% if finding.decision.note %} - note saved{% endif %}</small>
+</form>

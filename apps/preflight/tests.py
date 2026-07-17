@@ -1,13 +1,16 @@
 import io
+import json
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
 from django.contrib.auth.models import User
+from types import SimpleNamespace
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from apps.ai_tools.services.llm_client import LLMConfigurationError, run_llm_json
 from .models import AIExecution, PreflightReview, ReviewFile
-from .services import run_deterministic_review, safe_zip_members
+from .services import build_workfile_record, run_deterministic_review, safe_zip_members
 
 
 class PreflightTests(TestCase):
@@ -28,6 +31,7 @@ class PreflightTests(TestCase):
         self.assertEqual(response.status_code, 302)
         review = PreflightReview.objects.get(user=self.user)
         self.assertEqual(review.status, "completed")
+        self.assertEqual(review.versions.get().status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
 
     def test_zip_upload_extracts_package_members(self):
@@ -100,3 +104,75 @@ class PreflightTests(TestCase):
         download.close()
         self.client.post(reverse("preflight:delete_review", args=[review.pk]))
         self.assertFalse(PreflightReview.objects.filter(pk=review.pk).exists())
+
+    def test_build_week_demo_has_predictable_evidence_driven_findings(self):
+        fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-build-week-demo.zip"
+        package = SimpleUploadedFile("coappraiser-build-week-demo.zip", fixture.read_bytes(), content_type="application/zip")
+        response = self.client.post(reverse("preflight:create"), {"title": "Build Week demo", "files": [package]})
+        self.assertEqual(response.status_code, 302)
+        review = PreflightReview.objects.get(title="Build Week demo")
+        codes = set(review.findings.filter(basis="deterministic").values_list("rule_code", flat=True))
+        self.assertTrue({
+            "CROSS_SOURCE_SUBJECT_CONDITION",
+            "XML_NARRATIVE_CONDITION",
+            "XML_NARRATIVE_QUALITY",
+            "COMPARABLE_COMMENTARY_INCOMPLETE",
+        }.issubset(codes))
+        detail = self.client.get(response.url)
+        self.assertContains(detail, "Deterministic checks")
+        self.assertContains(detail, "GPT-generated findings")
+        self.assertContains(detail, "Appraiser judgment required")
+
+    def test_decision_note_is_saved_in_workfile_record(self):
+        fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-build-week-demo.zip"
+        package = SimpleUploadedFile("demo.zip", fixture.read_bytes(), content_type="application/zip")
+        self.client.post(reverse("preflight:create"), {"title": "Decision demo", "files": [package]})
+        review = PreflightReview.objects.get(title="Decision demo")
+        finding = review.findings.filter(basis="deterministic").first()
+        response = self.client.post(reverse("preflight:decision", args=[finding.pk]), {"status": "deferred", "note": "Verify the source commentary before delivery."})
+        self.assertEqual(response.status_code, 200)
+        finding.decision.refresh_from_db()
+        self.assertEqual(finding.decision.status, "deferred")
+        self.assertEqual(finding.decision.note, "Verify the source commentary before delivery.")
+        record = build_workfile_record(review)
+        saved = next(item for item in record.snapshot["findings"] if item["rule_code"] == finding.rule_code)
+        self.assertEqual(saved["decision_note"], finding.decision.note)
+        self.assertTrue(saved["appraiser_judgment_required"])
+        self.assertIn("supporting_evidence", saved)
+
+    @override_settings(
+        COAPPRAISER_LLM_PROVIDER="openai",
+        COAPPRAISER_LLM_MODEL="gpt-5.6",
+        OPENAI_API_KEY="test-key",
+    )
+    def test_gpt5_request_uses_supported_structured_output_parameters(self):
+        payload = {"summary": "Reviewed", "findings": [], "missing_information": []}
+        with patch("openai.OpenAI") as openai_client:
+            create = openai_client.return_value.chat.completions.create
+            create.return_value = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))])
+            result = run_llm_json(system_prompt="Return JSON", user_prompt="Evidence", schema_name="preflight_review", required_keys=payload.keys())
+        self.assertEqual(result, payload)
+        request = create.call_args.kwargs
+        self.assertEqual(request["model"], "gpt-5.6")
+        self.assertNotIn("temperature", request)
+        self.assertEqual(request["response_format"]["type"], "json_schema")
+
+    @override_settings(
+        DEBUG=False,
+        COAPPRAISER_ALLOW_MOCK_AI=False,
+        COAPPRAISER_LLM_PROVIDER="mock",
+    )
+    def test_mock_ai_is_rejected_in_production_configuration(self):
+        with self.assertRaisesMessage(LLMConfigurationError, "Mock AI is disabled"):
+            run_llm_json(system_prompt="", user_prompt="", schema_name="preflight_review")
+
+    def test_ai_failure_message_confirms_package_state_is_preserved(self):
+        fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
+        package = SimpleUploadedFile("failure-demo.zip", fixture.read_bytes(), content_type="application/zip")
+        with patch("apps.preflight.ai_review.run_llm_json", side_effect=RuntimeError("provider unavailable")):
+            response = self.client.post(reverse("preflight:create"), {"title": "Failure demo", "files": [package]}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "uploaded package and deterministic findings were saved")
+        review = PreflightReview.objects.get(title="Failure demo")
+        self.assertTrue(review.versions.first().files.exists())
+        self.assertTrue(review.findings.filter(basis="deterministic").exists())

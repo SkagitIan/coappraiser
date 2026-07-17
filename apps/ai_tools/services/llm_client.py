@@ -3,6 +3,11 @@ from django.conf import settings
 
 REQUIRED_REVISION_KEYS = {"issue_summary", "request_explanation", "recommended_action", "draft_response", "optional_report_language", "workfile_note", "verification_items", "risk_flags", "missing_information"}
 
+
+class LLMConfigurationError(RuntimeError):
+    pass
+
+
 def validate_output(result, required_keys=None):
     if not isinstance(result, dict):
         raise ValueError("The AI provider returned an invalid structured response.")
@@ -25,12 +30,23 @@ def mock_revision_response(user_prompt):
     }
 
 def run_skill(*, system_prompt, user_prompt, output_schema):
-    if settings.COAPPRAISER_LLM_PROVIDER == "mock" or (settings.DEBUG and not settings.OPENAI_API_KEY):
+    if settings.COAPPRAISER_LLM_PROVIDER == "mock":
+        if not settings.COAPPRAISER_ALLOW_MOCK_AI:
+            raise LLMConfigurationError("Mock AI is disabled when DEBUG is false.")
         return validate_output(mock_revision_response(user_prompt), REQUIRED_REVISION_KEYS)
     if settings.COAPPRAISER_LLM_PROVIDER == "openai":
+        if not settings.OPENAI_API_KEY:
+            raise LLMConfigurationError("OPENAI_API_KEY is required when COAPPRAISER_LLM_PROVIDER=openai.")
         from openai import OpenAI
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = client.chat.completions.create(model=settings.COAPPRAISER_LLM_MODEL, temperature=0.2, response_format={"type": "json_object"}, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}])
+        request = {
+            "model": settings.COAPPRAISER_LLM_MODEL,
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+        }
+        if not settings.COAPPRAISER_LLM_MODEL.startswith("gpt-5"):
+            request["temperature"] = 0.2
+        response = client.chat.completions.create(**request)
         return validate_output(json.loads(response.choices[0].message.content), REQUIRED_REVISION_KEYS)
     raise RuntimeError("No supported LLM provider is configured.")
 
@@ -55,14 +71,18 @@ def mock_preflight_review():
 
 
 def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None):
-    if settings.COAPPRAISER_LLM_PROVIDER == "mock" or (settings.DEBUG and not settings.OPENAI_API_KEY):
+    if settings.COAPPRAISER_LLM_PROVIDER == "mock":
+        if not settings.COAPPRAISER_ALLOW_MOCK_AI:
+            raise LLMConfigurationError("Mock AI is disabled when DEBUG is false.")
         return validate_output(mock_preflight_review() if schema_name == "preflight_review" else {}, required_keys or [])
     if settings.COAPPRAISER_LLM_PROVIDER == "openai":
+        if not settings.OPENAI_API_KEY:
+            raise LLMConfigurationError("OPENAI_API_KEY is required when COAPPRAISER_LLM_PROVIDER=openai.")
         from openai import OpenAI
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         request = {
             "model": settings.COAPPRAISER_LLM_MODEL,
-            "response_format": {"type": "json_object"},
+            "response_format": _response_format(schema_name),
             "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
         }
         if not settings.COAPPRAISER_LLM_MODEL.startswith("gpt-5"):
@@ -70,3 +90,42 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None)
         response = client.chat.completions.create(**request)
         return validate_output(json.loads(response.choices[0].message.content), required_keys or [])
     raise RuntimeError("No supported LLM provider is configured.")
+
+
+def _response_format(schema_name):
+    if schema_name != "preflight_review":
+        return {"type": "json_object"}
+    finding_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "rule_code": {"type": "string"},
+            "title": {"type": "string"},
+            "category": {"type": "string", "enum": ["fix_before_delivery", "judgment_review", "cleanup"]},
+            "severity": {"type": "string", "enum": ["critical", "warning", "advisory"]},
+            "observed": {"type": "string"},
+            "location": {"type": "string"},
+            "why_it_matters": {"type": "string"},
+            "recommended_action": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}},
+            "guidance": {"type": "array", "items": {"type": "string"}},
+        },
+        "required": ["rule_code", "title", "category", "severity", "observed", "location", "why_it_matters", "recommended_action", "evidence", "guidance"],
+    }
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": schema_name,
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "summary": {"type": "string"},
+                    "findings": {"type": "array", "items": finding_schema},
+                    "missing_information": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["summary", "findings", "missing_information"],
+            },
+        },
+    }

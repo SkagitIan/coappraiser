@@ -19,7 +19,7 @@ class PreflightReview(models.Model):
 
     @property
     def open_findings(self):
-        return self.findings.exclude(decision__status__in=["resolved", "dismissed"]).count()
+        return self.findings.exclude(decision__status__in=["resolved", "not_applicable"]).count()
 
 
 class ReviewVersion(models.Model):
@@ -103,7 +103,7 @@ class ReviewFinding(models.Model):
 
 
 class FindingDecision(models.Model):
-    STATUS_CHOICES = [(x, x.replace("_", " ").title()) for x in ["open", "resolved", "dismissed", "accepted_risk"]]
+    STATUS_CHOICES = [(x, x.replace("_", " ").title()) for x in ["open", "resolved", "deferred", "not_applicable"]]
     finding = models.OneToOneField(ReviewFinding, on_delete=models.CASCADE, related_name="decision")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
     note = models.TextField(blank=True)

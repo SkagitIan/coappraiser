@@ -1,10 +1,35 @@
-# CoAppraiser
+# CoAppraiser Preflight
 
-CoAppraiser is a compliance-first AI copilot for residential appraisers. It helps prepare revision-response drafts and traceable workfile artifacts without determining value or replacing professional judgment.
+CoAppraiser Preflight uses GPT-5.6 to review the evidence inside a residential appraisal package, surface traceable inconsistencies before delivery, and preserve the appraiser's decisions in an auditable workfile record. It is a focused, human-in-the-loop pre-delivery review that works alongside existing appraisal software; it does not determine value or replace professional judgment.
 
-## CoAppraiser Preflight
+## The problem
 
-The primary logged-in workflow is now Preflight: upload a completed UAD ZIP, or separate XML, PDF, and image files, to receive prioritized intake findings before delivery. Correct the report in the existing appraisal software, upload a revised version, record finding decisions, and download a concise workfile review record. Preflight is readiness support, not official GSE validation or a guarantee of acceptance.
+A completed appraisal can repeat the same fact across XML fields, rendered report language, comparable commentary, and exhibits. Small conflicts or unsupported explanations can become revision requests after delivery. Preflight gives the appraiser one evidence-linked review queue before delivery, then records how each item was resolved, deferred, or found not applicable.
+
+## Why GPT-5.6
+
+Deterministic rules are best for known package and field checks. GPT-5.6 adds the reasoning needed to compare less uniform commentary and extracted evidence while still returning a strict finding schema. CoAppraiser limits the model to supplied evidence and stores the model, prompt version, input snapshot, response, and resulting findings. The production model alias is `gpt-5.6`; see the [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+
+## How Codex was used
+
+Codex was used as the repository-level engineering partner: it audited the existing Django workflow, traced upload-to-workfile persistence, hardened the OpenAI request path, created the sanitized demo fixture, added regression tests, and ran the production-readiness checks. Keep Build Week session evidence with the submission materials.
+
+## Build Week scope
+
+CoAppraiser and its initial appraisal workflow existed before Build Week. Work completed during the event focused on the submission concept: production GPT-5.6 configuration, evidence-complete structured findings, separation of deterministic and model findings, resilient error handling, the sanitized and predictable demo package, decision-note/workfile improvements, deployment safety, regression tests, and submission documentation. The repository history and required Codex `/feedback` session ID provide timestamped evidence of that work and the decisions behind it.
+
+## Architecture
+
+- Django, server-rendered templates, HTMX, and PostgreSQL/SQLite.
+- `apps/preflight`: private package intake, extraction, versioned findings, decisions, AI execution records, and workfile export.
+- `apps/ai_tools/services/llm_client.py`: explicit mock or OpenAI provider with structured JSON output. GPT-5 requests omit unsupported temperature overrides.
+- XML and PDF observations retain source locations; deterministic rules and GPT interpretations are stored and displayed separately.
+- Cloudflare R2 is required for production uploads. Downloads are authenticated and user-scoped; files are not served from public static paths.
+- Railway runs migrations, WhiteNoise static assets, and Gunicorn.
+
+## Human-in-the-loop boundaries
+
+Every finding says that appraiser judgment is required. CoAppraiser may point to supplied evidence and suggest what to review. It must not determine value, select final comparables, recommend a final adjustment, declare USPAP compliance, perform official UAD validation, or guarantee lender, AMC, FHA, VA, Fannie Mae, Freddie Mac, or other GSE acceptance. The appraiser makes and records every decision.
 
 ## Local setup
 
@@ -12,54 +37,74 @@ The primary logged-in workflow is now Preflight: upload a completed UAD ZIP, or 
 py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+$env:DEBUG = "True"
+$env:COAPPRAISER_LLM_PROVIDER = "mock"
+$env:COAPPRAISER_LLM_MODEL = "gpt-5.6"
+$env:COAPPRAISER_STORAGE_BACKEND = "local"
+$env:COAPPRAISER_BILLING_MODE = "mock"
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
-With `COAPPRAISER_LLM_PROVIDER=mock` and `DEBUG=True`, the complete first workflow runs without an API subscription. Set `DATABASE_URL` to Railway PostgreSQL in production. Run `python manage.py collectstatic --noinput` before deployment; Railway uses `web: gunicorn config.wsgi:application`.
+Mock mode is explicit and is accepted only for local development and tests. To exercise the live API locally, set `COAPPRAISER_LLM_PROVIDER=openai` and `OPENAI_API_KEY`; a missing key raises a visible failure and never falls back to mock.
 
-## First workflow
+## Production environment
 
-Create an account, open Preflight from the dashboard, upload a completed appraisal package, review the prioritized findings, and download the workfile record. Legacy assignment-based workflows remain available under Legacy tools while their parsing, AI logging, and workfile capabilities are folded into the Preflight roadmap.
+Required on Railway:
 
-## Project structure
+```text
+SECRET_KEY=<strong random value>
+DEBUG=False
+ALLOWED_HOSTS=<deployment host>
+CSRF_TRUSTED_ORIGINS=https://<deployment host>
+DATABASE_URL=<Railway PostgreSQL URL>
+COAPPRAISER_LLM_PROVIDER=openai
+COAPPRAISER_LLM_MODEL=gpt-5.6
+OPENAI_API_KEY=<secret>
+COAPPRAISER_STORAGE_BACKEND=r2
+R2_ACCOUNT_ID=<secret>
+R2_BUCKET_NAME=<private bucket>
+R2_ENDPOINT_URL=https://<account>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=<secret>
+R2_SECRET_ACCESS_KEY=<secret>
+```
 
-`apps/preflight` owns review lifecycle, immutable versions, package files, findings, decisions, and workfile records. `apps/assignments` owns legacy assignments and sources. `apps/ai_tools` owns reusable skills, parsing, and AI actions. `apps/workfile` owns legacy artifacts and verification. Existing public HTML and shared styling remain in the repository. See `docs/preflight_transition_plan.md` for the audit and migration strategy.
+Set `COAPPRAISER_BILLING_MODE` and the Stripe variables only if billing is enabled for the deployment. Production mock AI and production local-media uploads are rejected by the application.
 
-Run tests with `python manage.py test`. Run `python manage.py check`, `python manage.py makemigrations --check`, and `python manage.py collectstatic --noinput` before deployment. The existing `assets/styles.css` is retained as the current frontend styling; no frontend build step is required for the server-rendered MVP.
+## Exact Build Week demo
 
-## Railway deployment
+1. Create a fresh account and open **Preflight**.
+2. Choose **New review** and name it `Build Week synthetic review`.
+3. Upload [`demo/coappraiser-build-week-demo.zip`](demo/coappraiser-build-week-demo.zip).
+4. Run the review. The deterministic section reliably flags condition conflicts, a quality/commentary conflict, and incomplete comparable commentary. GPT findings appear in a separate section.
+5. Expand the evidence trail in each finding and compare it with **Extracted evidence**.
+6. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save each decision.
+7. Select **Download workfile record** and show the JSON evidence, model metadata, decisions, notes, limitations, and file hashes.
 
-1. Create a Railway project with a PostgreSQL service.
-2. Deploy this repository as a web service.
-3. Set `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL`, and the LLM provider variables in Railway.
-4. Run `python manage.py migrate` and `python manage.py collectstatic --noinput` in the deployment/release setup.
-5. Railway uses the repository `Procfile`: `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`.
+The package is entirely synthetic. Its auditable source files and expected findings are documented in [`demo/README.md`](demo/README.md).
 
-`railway.json` also documents the Nixpacks build, static collection, migration, Gunicorn start command, and `/` health check.
+## Tests
 
-The MVP defaults to SQLite locally and mock AI mode. Production should use Railway PostgreSQL and Cloudflare R2 before confidential document uploads are enabled for real users. See `docs/preflight_storage.md` for the required environment variables and privacy behavior.
+```powershell
+python manage.py check
+python manage.py makemigrations --check
+python manage.py test
+python manage.py collectstatic --noinput
+```
 
-## Preflight pricing and billing
+The Preflight suite also covers the controlled demo result, user scoping, ZIP safety, evidence-rich conflicts, preserved state after AI failure, decision notes, workfile export, production mock rejection, and GPT-5 structured request parameters.
 
-Preflight has one public plan: `$59/month` after one free scan. Set `STRIPE_PRICE_PREFLIGHT` to the recurring Stripe Price ID before enabling Stripe billing in production. Development can use `COAPPRAISER_BILLING_MODE=mock`; production should use Stripe and private persistent media storage before confidential appraisal uploads.
+## Known limitations
 
-## Stripe billing
+- This is readiness support, not official UAD, GSE, lender, or USPAP validation.
+- PDF review depends on extractable text; OCR and visual image analysis are not implemented.
+- The initial rule set covers a small, explicit subset of appraisal fields and package checks.
+- Reviews run synchronously and are intended for modest package sizes.
+- Production requires private R2 storage and operational privacy/retention controls.
+- GPT findings can vary; the demo's core findings are deterministic so the video remains repeatable.
 
-Local development defaults to `COAPPRAISER_BILLING_MODE=mock`, which lets an authenticated user exercise plan selection without contacting Stripe. For Stripe test mode, set `COAPPRAISER_BILLING_MODE=stripe`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the three Stripe Price IDs. Configure the webhook endpoint as `/billing/webhook/` for checkout completion, subscription updates, cancellation, and payment failures. The app stores Stripe IDs and subscription state, never card data. Use `/billing/` for the customer portal.
+## Short demo script
 
-In Railway, set `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO`, and `STRIPE_PRICE_ELITE` to the Stripe recurring Price IDs that match the public $39, $99, and $149 monthly plans. Use separate test and live values; never commit them to the repository.
+> "Appraisal evidence repeats across structured XML, report commentary, and exhibits, so small inconsistencies can survive until delivery. I will upload a fully synthetic package to CoAppraiser Preflight. The app runs versioned deterministic checks and asks GPT-5.6 for a separate evidence-grounded consistency review. Each finding shows what was observed, the exact source location, supporting evidence, why it matters, and what the appraiser should review. The model never determines value or compliance. I can resolve, defer, or mark an item not applicable, record my reasoning, and download an auditable workfile record containing the evidence, model metadata, decisions, and file hashes."
 
-For local Stripe webhook testing, install the Stripe CLI, run `stripe login`, then use `stripe listen --forward-to localhost:8000/billing/webhook/` and place the printed signing secret in `STRIPE_WEBHOOK_SECRET`. Run with `COAPPRAISER_BILLING_MODE=stripe` and test-mode keys.
-
-## Current workflows
-
-- Revision Response Agent: reviewer request → structured draft → saved artifact → edit/approve → verification checklist.
-- Workfile Guardian: source documents, AI actions, artifacts, approval state, and verification history with browser-print export.
-- UAD 3.6 Readiness Review: pasted issue explanation with explicit non-validation disclaimer.
-- Market Evidence Pack: CSV column detection and descriptive sale-price/DOM/list-to-sale summaries with cautious report language.
-
-## Boundaries
-
-Outputs are drafts. CoAppraiser does not determine value, make final adjustments, provide official UAD validation, or guarantee USPAP, GSE, lender, AMC, FHA, or VA acceptance. The appraiser must review and verify before use.
+For Devpost, record this as a public YouTube video under three minutes. The audio must explain what was built, how Codex was used, and how GPT-5.6 was used.

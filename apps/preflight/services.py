@@ -8,6 +8,8 @@ from uuid import uuid4
 from pathlib import PurePosixPath
 
 from django.core.files.base import ContentFile
+from django.conf import settings
+from django.utils import timezone
 
 from apps.ai_tools.services.file_tools import extract_pdf_text
 from .models import ExtractedObservation, FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
@@ -57,6 +59,11 @@ XML_FIELD_MAP = {
     "below_grade_finished": "areas.below_grade_finished",
     "property_type": "subject.property_type",
     "defect": "subject.defect",
+    "quality": "subject.quality",
+    "narrative_condition": "narrative.condition",
+    "narrative_quality": "narrative.quality",
+    "comparable_count": "comparables.count",
+    "comparable_commentary_count": "comparables.commentary_count",
 }
 
 
@@ -109,6 +116,8 @@ def extract_observations(version):
 
 def ingest_files(version, uploaded_files):
     entries = []
+    if not settings.COAPPRAISER_ALLOW_LOCAL_UPLOADS and settings.STORAGE_BACKEND != "r2":
+        raise ValueError("Production appraisal uploads require private R2 storage. Your review record was saved, but no package was processed.")
     for uploaded in uploaded_files:
         name = uploaded.name
         raw = uploaded.read()
@@ -166,11 +175,31 @@ def run_deterministic_review(version):
         xml_value = (by_field.get(field_code, {}).get("xml") or [None])[0]
         pdf_value = (by_field.get(field_code, {}).get("pdf") or [None])[0]
         if xml_value and pdf_value and xml_value.normalized_value != pdf_value.normalized_value:
-            add("CROSS_SOURCE_" + field_code.upper().replace(".", "_"), f"{label} differs between XML and PDF", "fix_before_delivery", "warning", f"XML reports {xml_value.value}; PDF reports {pdf_value.value}.", location, "Conflicting source values can create a revision trigger or make the report difficult to reconcile.", f"Review the {label.lower()} in the appraisal software and confirm which source is correct.", [xml_value.source_location, pdf_value.source_location])
+            add("CROSS_SOURCE_" + field_code.upper().replace(".", "_"), f"{label} differs between XML and PDF", "fix_before_delivery", "warning", f"XML reports {xml_value.value}; PDF reports {pdf_value.value}.", location, "Conflicting source values can create a revision trigger or make the report difficult to reconcile.", f"Review the {label.lower()} in the appraisal software and confirm which source is correct.", [f"{xml_value.source_location}: {xml_value.value}", f"{pdf_value.source_location}: {pdf_value.value}"])
 
     compare_field("subject.identifier", "Subject identifier", "Subject section")
     compare_field("areas.above_grade_gla", "Above-grade GLA", "Area section")
     compare_field("subject.condition", "Condition", "Condition section")
+
+    def compare_xml_narrative(structured_code, narrative_code, label, location):
+        structured = (by_field.get(structured_code, {}).get("xml") or [None])[0]
+        narrative = (by_field.get(narrative_code, {}).get("xml") or [None])[0]
+        if structured and narrative and structured.normalized_value != narrative.normalized_value:
+            add(f"XML_NARRATIVE_{label.upper()}", f"{label.title()} conflicts with narrative commentary", "fix_before_delivery", "warning", f"The structured XML reports {structured.value}, while the narrative commentary reports {narrative.value}.", location, "Structured fields and narrative commentary should tell a consistent, supportable story.", f"Review both locations in the appraisal software and reconcile the {label} using verified assignment evidence.", [f"{structured.source_location}: {structured.value}", f"{narrative.source_location}: {narrative.value}"])
+
+    compare_xml_narrative("subject.condition", "narrative.condition", "condition", "XML subject condition and narrative condition commentary")
+    compare_xml_narrative("subject.quality", "narrative.quality", "quality", "XML subject quality and narrative quality commentary")
+
+    comp_count = (by_field.get("comparables.count", {}).get("xml") or [None])[0]
+    commentary_count = (by_field.get("comparables.commentary_count", {}).get("xml") or [None])[0]
+    if comp_count and commentary_count:
+        try:
+            incomplete_commentary = int(commentary_count.value) < int(comp_count.value)
+        except ValueError:
+            incomplete_commentary = False
+        if incomplete_commentary:
+            add("COMPARABLE_COMMENTARY_INCOMPLETE", "Comparable commentary appears incomplete", "judgment_review", "warning", f"The package identifies {comp_count.value} comparables but commentary for only {commentary_count.value}.", "XML sales comparison commentary summary", "Incomplete comparable commentary may leave the selection, differences, or reliance insufficiently explained for review.", "Review each comparable and add only commentary supported by the assignment evidence. Do not use this finding to select comps or determine an adjustment.", [f"{comp_count.source_location}: {comp_count.value}", f"{commentary_count.source_location}: {commentary_count.value}"])
+
     if by_field.get("subject.defect", {}).get("xml") and "image" not in kinds:
         defect = by_field["subject.defect"]["xml"][0]
         add("DEFECT_WITHOUT_PHOTO_SUPPORT", "Reported defect has no photo support", "judgment_review", "warning", f"The XML reports: {defect.value}", defect.source_location, "A reported defect may need supporting exhibit or photo documentation.", "Confirm whether the report package includes the relevant photo and that it is connected to the correct report section.", [defect.source_location])
@@ -189,6 +218,7 @@ def run_deterministic_review(version):
     from .ai_review import run_preflight_ai_review
     run_preflight_ai_review(version)
     version.status = "completed"
+    version.save(update_fields=["status"])
     review.status = "completed"
     review.save(update_fields=["status", "updated_at"])
     return findings
@@ -197,8 +227,37 @@ def run_deterministic_review(version):
 def build_workfile_record(review):
     latest = review.versions.first()
     findings = list(review.findings.filter(version=latest).select_related("decision")) if latest else []
-    snapshot = {"subject_identifier": review.subject_identifier, "review_date": review.updated_at.isoformat(), "version": latest.number if latest else None, "rule_version": latest.rule_version if latest else None, "findings": [{"title": f.title, "rule_code": f.rule_code, "severity": f.severity, "status": getattr(f.decision, "status", "open"), "location": f.location} for f in findings], "limitations": "CoAppraiser Preflight performed an automated review using the files provided and rules available at the time. It does not guarantee compliance, acceptance, or appraisal accuracy. The appraiser remains responsible for all analysis, reporting, and final conclusions.", "ai_use_disclosure": "This review may include automated interpretation; deterministic checks and AI interpretations are labeled in the review.", "file_hashes": [f.sha256 for f in latest.files.all()] if latest else []}
-    record, _ = WorkfileReviewRecord.objects.update_or_create(review=review, defaults={"snapshot": snapshot})
+    generated_at = timezone.now()
+    ai_executions = latest.ai_executions.order_by("created_at") if latest else []
+    snapshot = {
+        "review_title": review.title,
+        "subject_identifier": review.subject_identifier,
+        "generated_at": generated_at.isoformat(),
+        "version": latest.number if latest else None,
+        "parser_version": latest.parser_version if latest else None,
+        "rule_version": latest.rule_version if latest else None,
+        "findings": [{
+            "title": f.title,
+            "rule_code": f.rule_code,
+            "category": f.category,
+            "severity": f.severity,
+            "basis": f.basis,
+            "observed_issue": f.observed,
+            "source_location": f.location,
+            "supporting_evidence": f.evidence,
+            "why_it_matters": f.why_it_matters,
+            "recommended_review_action": f.recommended_action,
+            "appraiser_judgment_required": True,
+            "decision_status": f.decision.status,
+            "decision_note": f.decision.note,
+            "decided_by": f.decision.decided_by.get_username(),
+            "decided_at": f.decision.decided_at.isoformat(),
+        } for f in findings],
+        "ai_executions": [{"provider": item.provider, "model": item.model_name, "status": item.status, "prompt_version": item.prompt_version} for item in ai_executions],
+        "limitations": "CoAppraiser Preflight performed an automated review using the files provided and rules available at the time. It does not determine value, recommend final adjustments, declare USPAP compliance, or guarantee lender, AMC, or GSE acceptance. The appraiser remains responsible for all analysis, reporting, and final conclusions.",
+        "file_hashes": [{"name": f.original_name, "sha256": f.sha256} for f in latest.files.all()] if latest else [],
+    }
+    record, _ = WorkfileReviewRecord.objects.update_or_create(review=review, defaults={"snapshot": snapshot, "generated_at": generated_at})
     return record
 
 

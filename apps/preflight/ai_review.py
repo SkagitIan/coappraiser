@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 VALID_CATEGORIES = {value for value, _ in ReviewFinding.CATEGORIES}
 VALID_SEVERITIES = {value for value, _ in ReviewFinding.SEVERITIES}
 
-SYSTEM_PROMPT = """You are CoAppraiser Preflight's focused consistency reviewer. Review only the extracted evidence supplied by the application. Do not determine value, select comps, calculate adjustments, claim compliance, or invent facts. Return JSON with summary, findings, and missing_information. Each finding must be a possible issue for appraiser review, not a command to reach a substantive appraisal conclusion. Label uncertainty clearly and cite only supplied evidence."""
+SYSTEM_PROMPT = """You are CoAppraiser Preflight's focused consistency reviewer. Review only the extracted evidence supplied by the application. Do not determine value, select comps, recommend or calculate final adjustments, declare USPAP compliance, guarantee lender/AMC/GSE acceptance, or invent facts. Return structured JSON with summary, findings, and missing_information. Every finding must include a concise title, category, severity, observed issue, exact supplied source location when available, supporting evidence, why the issue matters, a recommended review action, and guidance that explicitly says appraiser judgment is required. Describe possible inconsistencies for review; never direct a substantive appraisal conclusion. Label uncertainty clearly and cite only supplied evidence."""
 
 
 def _review_context(version):
@@ -35,7 +35,11 @@ def run_preflight_ai_review(version):
             title = str(item.get("title"))[:200]
             category = item.get("category") if item.get("category") in VALID_CATEGORIES else "judgment_review"
             severity = item.get("severity") if item.get("severity") in VALID_SEVERITIES else "advisory"
-            finding = ReviewFinding.objects.create(review=version.review, version=version, rule_code=code, signature=f"AI:{code}:{title.lower()}", title=title, category=category, severity=severity, observed=str(item.get("observed", "")), location=str(item.get("location", ""))[:300], why_it_matters=str(item.get("why_it_matters", "")), recommended_action=str(item.get("recommended_action", "Review the supplied evidence and apply professional judgment.")), evidence=item.get("evidence", []), guidance=item.get("guidance", []), basis="ai_interpretation")
+            evidence = item.get("evidence", [])
+            guidance = item.get("guidance", [])
+            if not isinstance(evidence, list) or not isinstance(guidance, list):
+                continue
+            finding = ReviewFinding.objects.create(review=version.review, version=version, rule_code=code, signature=f"AI:{code}:{title.lower()}", title=title, category=category, severity=severity, observed=str(item.get("observed", "")), location=str(item.get("location", ""))[:300], why_it_matters=str(item.get("why_it_matters", "")), recommended_action=str(item.get("recommended_action", "Review the supplied evidence and apply professional judgment.")), evidence=evidence, guidance=guidance or ["Appraiser judgment is required."], basis="ai_interpretation")
             FindingDecision.objects.create(finding=finding, decided_by=version.review.user)
         execution.status = "completed"
         execution.completed_at = timezone.now()

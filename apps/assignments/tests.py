@@ -16,6 +16,7 @@ class AssignmentAccessTests(TestCase):
         assignment = Assignment.objects.create(user=self.other, title="Private")
         self.client.login(username="owner", password="pass12345")
         self.assertEqual(self.client.get(reverse("assignments:detail", args=[assignment.pk])).status_code, 404)
-    def test_public_legacy_pages_are_wired(self):
+    def test_public_pricing_and_legacy_redirect_are_wired(self):
         self.assertEqual(self.client.get("/pricing/").status_code, 200)
-        self.assertContains(self.client.get("/solutions/workfile-guardian/"), "Workfile")
+        response = self.client.get("/solutions/workfile-guardian/")
+        self.assertRedirects(response, reverse("home"))

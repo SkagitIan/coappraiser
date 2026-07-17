@@ -2,6 +2,7 @@ import json
 import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Case, IntegerField, When
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -34,6 +35,9 @@ def create(request):
             version.save(update_fields=["package_hash"])
             ingest_files(version, uploaded)
             run_deterministic_review(version)
+            ai_execution = version.ai_executions.first()
+            if ai_execution and ai_execution.status == "failed":
+                messages.warning(request, "Your package and deterministic findings were saved, but the GPT review is temporarily unavailable. Check the AI configuration and try the package again later.")
         except Exception as exc:
             logger.exception("Preflight upload failed for review %s", review.pk)
             review.status = "failed"
@@ -48,14 +52,21 @@ def create(request):
 def detail(request, pk):
     review = get_object_or_404(PreflightReview.objects.prefetch_related("versions", "findings__decision"), pk=pk, user=request.user)
     version = review.versions.first()
-    findings = version.findings.all() if version else []
+    findings = version.findings.annotate(
+        severity_rank=Case(
+            When(severity="critical", then=0), When(severity="warning", then=1),
+            default=2, output_field=IntegerField(),
+        )
+    ).order_by("severity_rank", "category", "created_at") if version else []
+    deterministic_findings = findings.filter(basis="deterministic") if version else []
+    ai_findings = findings.filter(basis="ai_interpretation") if version else []
     observations = version.observations.all() if version else []
     ai_execution = version.ai_executions.first() if version else None
     previous = review.versions.all()[1] if review.versions.count() > 1 else None
     current_signatures = {f.signature for f in findings}
     prior_signatures = {f.signature for f in previous.findings.all()} if previous else set()
     comparison = {"fixed": len(prior_signatures - current_signatures), "still_present": len(prior_signatures & current_signatures), "new": len(current_signatures - prior_signatures)} if previous else None
-    return render(request, "preflight/detail.html", {"review": review, "version": version, "findings": findings, "observations": observations, "ai_execution": ai_execution, "comparison": comparison, "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier})})
+    return render(request, "preflight/detail.html", {"review": review, "version": version, "findings": findings, "deterministic_findings": deterministic_findings, "ai_findings": ai_findings, "observations": observations, "ai_execution": ai_execution, "comparison": comparison, "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier})})
 
 
 @login_required
@@ -64,7 +75,7 @@ def decision(request, pk):
     finding = get_object_or_404(ReviewFinding, pk=pk, review__user=request.user)
     status = request.POST.get("status", "open")
     if status in dict(FindingDecision.STATUS_CHOICES):
-        FindingDecision.objects.update_or_create(finding=finding, defaults={"status": status, "note": request.POST.get("note", ""), "decided_by": request.user})
+        FindingDecision.objects.update_or_create(finding=finding, defaults={"status": status, "note": request.POST.get("note", "").strip()[:2000], "decided_by": request.user})
     return render(request, "preflight/partials/finding_status.html", {"finding": finding})
 
 
@@ -79,6 +90,9 @@ def revise(request, pk):
     try:
         ingest_files(version, files)
         run_deterministic_review(version)
+        ai_execution = version.ai_executions.first()
+        if ai_execution and ai_execution.status == "failed":
+            messages.warning(request, "The revised package and deterministic findings were saved, but the GPT review is temporarily unavailable.")
     except Exception:
         logger.exception("Preflight revised upload failed for review %s", review.pk)
         review.status = "failed"

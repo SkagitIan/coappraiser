@@ -1,10 +1,13 @@
 import os
+import sys
 from pathlib import Path
 import dj_database_url
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
-DEBUG = os.getenv("DEBUG", "True").lower() in {"1", "true", "yes"}
+SECRET_KEY = os.getenv("SECRET_KEY") or get_random_secret_key()
+_debug_default = "False" if os.getenv("RAILWAY_ENVIRONMENT") else "True"
+DEBUG = os.getenv("DEBUG", _debug_default).lower() in {"1", "true", "yes"}
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [h.strip() for h in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if h.strip()]
 
@@ -71,8 +74,10 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/app/preflight/"
 LOGOUT_REDIRECT_URL = "/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-COAPPRAISER_LLM_PROVIDER = os.getenv("COAPPRAISER_LLM_PROVIDER", "mock")
-COAPPRAISER_LLM_MODEL = os.getenv("COAPPRAISER_LLM_MODEL", "mock-revision-response")
+COAPPRAISER_LLM_PROVIDER = os.getenv("COAPPRAISER_LLM_PROVIDER", "mock").strip().lower()
+COAPPRAISER_LLM_MODEL = os.getenv("COAPPRAISER_LLM_MODEL", "gpt-5.6").strip()
+COAPPRAISER_ALLOW_MOCK_AI = DEBUG or "test" in sys.argv
+COAPPRAISER_ALLOW_LOCAL_UPLOADS = DEBUG or "test" in sys.argv
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 # Accept the explicit private-key name used by Railway, while retaining the

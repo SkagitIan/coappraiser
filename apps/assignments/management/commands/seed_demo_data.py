@@ -42,7 +42,7 @@ class Command(BaseCommand):
         Subscription.objects.update_or_create(
             user=user,
             defaults={
-                "plan": "pro",
+                "plan": "preflight",
                 "status": "active",
                 "stripe_customer_id": "demo_customer_coappraiser",
                 "stripe_subscription_id": None,
