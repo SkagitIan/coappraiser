@@ -177,6 +177,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     c = canvas.Canvas(str(path), pagesize=letter, invariant=1)
     c.setTitle(f"Synthetic report - {scenario['identifier']}")
     c.setAuthor("CoAppraiser synthetic fixture generator")
+    comp_3_condition = "C3" if scenario["condition_pdf"] == "C4" else "C4"
 
     _page_header(c, scenario, "Subject", 1)
     c.setFillColor(colors.HexColor("#0F172A"))
@@ -217,7 +218,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     rows = [
         ["Identifier", scenario["identifier"], "SYN-COMP-01", "SYN-COMP-02", "SYN-COMP-03"],
         ["Sale status", "Subject", "Closed", "Closed", "Closed"],
-        ["Condition", scenario["condition_pdf"], "C3", "C3", "C4"],
+        ["Condition", scenario["condition_pdf"], "C3", "C3", comp_3_condition],
         ["Quality", scenario["quality_pdf"], "Q3", "Q3", "Q3"],
         ["GLA", scenario["gla_pdf"], "2,080", "2,225", "1,990"],
     ]
