@@ -463,7 +463,13 @@ def build_workfile_record(review):
             "decided_by": f.decision.decided_by.get_username(),
             "decided_at": f.decision.decided_at.isoformat(),
         } for f in findings],
-        "ai_executions": [{"provider": item.provider, "model": item.model_name, "status": item.status, "prompt_version": item.prompt_version} for item in ai_executions],
+        "ai_executions": [{
+            "provider": item.provider,
+            "model": item.model_name,
+            "status": item.status,
+            "prompt_version": item.prompt_version,
+            "response_metadata": item.parsed_response.get("_response_metadata", {}),
+        } for item in ai_executions],
         "limitations": "CoAppraiser Preflight performed an automated review using the files provided and rules available at the time. It does not determine value, recommend final adjustments, declare USPAP compliance, or guarantee lender, AMC, or GSE acceptance. The appraiser remains responsible for all analysis, reporting, and final conclusions.",
         "file_hashes": [{"name": f.original_name, "sha256": f.sha256} for f in latest.files.all()] if latest else [],
     }

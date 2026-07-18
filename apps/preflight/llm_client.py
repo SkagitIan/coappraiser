@@ -7,6 +7,12 @@ class LLMConfigurationError(RuntimeError):
     pass
 
 
+class LLMResult(dict):
+    def __init__(self, value, *, response_metadata=None):
+        super().__init__(value)
+        self.response_metadata = response_metadata or {}
+
+
 def validate_output(result, required_keys=None):
     if not isinstance(result, dict):
         raise ValueError("The AI provider returned an invalid structured response.")
@@ -82,7 +88,20 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None,
             else settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS
         ),
     )
-    return validate_output(json.loads(response.output_text), required_keys or [])
+    usage = getattr(response, "usage", None)
+    if hasattr(usage, "model_dump"):
+        usage = usage.model_dump()
+    elif usage is not None and not isinstance(usage, (dict, list, str, int, float, bool)):
+        usage = vars(usage)
+    result = validate_output(json.loads(response.output_text), required_keys or [])
+    return LLMResult(
+        result,
+        response_metadata={
+            "response_id": getattr(response, "id", ""),
+            "model": getattr(response, "model", settings.COAPPRAISER_LLM_MODEL),
+            "usage": usage or {},
+        },
+    )
 
 
 def _responses_text_format(schema_name):

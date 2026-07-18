@@ -3,6 +3,7 @@ import json
 import logging
 import mimetypes
 import re
+import time
 from django.conf import settings
 from django.utils import timezone
 from .llm_client import run_llm_json
@@ -261,6 +262,7 @@ def run_preflight_ai_review(version):
         "instruction": "Only these attached files may support visual observations.",
     }
     execution = AIExecution.objects.create(version=version, operation="preflight_consistency_review", provider=settings.COAPPRAISER_LLM_PROVIDER, model_name=settings.COAPPRAISER_LLM_MODEL, system_prompt=SYSTEM_PROMPT, input_snapshot=context, status="running")
+    started_at = time.perf_counter()
     try:
         result = run_llm_json(
             system_prompt=SYSTEM_PROMPT,
@@ -269,7 +271,11 @@ def run_preflight_ai_review(version):
             required_keys=["summary", "findings", "missing_information"],
             multimodal_inputs=multimodal_inputs,
         )
-        execution.raw_response = json.dumps(result, ensure_ascii=False)
+        response_metadata = dict(getattr(result, "response_metadata", {}) or {})
+        response_metadata["duration_ms"] = round((time.perf_counter() - started_at) * 1000)
+        stored_result = dict(result)
+        stored_result["_response_metadata"] = response_metadata
+        execution.raw_response = json.dumps(stored_result, ensure_ascii=False)
         deterministic_topics = {
             _finding_topic(finding.title, finding.observed, finding.evidence)
             for finding in version.findings.filter(basis="deterministic")
@@ -381,7 +387,7 @@ def run_preflight_ai_review(version):
                 visual_sources=verified_visual_sources,
             )
             FindingDecision.objects.create(finding=finding, decided_by=version.review.user)
-        execution.parsed_response = dict(result)
+        execution.parsed_response = stored_result
         execution.parsed_response["suppressed_findings"] = suppressed_findings
         execution.status = "completed"
         execution.completed_at = timezone.now()
@@ -390,6 +396,11 @@ def run_preflight_ai_review(version):
         logger.exception("Preflight AI review failed for version %s", version.pk)
         execution.status = "failed"
         execution.error_message = str(exc)[:2000]
+        execution.parsed_response = {
+            "_response_metadata": {
+                "duration_ms": round((time.perf_counter() - started_at) * 1000),
+            }
+        }
         execution.completed_at = timezone.now()
-        execution.save(update_fields=["status", "error_message", "completed_at"])
+        execution.save(update_fields=["status", "error_message", "parsed_response", "completed_at"])
     return execution

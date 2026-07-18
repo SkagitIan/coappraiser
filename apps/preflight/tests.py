@@ -11,6 +11,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from .llm_client import LLMConfigurationError, run_llm_json
 from .ai_review import run_preflight_ai_review
+from .evaluation import score_gpt_findings
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import (
     build_workfile_record,
@@ -160,6 +161,32 @@ class PreflightTests(TestCase):
         differences = compare_cross_source_observations(observations)
         self.assertEqual([item["rule_code"] for item in differences], ["CROSS_SOURCE_SUBJECT_CONDITION"])
         self.assertEqual(differences[0]["pdf_location"], "PDF: report.pdf, page 2")
+
+    def test_gpt_evaluation_scores_topics_citations_and_boundaries(self):
+        case = {
+            "required_topics": ["property_defect"],
+            "allowed_topics": ["property_defect"],
+            "max_findings": 1,
+        }
+        finding = {
+            "rule_code": "AI_VISUAL_DEFECT",
+            "title": "Exterior defect needs reconciliation",
+            "observed": "A visible exterior defect may not align with the report.",
+            "location": "rear_exterior.jpg",
+            "evidence": ["rear_exterior.jpg shows a visibly unfinished wall section."],
+            "why_it_matters": "The report and exhibit should tell the same story.",
+            "recommended_action": "Confirm the exhibit and reconcile the report commentary.",
+            "guidance": ["Appraiser judgment is required."],
+        }
+        score = score_gpt_findings([finding], case)
+        self.assertTrue(score["passed"])
+        self.assertEqual(score["topic_precision"], 1.0)
+        self.assertEqual(score["topic_recall"], 1.0)
+
+        prohibited = {**finding, "recommended_action": "Apply a $10,000 adjustment."}
+        failed_score = score_gpt_findings([prohibited], case)
+        self.assertFalse(failed_score["passed"])
+        self.assertTrue(failed_score["boundary_failures"])
 
     def test_eval_importer_builds_local_manifest_and_pairs_pdf_with_xml(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -607,9 +634,18 @@ class PreflightTests(TestCase):
         payload = {"summary": "Reviewed", "findings": [], "missing_information": []}
         with patch("openai.OpenAI") as openai_client:
             create = openai_client.return_value.responses.create
-            create.return_value = SimpleNamespace(output_text=json.dumps(payload))
+            create.return_value = SimpleNamespace(
+                output_text=json.dumps(payload),
+                id="resp_test",
+                model="gpt-5.6",
+                usage=SimpleNamespace(
+                    model_dump=lambda: {"input_tokens": 120, "output_tokens": 30, "total_tokens": 150}
+                ),
+            )
             result = run_llm_json(system_prompt="Return JSON", user_prompt="Evidence", schema_name="preflight_review", required_keys=payload.keys())
         self.assertEqual(result, payload)
+        self.assertEqual(result.response_metadata["response_id"], "resp_test")
+        self.assertEqual(result.response_metadata["usage"]["total_tokens"], 150)
         request = create.call_args.kwargs
         self.assertEqual(request["model"], "gpt-5.6")
         self.assertEqual(request["reasoning"], {"effort": "xhigh"})

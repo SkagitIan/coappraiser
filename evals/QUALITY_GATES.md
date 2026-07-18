@@ -73,8 +73,7 @@ Machine-readable reports are written to `.eval-data/reports/`.
 
 ## Next gates
 
-- controlled narrative-support cases;
+- execute the live GPT-5.6 runner for at least three repetitions per case;
+- establish reviewed pass-rate, latency, and token thresholds from those runs;
 - controlled photo-to-report cases with reviewed expected labels;
-- GPT-5.6 precision and evidence-citation scoring over repeated runs;
-- latency and cost distributions;
 - operational recovery tests for timeouts and provider failures.

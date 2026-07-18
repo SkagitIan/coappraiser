@@ -43,6 +43,19 @@ mutations to a local copy of the official SF5 XML while retaining its paired PDF
 Each case must return exactly the expected cross-source rule; the clean case must
 return none. Only the mutation recipes and expected rules are committed.
 
+## Live GPT-5.6 evaluation
+
+With the production model variables and a deliberate paid-call confirmation:
+
+```powershell
+python manage.py evaluate_gpt56 --repeat 3 --confirm-paid-api --strict
+```
+
+The runner never falls back to mock AI. It scores required and unexpected
+finding topics, source citations, appraiser-judgment language, professional
+boundary violations, latency, and token usage. It uses temporary users and media
+and removes them after each run. Reports remain under `.eval-data/reports/`.
+
 ## Why the archive is not in Git
 
 The samples are published for UAD implementation work, but CoAppraiser does not
