@@ -3,23 +3,25 @@
 {% block content %}
 <section class="demo-entry">
   <div class="demo-entry-copy">
-    <span class="demo-kicker">Residential appraisal evidence review</span>
-    <h1>Review the package.<br><em>Not just the fields.</em></h1>
-    <p class="demo-entry-lede">CoAppraiser checks whether the XML, rendered report, commentary, and exhibits in a completed appraisal package tell one consistent story—before the report leaves the appraiser’s desk.</p>
-    <div class="demo-comparison" aria-label="How CoAppraiser differs from field validation">
-      <div><span>Traditional validation</span><strong>Are the fields complete?</strong></div>
-      <div><span>CoAppraiser Preflight</span><strong>Does the evidence agree?</strong></div>
+    <div class="demo-build-week-label"><span class="demo-live-dot"></span> LIVE BUILD WEEK DEMO <b>·</b> 90 seconds</div>
+    <span class="demo-kicker">GPT-5.6 appraisal evidence review</span>
+    <h1>Find the contradiction <em>before delivery.</em></h1>
+    <p class="demo-entry-lede">A residential appraisal package can pass field validation and still tell two different stories. CoAppraiser compares the XML, report narrative, and exhibits, then leaves the decision with the appraiser.</p>
+    <div class="demo-proof-row" aria-label="Demo promise">
+      <span><strong>01</strong> Drop a synthetic package</span>
+      <span><strong>02</strong> Trace the evidence</span>
+      <span><strong>03</strong> Preserve the decision</span>
     </div>
   </div>
 
   <article class="demo-intake-workbench" aria-labelledby="package-title">
     <div class="demo-workbench-bar">
-      <div><span class="demo-live-dot"></span><strong>Preflight intake</strong></div>
-      <small>New review · Not yet started</small>
+      <div><span class="demo-live-dot"></span><strong>Step 1 · Load the evidence</strong></div>
+      <small>Live demo · No sign-up required</small>
     </div>
     <div class="demo-intake-grid">
       <div class="demo-package-tray">
-        <span class="demo-field-label">Package received</span>
+        <span class="demo-field-label">Featured demo package</span>
         <button
           class="demo-draggable-package"
           type="button"
@@ -30,15 +32,15 @@
         >
           <span class="demo-package-mark">ZIP</span>
           <span>
-            <strong id="package-title">Residential_Report_Package.zip</strong>
-            <small>6 files · 3.8 MB · Synthetic</small>
+            <strong id="package-title">Package 002 · Reconcile</strong>
+            <small>6 files · Synthetic · Deliberate conflicts</small>
           </span>
           <span class="demo-grip" aria-hidden="true">⠿</span>
         </button>
-        <p id="package-instruction">Drag this completed appraisal package into Preflight. On a phone or keyboard, tap the package instead.</p>
+        <p id="package-instruction">Drag this package into the intake area. On a phone or keyboard, tap it to continue.</p>
         <dl class="demo-package-meta">
-          <div><dt>Assignment</dt><dd>{{ featured_scenario.subject_identifier }}</dd></div>
-          <div><dt>Contents</dt><dd>XML, PDF, 3 exhibits, README</dd></div>
+          <div><dt>Scenario</dt><dd>Condition, quality, and comp commentary</dd></div>
+          <div><dt>Evidence</dt><dd>XML, PDF, 3 exhibits, README</dd></div>
         </dl>
       </div>
 
@@ -48,8 +50,8 @@
         <div class="demo-dropzone" data-demo-dropzone role="button" tabindex="0" aria-label="Add the synthetic appraisal package to Preflight">
           <div class="demo-drop-idle" data-drop-idle>
             <span class="demo-drop-icon" aria-hidden="true">↓</span>
-            <strong>Drop appraisal package here</strong>
-            <p>ZIP containing XML, PDF, images, and supporting files</p>
+            <strong>Drop package to start the demo</strong>
+            <p>We’ll open the ZIP, trace the sources, and run GPT-5.6.</p>
           </div>
           <div class="demo-drop-ready" data-drop-ready hidden>
             <span class="demo-ready-check" aria-hidden="true">✓</span>
@@ -62,11 +64,11 @@
             </div>
           </div>
         </div>
-        <div class="demo-intake-message" aria-live="polite" data-intake-message>Waiting for an appraisal package.</div>
+        <div class="demo-intake-message" aria-live="polite" data-intake-message>Start here: move the package into the intake area.</div>
         <button class="app-button primary demo-primary-run" type="submit" data-run-button disabled>
-          Run Preflight <span aria-hidden="true">→</span>
+          Start the evidence review <span aria-hidden="true">→</span>
         </button>
-        <p class="demo-run-note">{% if uses_live_gpt %}Runs a real GPT-5.6 review{% else %}Uses mock AI locally; production runs GPT-5.6{% endif %} · No account or payment required</p>
+        <p class="demo-run-note">{% if uses_live_gpt %}Real GPT-5.6 review{% else %}Local mock mode{% endif %} · Your session is isolated</p>
       </form>
     </div>
   </article>
@@ -79,10 +81,17 @@
   <span><b>04</b> Appraiser judgment is required</span>
 </div>
 
+<section class="demo-judge-promise" aria-label="What the judge will see">
+  <div><span class="demo-kicker">What this demo proves</span><strong>From a ZIP file to a defensible review record.</strong></div>
+  <div><b>Find</b><span>Surface a contradiction</span></div>
+  <div><b>Trace</b><span>Show the exact source</span></div>
+  <div><b>Decide</b><span>Save the appraiser’s judgment</span></div>
+</section>
+
 <section class="demo-journey" aria-labelledby="journey-title">
   <div class="demo-journey-heading">
-    <span class="demo-kicker">One continuous workfile workflow</span>
-    <h2 id="journey-title">From package intake to an auditable decision record.</h2>
+    <span class="demo-kicker">The judge path</span>
+    <h2 id="journey-title">Watch evidence become a decision.</h2>
   </div>
   <ol class="demo-journey-steps">
     <li><span>1</span><div><strong>Open the package</strong><p>Validate the ZIP and inventory its XML, PDF, and exhibits.</p></div></li>
@@ -94,23 +103,23 @@
 
 <section class="demo-secondary-cases" aria-labelledby="other-package-title">
   <div>
-    <span class="demo-kicker">Additional package states</span>
-    <h2 id="other-package-title">Test the same workflow against a different package.</h2>
-    <p>These are secondary fixtures for repeat testing—not separate product modes.</p>
+    <span class="demo-kicker">Try another outcome</span>
+    <h2 id="other-package-title">Same workflow. Different evidence.</h2>
+    <p>Use the alternate synthetic packages to see how the review changes when evidence aligns or a core export is missing.</p>
   </div>
   <div class="demo-package-options">
     {% for scenario in alternate_scenarios %}
       <article>
         <div class="demo-option-state scenario-{{ scenario.tone }}"></div>
         <div>
-          <span>Synthetic test package</span>
+          <span>OUTCOME · {% if scenario.tone == 'ready' %}ALIGNED{% else %}MISSING EXPORT{% endif %}</span>
           <h3>{{ scenario.title }}</h3>
           <p>{{ scenario.description }}</p>
         </div>
         <form method="post" action="{% url 'preflight_demo:start' scenario.slug %}">
           {% csrf_token %}
           <input type="hidden" name="launch_token" value="{{ launch_token }}">
-          <button class="app-button secondary" type="submit" {% if not scenario.available %}disabled{% endif %}>Run package</button>
+          <button class="app-button secondary" type="submit" {% if not scenario.available %}disabled{% endif %}>See outcome <span aria-hidden="true">→</span></button>
         </form>
       </article>
     {% endfor %}
@@ -119,7 +128,7 @@
 
 <section class="demo-final-cta">
   <div>
-    <span>Professional boundary</span>
+          <span>Human-in-the-loop by design</span>
     <strong>CoAppraiser identifies the evidence. The appraiser determines what it means.</strong>
     <p>Preflight does not determine value, recommend final adjustments, declare USPAP compliance, or guarantee lender, AMC, or GSE acceptance.</p>
   </div>
