@@ -14,12 +14,15 @@ SYSTEM_PROMPT = """You are CoAppraiser Preflight's focused consistency reviewer.
 
 The input includes a file inventory, extracted observations and PDF excerpts, plus deterministic findings already shown to the appraiser. Do not repeat or substantially restate a deterministic finding. Add only distinct, evidence-grounded interpretive findings. A file inventory proves presence only: do not claim a file or exhibit is missing when it is listed, and do not claim to have inspected image contents because image text is not supplied.
 
+When review_context.synthetic_demo is true, synthetic-data notices, demonstration labels, placeholder identities, omitted signatures, and language explaining that the package is not a real appraisal are intentional safeguards. Do not report them or synthetic placeholder phrasing as findings. Review only the deliberate evidence relationships within the fixture.
+
 Return structured JSON with summary, no more than four distinct findings, and missing_information. Every finding must include a concise title, category, severity, observed issue, exact supplied source location when available, supporting evidence, why the issue matters, a recommended review action, and guidance that explicitly says appraiser judgment is required.
 
 Use critical only for a package-level omission that prevents a core review or an explicitly supplied urgent material issue. Use warning for a supported inconsistency that likely needs review before delivery. Use advisory for clarity, cleanup, or limited support. Do not escalate an issue already classified by a deterministic check. Describe possible inconsistencies for review; never direct a substantive appraisal conclusion. Label uncertainty clearly, cite only supplied evidence, and phrase assignment-specific requirements as items for the appraiser to verify."""
 
 
 def _review_context(version):
+    synthetic_demo = version.review.user.username.startswith("__coappraiser_demo__")
     observations = [{"field": o.field_code, "value": o.value, "source": o.source_kind, "location": o.source_location} for o in version.observations.all()]
     excerpts = [{"file": f.original_name, "kind": f.kind, "text": (f.extracted_text or "")[:4000]} for f in version.files.filter(kind="pdf")]
     files = [{"file": f.original_name, "kind": f.kind} for f in version.files.all()]
@@ -35,6 +38,10 @@ def _review_context(version):
         for finding in version.findings.filter(basis="deterministic")
     ]
     return {
+        "review_context": {
+            "synthetic_demo": synthetic_demo,
+            "note": "Synthetic notices and placeholder identities are expected safeguards, not review findings." if synthetic_demo else "",
+        },
         "file_inventory": files,
         "observations": observations,
         "pdf_excerpts": excerpts,
@@ -85,6 +92,18 @@ def run_preflight_ai_review(version):
                 item.get("recommended_action"),
                 item.get("evidence"),
             )
+            item_text = json.dumps(item, ensure_ascii=False).lower()
+            if context["review_context"]["synthetic_demo"] and any(
+                term in item_text for term in ("synthetic", "demonstration fixture", "demo fixture")
+            ):
+                suppressed_findings.append(
+                    {
+                        "title": str(item.get("title"))[:200],
+                        "topic": "demo_metadata",
+                        "reason": "Synthetic fixture safeguards are expected in demo mode.",
+                    }
+                )
+                continue
             if topic and topic in deterministic_topics:
                 suppressed_findings.append(
                     {

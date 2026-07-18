@@ -70,6 +70,8 @@ class PreflightTests(TestCase):
         self.assertEqual(version.ai_executions.get().status, "failed")
 
     def test_ai_context_and_duplicate_suppression_keep_novel_finding(self):
+        self.user.username = "__coappraiser_demo__evidence"
+        self.user.save(update_fields=["username"])
         review = PreflightReview.objects.create(user=self.user, title="AI evidence context")
         version = review.versions.create(number=1, status="uploaded")
         ReviewFile.objects.create(version=version, original_name="report.pdf", kind="pdf", sha256="pdf", extracted_text="Condition: C3")
@@ -112,17 +114,34 @@ class PreflightTests(TestCase):
                     "recommended_action": "Review the report treatment and available exhibit.",
                     "guidance": ["Appraiser judgment is required."],
                 },
+                {
+                    "rule_code": "AI_DEMO_NOTICE",
+                    "title": "Package is explicitly a demonstration fixture",
+                    "category": "fix_before_delivery",
+                    "severity": "critical",
+                    "observed": "The report contains synthetic data notices.",
+                    "location": "report.pdf",
+                    "evidence": ["Synthetic demonstration fixture."],
+                    "why_it_matters": "This is not a live assignment.",
+                    "recommended_action": "Replace the demonstration package.",
+                    "guidance": ["Appraiser judgment is required."],
+                },
             ],
             "missing_information": [],
         }
         with patch("apps.preflight.ai_review.run_llm_json", return_value=response) as mocked_llm:
             execution = run_preflight_ai_review(version)
         context = json.loads(mocked_llm.call_args.kwargs["user_prompt"])
+        self.assertTrue(context["review_context"]["synthetic_demo"])
         self.assertIn({"file": "condition_exhibit.jpg", "kind": "image"}, context["file_inventory"])
         self.assertEqual(context["deterministic_findings"][0]["rule_code"], "CROSS_SOURCE_SUBJECT_CONDITION")
         self.assertFalse(review.findings.filter(rule_code="AI_CONDITION").exists())
+        self.assertFalse(review.findings.filter(rule_code="AI_DEMO_NOTICE").exists())
         self.assertTrue(review.findings.filter(rule_code="AI_ROOF").exists())
-        self.assertEqual(execution.parsed_response["suppressed_findings"][0]["topic"], "condition")
+        self.assertEqual(
+            {item["topic"] for item in execution.parsed_response["suppressed_findings"]},
+            {"condition", "demo_metadata"},
+        )
 
     def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
         review = PreflightReview.objects.create(user=self.user, title="Conflict package")
