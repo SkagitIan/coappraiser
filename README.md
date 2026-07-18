@@ -186,3 +186,7 @@ failures, fixes, and locked release protocol, and
 > "Traditional validation checks whether appraisal fields are populated and correctly formatted. CoAppraiser asks whether the entire package tells one consistent story. These three controlled packages show the same fictional subject with aligned, conflicting, or incomplete report evidence. GPT-5.6 reads the rendered report and selected residential photos while deterministic rules reconcile exact XML and PDF fields. Each finding shows what was observed, its source and supporting evidence, why it matters, and what the appraiser should review. The appraiser records the decision, and CoAppraiser preserves it in an auditable workfile record."
 
 For Devpost, record this as a public YouTube video under three minutes. The audio must explain what was built, how Codex was used, and how GPT-5.6 was used.
+
+## License
+
+CoAppraiser is source-available for non-commercial evaluation, testing, educational review, and hackathon judging. Commercial use, redistribution, and modified publication require prior written permission. See [`LICENSE`](LICENSE).

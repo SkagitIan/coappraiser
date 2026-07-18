@@ -57,7 +57,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 
 - [ ] README production variables and demo path match the deployed configuration.
 - [ ] README contains product problem, GPT-5.6 rationale, Codex use, architecture, boundaries, setup, tests, limitations, and demo script.
-- [ ] Repository is public with relevant licensing, or the private repository is shared with `testing@devpost.com` and `build-week-event@openai.com`.
+- [ ] Repository is public with the root `LICENSE` permitting non-commercial judging and testing, or the private repository is shared with `testing@devpost.com` and `build-week-event@openai.com`.
 - [ ] Default branch contains the deployed commit, fixture, checklist, migrations, and passing tests.
 - [ ] README clearly distinguishes the pre-Build Week baseline from meaningful work completed after July 13, with commit and Codex-session evidence.
 - [ ] No conflicting pricing, legacy flagship messaging, broken links, or committed secrets remain in the submission surface.
