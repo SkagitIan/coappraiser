@@ -22,7 +22,7 @@ The first run in a browser session creates a Django user whose username starts w
 
 The demo does not authenticate that generated owner into normal customer routes. Custom uploads therefore continue to require login and normal billing behavior. Stored files are returned only through session-checked Django views; R2 object URLs are not exposed directly.
 
-Demo users expire after `COAPPRAISER_DEMO_RETENTION_HOURS` (default `24`). Visiting the landing page prunes a small expired batch. Production should also run this command at least daily:
+Demo users become eligible for deletion after `COAPPRAISER_DEMO_RETENTION_HOURS` (default `24`). Every visit to the demo landing page automatically prunes a small expired batch. Operators can also remove a larger batch on demand:
 
 ```text
 python manage.py cleanup_demo_reviews
