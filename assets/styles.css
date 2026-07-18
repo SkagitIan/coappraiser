@@ -981,8 +981,15 @@
 .demo-judge-promise span { margin-top:6px; color:#76839a; font-size:.67rem; line-height:1.3; }
 .demo-assurance-bar { margin-top:14px; box-shadow:none; }
 .demo-assurance-bar span { padding:12px 15px; font-size:.65rem; }
-.demo-journey { margin-top:66px; padding:46px 50px; }
-.demo-journey-heading h2 { font-size:2.55rem; }
+.demo-journey { display:block; margin-top:66px; padding:42px 46px; }
+.demo-journey-heading { min-width:0; }
+.demo-journey-heading h2 { max-width:680px; font-size:2.35rem; }
+.demo-journey-heading p { margin:10px 0 0; color:#aab4c7; font-size:.78rem; }
+.demo-journey-steps { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:28px; }
+.demo-journey-steps li { display:block; min-width:0; min-height:128px; padding:17px; border:1px solid #34435e; border-radius:12px; background:rgba(255,255,255,.035); }
+.demo-journey-steps li > span { margin-bottom:18px; }
+.demo-journey-steps strong { display:block; font-size:.82rem; }
+.demo-journey-steps p { max-width:190px; font-size:.7rem; }
 .demo-secondary-cases { margin-top:68px; }
 .demo-secondary-cases h2 { font-size:2.15rem; }
 .demo-package-options article { padding:22px; }
@@ -992,18 +999,14 @@
 @media (max-width:960px) {
   .demo-entry { grid-template-columns:1fr; gap:28px; }
   .demo-entry-copy { padding-top:0; }
-  .demo-judge-promise { grid-template-columns:1fr 1fr; }
-  .demo-judge-promise > div:nth-child(2) { border-bottom:1px solid #e7ebf1; }
-  .demo-judge-promise > div:nth-child(3) { border-right:0; border-bottom:1px solid #e7ebf1; }
+  .demo-journey-steps { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media (max-width:680px) {
   .demo-build-week-label { font-size:.58rem; }
   .demo-entry-copy h1 { font-size:3.25rem; }
   .demo-entry-lede { font-size:.94rem; }
   .demo-proof-row { display:grid; grid-template-columns:1fr; gap:9px; }
-  .demo-judge-promise { grid-template-columns:1fr 1fr; }
-  .demo-judge-promise > div { min-height:78px; padding:15px; }
-  .demo-judge-promise > div:first-child { grid-column:1/-1; border-right:0; }
-  .demo-judge-promise > div:nth-child(2) { border-bottom:0; }
-  .demo-judge-promise > div:nth-child(3) { border-right:0; border-bottom:0; }
+  .demo-journey { padding:32px 22px; }
+  .demo-journey-heading h2 { font-size:1.9rem; }
+  .demo-journey-steps { grid-template-columns:1fr; }
 }
