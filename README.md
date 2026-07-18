@@ -45,7 +45,7 @@ Codex was the repository-level engineering agent used to turn an existing Django
 - inspected the upload-to-workfile path before changing it;
 - implemented and tested the GPT-5.6 Responses API, visual-input, reasoning-effort, and Structured Output path;
 - hardened production configuration so a failed or missing model request preserves the uploaded package and never silently substitutes mock output;
-- created the synthetic demo packages and predictable deterministic findings;
+- created the controlled same-subject demo packages, sanitized photo set, and predictable deterministic findings;
 - iterated on the server-rendered interface using screenshots and end-to-end workflow feedback;
 - audited secrets, storage defaults, stale product paths, migrations, static assets, and deployment configuration; and
 - repeatedly ran the Django checks, full test suite, fresh-database migration, and GitHub Actions workflow.
@@ -120,14 +120,14 @@ Set `COAPPRAISER_BILLING_MODE` and the Stripe variables only if billing is enabl
 ## Exact Build Week demo
 
 1. Open `/demo/` in a fresh private browser. No account or payment information is required.
-2. Drag the provided synthetic appraisal ZIP into the Preflight intake area (or tap it on mobile/keyboard).
+2. Drag the featured controlled appraisal ZIP into the Preflight intake area (or tap it on mobile/keyboard).
 3. Confirm the package validation message and choose **Run Preflight**.
 4. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 multimodal review.
 5. Compare the prioritized rule-based and GPT-5.6 sections, then inspect the exact report/photo sources, confidence, and **Extracted evidence**.
 6. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save it.
 7. Open **View workfile record**, inspect model and evidence metadata, then download the JSON record.
 
-All three packages are entirely synthetic. Their expected findings and the anonymous isolation design are documented in [`docs/build_week_demo.md`](docs/build_week_demo.md).
+All assignment facts, identities, locations, comparables, report statements, and conclusions in the three packages are synthetic. The five owner-supplied residential reference photos were selected to exclude addresses, signs, vehicles, people, and personal portraits, then re-encoded without EXIF metadata. Their expected findings and anonymous isolation design are documented in [`docs/build_week_demo.md`](docs/build_week_demo.md).
 
 ## Tests
 
@@ -148,9 +148,10 @@ The Preflight suite also covers public demo access, replay prevention, anonymous
 - Reviews run synchronously and are intended for modest package sizes; the public demo presents truthful stages rather than a fabricated percentage.
 - Production requires private R2 storage and operational privacy/retention controls.
 - GPT findings can vary; low-confidence items are suppressed and the demo's core findings remain deterministic so the video is repeatable.
+- The controlled photos are real owner-supplied residential reference images, not evidence from an appraisal assignment; demo report data must not be treated as describing an actual property.
 
 ## Short demo script
 
-> "Traditional validation checks whether appraisal fields are populated and correctly formatted. CoAppraiser asks whether the entire package tells one consistent story. From this public page I can run a fully synthetic package through the real intake, deterministic checks, and GPT-5.6 evidence review. Each finding shows what was observed, its source and supporting evidence, why the relationship matters, and what the appraiser should review. The appraiser records the decision, and CoAppraiser preserves it in an auditable workfile record."
+> "Traditional validation checks whether appraisal fields are populated and correctly formatted. CoAppraiser asks whether the entire package tells one consistent story. These three controlled packages show the same fictional subject with aligned, conflicting, or incomplete report evidence. GPT-5.6 reads the rendered report and selected residential photos while deterministic rules reconcile exact XML and PDF fields. Each finding shows what was observed, its source and supporting evidence, why it matters, and what the appraiser should review. The appraiser records the decision, and CoAppraiser preserves it in an auditable workfile record."
 
 For Devpost, record this as a public YouTube video under three minutes. The audio must explain what was built, how Codex was used, and how GPT-5.6 was used.

@@ -33,7 +33,8 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 ## Sanitized demo package
 
 - [ ] `demo/README.md` expected findings match the current rules.
-- [ ] XML, PDF, images, filenames, and metadata contain only synthetic information.
+- [ ] XML, PDF, filenames, assignment facts, and conclusions are synthetic; the five owner-supplied reference photos are the approved sanitized set.
+- [ ] Approved photos contain no visible address, sign, vehicle, person, or personal portrait and have zero EXIF entries.
 - [ ] No borrower, client, lender, appraiser, real address, signature, credential, or confidential assignment data is present.
 - [ ] The ZIP hash and final repository copy match the scenario package used in the video.
 
@@ -65,8 +66,8 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 
 - [ ] Browser zoom, desktop resolution, and font size make evidence and notes readable.
 - [ ] Notifications, password managers, bookmarks, API keys, Railway variables, and personal tabs are hidden.
-- [ ] Start at `/demo/`, drag the synthetic ZIP into Preflight, and show the package-validation message before starting the review.
-- [ ] Show the controlled condition exhibit and its exact filename on a GPT-5.6 visual finding; do not promise identical wording on every run.
+- [ ] Start at `/demo/`, drag the controlled same-subject ZIP into Preflight, and show the package-validation message before starting the review.
+- [ ] Show `rear_deck_exterior.jpg` or `rear_exterior_condition.jpg` and its exact filename on a GPT-5.6 visual finding; do not promise identical wording on every run.
 - [ ] Show the sanitized ZIP, prioritized deterministic and GPT sections, source evidence, three decision states, a decision note, and workfile download.
 - [ ] State the professional boundaries aloud: no value conclusion, final adjustment, USPAP declaration, or acceptance guarantee.
 - [ ] Audio explains what was built, how Codex was used, and how GPT-5.6 was used.

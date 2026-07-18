@@ -1,13 +1,14 @@
-"""Build the three synthetic CoAppraiser Preflight demonstration packages."""
+"""Build three controlled same-subject CoAppraiser demonstration packages."""
 
 from __future__ import annotations
 
 import shutil
+import textwrap
 import zipfile
 from pathlib import Path
 
 import reportlab
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
@@ -17,6 +18,7 @@ from reportlab.pdfgen import canvas
 
 DEMO_DIR = Path(__file__).resolve().parent
 SCENARIO_DIR = DEMO_DIR / "scenarios"
+PHOTO_SOURCE_DIR = DEMO_DIR / "photo_sources"
 FIXED_ZIP_TIME = (2026, 7, 17, 12, 0, 0)
 REPORTLAB_FONT_DIR = Path(reportlab.__file__).resolve().parent / "fonts"
 PDF_FONT = "DemoSans"
@@ -24,15 +26,23 @@ PDF_FONT_BOLD = "DemoSansBold"
 pdfmetrics.registerFont(TTFont(PDF_FONT, REPORTLAB_FONT_DIR / "Vera.ttf"))
 pdfmetrics.registerFont(TTFont(PDF_FONT_BOLD, REPORTLAB_FONT_DIR / "VeraBd.ttf"))
 
+PHOTO_EXHIBITS = (
+    ("rear_exterior_condition.jpg", "Rear exterior and storage enclosure"),
+    ("rear_deck_exterior.jpg", "Rear exterior and covered deck"),
+    ("covered_deck_exterior.jpg", "Covered deck detail"),
+    ("kitchen_interior.jpg", "Kitchen interior"),
+    ("bathroom_interior.jpg", "Bathroom interior"),
+)
+
 SCENARIOS = [
     {
         "slug": "01_ready",
         "archive": "coappraiser-demo-01-ready.zip",
-        "identifier": "SYNTHETIC-READY-001",
-        "location": "101 Demonstration Way, Example, WA",
-        "condition_xml": "C3",
-        "condition_pdf": "C3",
-        "condition_narrative": "C3",
+        "identifier": "SYNTHETIC-SUBJECT-001",
+        "location": "Subject A, Fictional County, WA",
+        "condition_xml": "C4",
+        "condition_pdf": "C4",
+        "condition_narrative": "C4",
         "quality_xml": "Q3",
         "quality_pdf": "Q3",
         "quality_narrative": "Q3",
@@ -41,11 +51,18 @@ SCENARIOS = [
         "comp_count": "3",
         "commentary_count": "3",
         "defect": "",
-        "summary": "Complete package with aligned structured data, report commentary, and exhibits.",
+        "summary": "The same-subject package is complete and its report narrative accounts for the visible exhibits.",
+        "visual_narrative": [
+            "Rear photographs show a covered deck and an attached storage enclosure.",
+            "The storage enclosure is excluded from above-grade GLA.",
+            "Incomplete exterior cladding at the enclosure is disclosed for appraiser review.",
+            "No cause, repair scope, cost, or value effect is represented.",
+        ],
         "deliberate": [
             "No deliberate inconsistency is present.",
             "XML and PDF identifiers, GLA, and condition agree.",
             "Structured and narrative condition and quality agree.",
+            "The covered deck, storage enclosure, and incomplete cladding visible in the photos are disclosed in the addendum.",
             "All three comparables have commentary.",
         ],
         "expected": [
@@ -58,8 +75,8 @@ SCENARIOS = [
     {
         "slug": "02_reconcile",
         "archive": "coappraiser-demo-02-reconcile.zip",
-        "identifier": "SYNTHETIC-REVIEW-002",
-        "location": "202 Demonstration Way, Example, WA",
+        "identifier": "SYNTHETIC-SUBJECT-001",
+        "location": "Subject A, Fictional County, WA",
         "condition_xml": "C4",
         "condition_pdf": "C3",
         "condition_narrative": "C3",
@@ -70,21 +87,28 @@ SCENARIOS = [
         "gla_pdf": "2,180",
         "comp_count": "3",
         "commentary_count": "1",
-        "defect": "active roof leakage",
-        "summary": "Complete package containing intentional cross-source and commentary conflicts.",
+        "defect": "",
+        "summary": "The same-subject package contains intentional data, narrative, support, and photo conflicts.",
+        "visual_narrative": [
+            "The addendum states that no rear deck, covered patio, or accessory enclosure was observed.",
+            "The exterior is described as complete with no unfinished cladding noted.",
+            "These statements deliberately conflict with the supplied rear photographs.",
+            "No cause, repair scope, cost, or value effect is represented.",
+        ],
         "deliberate": [
             "XML condition C4 conflicts with PDF condition C3.",
             "Structured XML condition C4 conflicts with narrative condition C3.",
             "Structured XML quality Q3 conflicts with narrative quality Q4.",
             "Three comparables are identified, but only one has commentary.",
-            "The condition exhibit visibly shows synthetic ceiling staining for visual-to-narrative review.",
+            "The PDF says there is no rear deck or accessory enclosure, while the rear photos visibly show both.",
+            "The PDF describes complete exterior cladding, while a rear photo visibly shows an unfinished enclosure wall.",
         ],
         "expected": [
             "Warning to reconcile condition between XML and PDF.",
             "Warning to reconcile structured and narrative condition.",
             "Warning to reconcile structured and narrative quality.",
             "Warning to review incomplete comparable commentary.",
-            "A GPT-5.6 visual review prompt may connect visible ceiling staining with the C3/well-maintained report narrative.",
+            "A GPT-5.6 visual review prompt may identify the deck/enclosure and exterior-description conflicts using exact photo filenames.",
         ],
         "include_xml": True,
         "accent": "#D97706",
@@ -92,8 +116,8 @@ SCENARIOS = [
     {
         "slug": "03_incomplete",
         "archive": "coappraiser-demo-03-incomplete.zip",
-        "identifier": "SYNTHETIC-INCOMPLETE-003",
-        "location": "303 Demonstration Way, Example, WA",
+        "identifier": "SYNTHETIC-SUBJECT-001",
+        "location": "Subject A, Fictional County, WA",
         "condition_xml": "",
         "condition_pdf": "C4",
         "condition_narrative": "",
@@ -104,11 +128,17 @@ SCENARIOS = [
         "gla_pdf": "1,760",
         "comp_count": "3",
         "commentary_count": "3",
-        "defect": "water staining at rear bedroom ceiling",
-        "summary": "Rendered report and exhibits are present, but the structured XML export is missing.",
+        "defect": "",
+        "summary": "The same-subject rendered report and photos are present, but the structured XML export is missing.",
+        "visual_narrative": [
+            "Rear photographs show a covered deck and an attached storage enclosure.",
+            "The enclosure is excluded from the reported above-grade GLA.",
+            "The visible incomplete cladding is identified for appraiser review.",
+            "No cause, repair scope, cost, or value effect is represented.",
+        ],
         "deliberate": [
             "The structured XML report export is intentionally omitted.",
-            "The rendered PDF and three synthetic exhibits remain present.",
+            "The rendered PDF and five sanitized photo exhibits remain present.",
         ],
         "expected": [
             "One critical deterministic finding that no UAD XML was found.",
@@ -120,41 +150,13 @@ SCENARIOS = [
 ]
 
 
-def _font(size: int):
-    try:
-        return ImageFont.truetype("arial.ttf", size)
-    except OSError:
-        return ImageFont.load_default()
-
-
-def build_exhibit(path: Path, scenario: dict, label: str, variant: int) -> None:
-    image = Image.new("RGB", (1200, 800), "#DCEAF7")
-    draw = ImageDraw.Draw(image)
-    accent = scenario["accent"]
-    draw.rectangle((0, 560, 1200, 800), fill="#BED49B")
-    draw.rectangle((250, 285, 950, 650), fill="#F3EFE6", outline="#334155", width=8)
-    draw.polygon([(210, 310), (600, 80), (990, 310)], fill=accent, outline="#334155")
-    draw.rectangle((520, 430, 680, 650), fill="#8B5E3C", outline="#334155", width=6)
-    for x in (340, 760):
-        draw.rectangle((x, 390, x + 110, 500), fill="#BFE3F7", outline="#334155", width=5)
-    if variant == 2:
-        draw.ellipse((780, 150, 930, 250), fill="#F4B942", outline="#7C2D12", width=6)
-    if variant == 3:
-        if scenario["slug"] == "02_reconcile":
-            draw.rectangle((250, 285, 950, 650), fill="#F4F0E8", outline="#334155", width=8)
-            draw.polygon([(250, 285), (950, 285), (870, 455), (330, 455)], fill="#E7E0D4", outline="#64748B")
-            draw.ellipse((455, 320, 750, 440), fill="#A76B45", outline="#713F2B", width=7)
-            draw.ellipse((505, 345, 700, 415), fill="#7C4A33")
-            draw.text((390, 490), "SYNTHETIC CEILING STAINING", fill="#991B1B", font=_font(30))
-            draw.text((410, 535), "Visible condition cue for demo review", fill="#475569", font=_font(22))
-        else:
-            draw.rectangle((705, 510, 840, 550), fill="#7C3F2B", outline="#7F1D1D", width=6)
-    draw.rectangle((0, 0, 1200, 64), fill="#111827")
-    draw.text((28, 15), "SYNTHETIC EXHIBIT - NOT A REAL PROPERTY", fill="white", font=_font(28))
-    draw.rectangle((35, 690, 1165, 775), fill="white", outline="#334155", width=3)
-    draw.text((60, 705), f"{label} | {scenario['identifier']}", fill="#111827", font=_font(25))
-    draw.text((60, 742), "Generated solely for CoAppraiser demonstration and testing.", fill="#475569", font=_font(20))
-    image.save(path, "JPEG", quality=90, optimize=True)
+def build_exhibit(path: Path, source_name: str) -> None:
+    """Re-encode a sanitized owner-supplied reference photo without metadata."""
+    source = PHOTO_SOURCE_DIR / source_name
+    if not source.is_file():
+        raise FileNotFoundError(f"Missing sanitized demo photo source: {source}")
+    with Image.open(source) as image:
+        image.convert("RGB").save(path, "JPEG", quality=84, optimize=True, progressive=True)
 
 
 def _line(c: canvas.Canvas, label: str, value: str, y: float) -> float:
@@ -183,6 +185,11 @@ def _page_footer(c: canvas.Canvas) -> None:
     c.drawCentredString(306, 24, "DEMONSTRATION DATA ONLY - NOT AN APPRAISAL OR VALUE OPINION")
 
 
+def _wrapped(lines, width=82):
+    for line in lines:
+        yield from textwrap.wrap(line, width=width) or [""]
+
+
 def build_pdf(path: Path, scenario: dict) -> None:
     c = canvas.Canvas(str(path), pagesize=letter, invariant=1)
     c.setTitle(f"Synthetic report - {scenario['identifier']}")
@@ -202,7 +209,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     y = _line(c, "Quality:", scenario["quality_pdf"], y)
     y = _line(c, "Defect:", scenario["defect"] or "None reported in the synthetic scenario", y)
     c.setFillColor(colors.HexColor("#F8FAFC"))
-    c.roundRect(54, 390, 504, 120, 8, fill=1, stroke=0)
+    c.roundRect(54, 345, 504, 165, 8, fill=1, stroke=0)
     c.setFillColor(colors.HexColor("#111827"))
     c.setFont(PDF_FONT_BOLD, 11)
     c.drawString(72, 484, "Scenario narrative")
@@ -212,10 +219,12 @@ def build_pdf(path: Path, scenario: dict) -> None:
     for line in (
         scenario["summary"],
         f"The rendered report describes the subject as {scenario['condition_pdf']}.",
-        "All names, locations, facts, and exhibits in this file are synthetic.",
+        "All assignment data, identities, locations, and conclusions in this report are synthetic.",
+        "Sanitized owner-supplied photographs are used only as controlled visual evidence.",
         "No borrower, lender, client, appraiser, signature, or credential is represented.",
     ):
-        text.textLine(line)
+        for wrapped_line in _wrapped([line], 86):
+            text.textLine(wrapped_line)
     c.drawText(text)
     _page_footer(c)
     c.showPage()
@@ -224,7 +233,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     c.setFillColor(colors.HexColor("#0F172A"))
     c.setFont(PDF_FONT_BOLD, 18)
     c.drawString(54, 700, "Sales comparison overview")
-    headers = ["Item", "Subject", "Comparable 1", "Comparable 2", "Comparable 3"]
+    headers = ["Item", "Subject", "Comp 1", "Comp 2", "Comp 3"]
     rows = [
         ["Identifier", scenario["identifier"], "SYN-COMP-01", "SYN-COMP-02", "SYN-COMP-03"],
         ["Sale status", "Subject", "Closed", "Closed", "Closed"],
@@ -239,12 +248,16 @@ def build_pdf(path: Path, scenario: dict) -> None:
         c.drawString(x, 650, header)
     c.setStrokeColor(colors.HexColor("#CBD5E1"))
     c.line(54, 640, 558, 640)
+    for x in (140, 260, 370, 480, 558):
+        c.line(x, 490, x, 655)
     c.setFillColor(colors.HexColor("#111827"))
-    c.setFont(PDF_FONT, 7)
     row_y = 620
     for row in rows:
-        for x, value in zip(x_positions, row):
+        for column, (x, value) in enumerate(zip(x_positions, row)):
+            c.setFont(PDF_FONT, 5.8 if column else 7)
             c.drawString(x, row_y, str(value))
+        c.setStrokeColor(colors.HexColor("#E2E8F0"))
+        c.line(54, row_y - 10, 558, row_y - 10)
         row_y -= 28
     c.setFont(PDF_FONT_BOLD, 11)
     c.drawString(54, 450, "Comparable commentary")
@@ -275,24 +288,32 @@ def build_pdf(path: Path, scenario: dict) -> None:
     lines = [
         f"Rendered condition commentary: {scenario['condition_pdf']}.",
         f"Rendered quality commentary: {scenario['quality_pdf']}.",
-        f"Scenario identifier: {scenario['identifier']}.",
+        *scenario["visual_narrative"],
         "The appraiser must reconcile all source evidence and make every final decision.",
         "This synthetic report does not determine value, recommend an adjustment,",
         "declare USPAP compliance, or guarantee lender or GSE acceptance.",
     ]
     if scenario["defect"]:
         lines.insert(2, f"Observed scenario item: {scenario['defect']}. Review the related exhibit.")
-    for line in lines:
+    for line in _wrapped(lines):
         text.textLine(line)
     c.drawText(text)
+    c.setFont(PDF_FONT_BOLD, 11)
+    c.setFillColor(colors.HexColor("#0F172A"))
+    c.drawString(54, 420, "Photo register")
+    c.setFont(PDF_FONT, 9)
+    photo_y = 398
+    for filename, label in PHOTO_EXHIBITS:
+        c.drawString(72, photo_y, f"{filename} - {label}")
+        photo_y -= 17
     c.setFillColor(colors.HexColor("#FEF2F2"))
-    c.roundRect(54, 420, 504, 105, 8, fill=1, stroke=0)
+    c.roundRect(54, 250, 504, 82, 8, fill=1, stroke=0)
     c.setFillColor(colors.HexColor("#991B1B"))
-    c.setFont(PDF_FONT_BOLD, 12)
-    c.drawString(72, 495, "Professional boundary")
-    c.setFont(PDF_FONT, 10)
-    c.drawString(72, 470, "Appraiser judgment is required for every finding and report decision.")
-    c.drawString(72, 450, "This package is a controlled demonstration fixture, not assignment evidence.")
+    c.setFont(PDF_FONT_BOLD, 11)
+    c.drawString(72, 305, "Professional boundary")
+    c.setFont(PDF_FONT, 9)
+    c.drawString(72, 282, "Appraiser judgment is required for every finding and report decision.")
+    c.drawString(72, 264, "This controlled package is not assignment evidence.")
     _page_footer(c)
     c.save()
 
@@ -335,14 +356,19 @@ Identifier: {scenario['identifier']}
 Purpose: {scenario['summary']}
 XML status: {xml_status}
 
-SYNTHETIC DATA NOTICE
-This package contains no real appraisal, borrower, client, lender, appraiser,
-signature, credential, or property information. Appraiser judgment is required.
+CONTROLLED DATA NOTICE
+This is a synthetic appraisal package: every assignment fact, identifier, report
+statement, comparable, and conclusion is fictional. It contains no borrower,
+client, lender, appraiser, signature, credential, address, or value opinion.
+The residential photographs are owner-supplied reference images, selected to
+exclude visible addresses, signs, vehicles, people, and personal portraits, then
+re-encoded without EXIF metadata. They are not evidence from a real assignment.
+Appraiser judgment is required.
 
 DELIBERATE SCENARIO CONDITIONS
 {deliberate}
 
-EXPECTED DETERMINISTIC FINDING TYPES
+EXPECTED FINDING TYPES
 {expected}
 
 GPT-5.6 OUTPUT
@@ -373,9 +399,8 @@ def main() -> None:
         source_dir = SCENARIO_DIR / scenario["slug"]
         source_dir.mkdir()
         build_pdf(source_dir / "report.pdf", scenario)
-        build_exhibit(source_dir / "front_exterior.jpg", scenario, "Front exterior", 1)
-        build_exhibit(source_dir / "interior_kitchen.jpg", scenario, "Interior kitchen", 2)
-        build_exhibit(source_dir / "condition_exhibit.jpg", scenario, "Condition exhibit", 3)
+        for filename, _label in PHOTO_EXHIBITS:
+            build_exhibit(source_dir / filename, filename)
         build_manifest(source_dir / "README.txt", scenario)
         if scenario["include_xml"]:
             build_xml(source_dir / "report.xml", scenario)

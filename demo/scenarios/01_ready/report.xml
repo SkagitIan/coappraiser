@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <synthetic_uad_report version="3.6" data_classification="SYNTHETIC_DEMO_ONLY">
   <subject>
-    <identifier>SYNTHETIC-READY-001</identifier>
+    <identifier>SYNTHETIC-SUBJECT-001</identifier>
     <property_type>Detached</property_type>
-    <condition>C3</condition>
+    <condition>C4</condition>
     <quality>Q3</quality>
   </subject>
   <areas>
@@ -11,7 +11,7 @@
     <below_grade_finished>0</below_grade_finished>
   </areas>
   <commentary>
-    <narrative_condition>C3</narrative_condition>
+    <narrative_condition>C4</narrative_condition>
     <narrative_quality>Q3</narrative_quality>
   </commentary>
   <sales_comparison>

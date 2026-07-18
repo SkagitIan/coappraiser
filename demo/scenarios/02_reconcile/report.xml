@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <synthetic_uad_report version="3.6" data_classification="SYNTHETIC_DEMO_ONLY">
   <subject>
-    <identifier>SYNTHETIC-REVIEW-002</identifier>
+    <identifier>SYNTHETIC-SUBJECT-001</identifier>
     <property_type>Detached</property_type>
     <condition>C4</condition>
     <quality>Q3</quality>
-    <defect>active roof leakage</defect>
   </subject>
   <areas>
     <above_grade_gla>2180</above_grade_gla>

@@ -6,11 +6,11 @@ The public judge route is `/demo/`. It requires no account, password, upload, or
 
 | Public title | Fixture | Deterministic outcome | Likely GPT-5.6 categories |
 | --- | --- | --- | --- |
-| Consistent Package Baseline | `demo/coappraiser-demo-01-ready.zip` | One advisory baseline finding. XML, PDF, narrative, and exhibits align. | Cleanup or advisory review. |
-| Residential Appraisal Package 002 | `demo/coappraiser-demo-02-reconcile.zip` | Four warnings: XML/PDF condition, structured/narrative condition, structured/narrative quality, and incomplete comparable commentary. | Fix before delivery and appraiser judgment review. |
-| Missing Structured Report Export | `demo/coappraiser-demo-03-incomplete.zip` | One critical missing-XML finding. | Fix before delivery and missing-information review. |
+| Same Subject · Aligned Evidence | `demo/coappraiser-demo-01-ready.zip` | One advisory baseline finding. XML, PDF, narrative, and photos align. | Cleanup or advisory review. |
+| Same Subject · Reconcile Evidence | `demo/coappraiser-demo-02-reconcile.zip` | Four warnings: XML/PDF condition, structured/narrative condition, structured/narrative quality, and incomplete comparable commentary. | A distinct visual prompt may also connect the visible deck/enclosure and incomplete cladding to contradictory PDF language. |
+| Same Subject · Missing XML Export | `demo/coappraiser-demo-03-incomplete.zip` | One critical missing-XML finding. | Fix before delivery and missing-information review. |
 
-Every file is generated synthetic data. The packages contain no borrower, client, lender, appraiser, signature, credential, or real-property information. GPT-5.6 wording, prioritization, and additional interpretive findings may vary. The deterministic outcomes are regression-tested and predictable.
+All three use the fictional identifier `SYNTHETIC-SUBJECT-001` so judges can see how the outcome changes when the report evidence changes. Every assignment fact, location, comparable, report statement, and conclusion is synthetic. The five owner-supplied residential photos were selected to exclude addresses, signs, vehicles, people, and personal portraits, then re-encoded without EXIF metadata. They are controlled visual evidence, not evidence from a real assignment. GPT-5.6 wording, prioritization, and additional interpretive findings may vary; deterministic outcomes are regression-tested and predictable.
 
 ## Real pipeline
 
@@ -58,15 +58,15 @@ COAPPRAISER_DEMO_STALE_PROCESSING_SECONDS=120
 ## Exact judge test
 
 1. Open `/demo/` in a private browser.
-2. Drag the provided synthetic ZIP into the Preflight intake area, or tap it on mobile/keyboard.
+2. Drag the featured controlled ZIP into the Preflight intake area, or tap it on mobile/keyboard.
 3. Confirm the package validation message, select **Run Preflight**, and wait for the staged processing page.
 4. Confirm the summary shows files, deterministic findings, GPT-5.6 findings, highest severity, and completion state.
-5. Inspect the first finding's observed conflict, evidence locations, reason, and recommended review action.
+5. Inspect the observed conflict, exact PDF/photo locations, supporting evidence, reason, and recommended review action.
 6. Compare deterministic checks with the separate GPT-5.6 judgment-review section.
 7. Mark one finding **Resolved**, one **Deferred**, and one **Not applicable**; save a short note.
 8. Open **View workfile record** and confirm the decisions, timestamps, model, versions, file hashes, and professional-boundary statement.
 9. Download the JSON record.
-10. Return to `/demo/` and optionally run the clean baseline or missing-XML scenario.
+10. Return to `/demo/` and run the same subject with aligned evidence or the missing-XML state.
 
 ## Verification
 

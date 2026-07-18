@@ -1,5 +1,7 @@
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import patch
+import zipfile
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -14,6 +16,28 @@ from .services import ingest_files
 
 
 class PublicDemoTests(TestCase):
+    def test_controlled_packages_include_same_subject_photos_and_internal_readme(self):
+        demo_dir = Path(__file__).resolve().parents[2] / "demo"
+        expected_photos = {
+            "rear_exterior_condition.jpg",
+            "rear_deck_exterior.jpg",
+            "covered_deck_exterior.jpg",
+            "kitchen_interior.jpg",
+            "bathroom_interior.jpg",
+        }
+        for scenario in DEMO_SCENARIOS.values():
+            with zipfile.ZipFile(demo_dir / scenario["filename"]) as archive:
+                names = set(archive.namelist())
+                self.assertTrue(expected_photos.issubset(names))
+                self.assertIn("report.pdf", names)
+                self.assertIn("README.txt", names)
+                readme = archive.read("README.txt").decode("utf-8")
+                self.assertIn("This is a synthetic appraisal package", readme)
+                self.assertIn("SYNTHETIC-SUBJECT-001", readme)
+                self.assertIn("GPT-5.6 output may vary slightly", readme)
+                for photo_name in expected_photos:
+                    self.assertNotIn(b"Exif\x00\x00", archive.read(photo_name))
+
     def _start(self, client, slug):
         landing = client.get(reverse("preflight_demo:landing"))
         self.assertEqual(landing.status_code, 200)
@@ -42,7 +66,7 @@ class PublicDemoTests(TestCase):
         self.assertContains(response, "See outcome", count=2)
         for slug in DEMO_SCENARIOS:
             self.assertContains(response, reverse("preflight_demo:start", args=[slug]))
-        self.assertContains(response, "Synthetic package")
+        self.assertContains(response, "Synthetic report data")
         self.assertContains(response, "Appraiser judgment is required")
         self.assertNotContains(response, "Pricing")
         self.assertNotContains(response, "Stripe")

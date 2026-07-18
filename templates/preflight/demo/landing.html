@@ -32,22 +32,22 @@
         >
           <span class="demo-package-mark">ZIP</span>
           <span>
-            <strong id="package-title">Package 002 · Reconcile</strong>
-            <small>6 files · Synthetic · Deliberate conflicts</small>
+            <strong id="package-title">Same Subject · Reconcile</strong>
+            <small>8 files · Controlled demo · Deliberate conflicts</small>
           </span>
           <span class="demo-grip" aria-hidden="true">⠿</span>
         </button>
         <p id="package-instruction">Drag this package into the intake area. On a phone or keyboard, tap it to continue.</p>
         <dl class="demo-package-meta">
-          <div><dt>Scenario</dt><dd>Condition, quality, and comp commentary</dd></div>
-          <div><dt>Evidence</dt><dd>XML, PDF, 3 exhibits, README</dd></div>
+          <div><dt>Scenario</dt><dd>Same subject · Conflicting evidence</dd></div>
+          <div><dt>Evidence</dt><dd>XML, PDF, 5 photos, README</dd></div>
         </dl>
       </div>
 
       <form class="demo-drop-form" method="post" action="{% url 'preflight_demo:start' featured_scenario.slug %}" data-demo-form>
         {% csrf_token %}
         <input type="hidden" name="launch_token" value="{{ launch_token }}">
-        <div class="demo-dropzone" data-demo-dropzone role="button" tabindex="0" aria-label="Add the synthetic appraisal package to Preflight">
+        <div class="demo-dropzone" data-demo-dropzone role="button" tabindex="0" aria-label="Add the controlled appraisal package to Preflight">
           <div class="demo-drop-idle" data-drop-idle>
             <span class="demo-drop-icon" aria-hidden="true">↓</span>
             <strong>Drop package to start the demo</strong>
@@ -56,11 +56,11 @@
           <div class="demo-drop-ready" data-drop-ready hidden>
             <span class="demo-ready-check" aria-hidden="true">✓</span>
             <strong>Package accepted</strong>
-            <p>6 files found · Ready for evidence review</p>
+            <p>8 files found · Ready for evidence review</p>
             <div class="demo-validation-list">
               <span><b>✓</b> ZIP opened safely</span>
               <span><b>✓</b> Supported evidence detected</span>
-              <span><b>✓</b> Synthetic-data check passed</span>
+              <span><b>✓</b> Controlled demo-data check passed</span>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@
 </section>
 
 <div class="demo-assurance-bar" aria-label="Demo safeguards">
-  <span><b>01</b> Synthetic package</span>
+  <span><b>01</b> Synthetic report data</span>
   <span><b>02</b> No borrower data</span>
   <span><b>03</b> Session-isolated review</span>
   <span><b>04</b> Appraiser judgment is required</span>
