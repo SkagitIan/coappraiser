@@ -11,8 +11,18 @@
     <div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div>
     <p class="home-trust-line">Works alongside TOTAL, ACI, ClickFORMS, and the software you already use.</p>
   </div>
-  <div class="home-delivery-flow" aria-label="CoAppraiser workflow">
-    <span>Appraisal Software</span><b>→</b><strong>CoAppraiser Preflight</strong><b>→</b><span>Client Delivery</span>
+  <div class="home-cleared-queue" aria-label="Cleared Preflight queue">
+    <header>
+      <div><span class="status-dot status-dot-completed"></span><strong>Cleared Queue</strong></div>
+      <span>4 of 4 cleared</span>
+    </header>
+    <ul>
+      <li><span aria-hidden="true">✓</span><strong>XML</strong><small>Cleared</small></li>
+      <li><span aria-hidden="true">✓</span><strong>UAD</strong><small>Cleared</small></li>
+      <li><span aria-hidden="true">✓</span><strong>Condition</strong><small>Cleared</small></li>
+      <li><span aria-hidden="true">✓</span><strong>Narrative</strong><small>Cleared</small></li>
+    </ul>
+    <footer><span>Status</span><strong>Ready for Client Delivery</strong></footer>
   </div>
 </section>
 
