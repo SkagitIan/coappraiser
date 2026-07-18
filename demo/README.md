@@ -1,20 +1,22 @@
-# Build Week Preflight demo package
+# Synthetic Preflight demonstration packages
 
-`coappraiser-build-week-demo.zip` is a controlled, entirely synthetic appraisal package. It contains no borrower, client, lender, appraiser, or real-property information. The source files are retained in `preflight_build_week/` so the package can be audited before a demonstration.
+These three controlled residential appraisal packages contain no borrower, client, lender, appraiser, signature, credential, or real-property information. Each includes a three-page extractable report PDF and three labeled synthetic exhibits. Source files are retained under `scenarios/` for inspection.
 
-Upload the ZIP through **Preflight > New review**. The deterministic rules produce these stable findings even if GPT wording varies:
+Upload a ZIP through **Preflight > New review**:
 
-- XML condition `C4` conflicts with PDF condition `C3`.
-- Structured condition `C4` conflicts with narrative condition `C3`.
-- Structured quality `Q3` conflicts with narrative quality `Q4`.
-- Three comparables are identified, but only one has commentary.
+| Package | Intended outcome | Stable deterministic result |
+| --- | --- | --- |
+| `coappraiser-demo-01-ready.zip` | Ready for appraiser review | One advisory baseline finding; XML, PDF, commentary, and exhibits are aligned. |
+| `coappraiser-demo-02-reconcile.zip` | Reconcile before delivery | Four warnings: PDF/XML condition conflict, structured/narrative condition conflict, structured/narrative quality conflict, and incomplete comparable commentary. |
+| `coappraiser-demo-03-incomplete.zip` | Incomplete package | One critical finding because the XML export is intentionally missing. |
 
-GPT-5.6 may add evidence-grounded interpretive findings. Its output is deliberately shown separately from deterministic checks.
+GPT-5.6 may add evidence-grounded interpretive findings in its separate UI section. The deterministic outcomes above remain predictable.
 
-To rebuild the ZIP after intentionally changing a source file, run from the repository root:
+Rebuild all source files and ZIPs from the repository root:
 
 ```powershell
-Compress-Archive -Path demo\preflight_build_week\* -DestinationPath demo\coappraiser-build-week-demo.zip -Force
+pip install -r demo\requirements.txt
+python demo\build_scenario_packages.py
 ```
 
-The included PDF and image fixtures are synthetic test artifacts, not a real appraisal report.
+The generated reports and exhibits are demonstration artifacts, not appraisal reports or value opinions.

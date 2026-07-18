@@ -1,0 +1,7 @@
+<div id="processing-status" class="demo-processing-wait" role="status" aria-live="polite">
+  <p>This review is already processing in this session. CoAppraiser will check again shortly.</p>
+  <form method="post" action="{% url 'preflight_demo:process' review.pk %}" hx-post="{% url 'preflight_demo:process' review.pk %}" hx-trigger="load delay:2s" hx-target="#processing-status" hx-swap="outerHTML">
+    {% csrf_token %}
+    <button class="app-button secondary" type="submit">Check review status</button>
+  </form>
+</div>

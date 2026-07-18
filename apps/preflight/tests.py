@@ -105,26 +105,32 @@ class PreflightTests(TestCase):
         self.client.post(reverse("preflight:delete_review", args=[review.pk]))
         self.assertFalse(PreflightReview.objects.filter(pk=review.pk).exists())
 
-    def test_build_week_demo_has_predictable_evidence_driven_findings(self):
-        fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-build-week-demo.zip"
-        package = SimpleUploadedFile("coappraiser-build-week-demo.zip", fixture.read_bytes(), content_type="application/zip")
-        response = self.client.post(reverse("preflight:create"), {"title": "Build Week demo", "files": [package]})
-        self.assertEqual(response.status_code, 302)
-        review = PreflightReview.objects.get(title="Build Week demo")
-        codes = set(review.findings.filter(basis="deterministic").values_list("rule_code", flat=True))
-        self.assertTrue({
-            "CROSS_SOURCE_SUBJECT_CONDITION",
-            "XML_NARRATIVE_CONDITION",
-            "XML_NARRATIVE_QUALITY",
-            "COMPARABLE_COMMENTARY_INCOMPLETE",
-        }.issubset(codes))
-        detail = self.client.get(response.url)
-        self.assertContains(detail, "Deterministic checks")
-        self.assertContains(detail, "GPT-generated findings")
-        self.assertContains(detail, "Appraiser judgment required")
+    def test_demo_scenarios_have_predictable_deterministic_outcomes(self):
+        demo_dir = Path(__file__).resolve().parents[2] / "demo"
+        scenarios = {
+            "coappraiser-demo-01-ready.zip": {"PREFLIGHT_BASELINE"},
+            "coappraiser-demo-02-reconcile.zip": {
+                "CROSS_SOURCE_SUBJECT_CONDITION",
+                "XML_NARRATIVE_CONDITION",
+                "XML_NARRATIVE_QUALITY",
+                "COMPARABLE_COMMENTARY_INCOMPLETE",
+            },
+            "coappraiser-demo-03-incomplete.zip": {"PACKAGE_XML_MISSING"},
+        }
+        for index, (filename, expected_codes) in enumerate(scenarios.items(), start=1):
+            package = SimpleUploadedFile(filename, (demo_dir / filename).read_bytes(), content_type="application/zip")
+            response = self.client.post(reverse("preflight:create"), {"title": f"Demo scenario {index}", "files": [package]})
+            self.assertEqual(response.status_code, 302)
+            review = PreflightReview.objects.get(title=f"Demo scenario {index}")
+            codes = set(review.findings.filter(basis="deterministic").values_list("rule_code", flat=True))
+            self.assertEqual(codes, expected_codes)
+            detail = self.client.get(response.url)
+            self.assertContains(detail, "Deterministic checks")
+            self.assertContains(detail, "GPT-generated findings")
+            self.assertContains(detail, "Appraiser judgment required")
 
     def test_decision_note_is_saved_in_workfile_record(self):
-        fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-build-week-demo.zip"
+        fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-demo-02-reconcile.zip"
         package = SimpleUploadedFile("demo.zip", fixture.read_bytes(), content_type="application/zip")
         self.client.post(reverse("preflight:create"), {"title": "Decision demo", "files": [package]})
         review = PreflightReview.objects.get(title="Decision demo")

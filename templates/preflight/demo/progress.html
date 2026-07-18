@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Running {{ scenario.title }} | CoAppraiser{% endblock %}
+{% block content %}
+<section class="demo-progress-shell" aria-labelledby="progress-title">
+  <span class="demo-kicker">Live Preflight review</span>
+  <h1 id="progress-title">{{ scenario.title }}</h1>
+  <p>CoAppraiser is sending the synthetic package through the real review pipeline. This page lists the actual processing stages; it does not claim a precise percentage.</p>
+  <div class="demo-progress-card">
+    <div class="demo-spinner" aria-hidden="true"></div>
+    <div>
+      <strong>Review in progress</strong>
+      <span id="processing-announcement" role="status" aria-live="polite">Starting the package review...</span>
+    </div>
+  </div>
+  <ol class="demo-stage-list">
+    <li><span>1</span><div><strong>Opening appraisal package</strong><small>Validating the selected ZIP and package members.</small></div></li>
+    <li><span>2</span><div><strong>Extracting structured and narrative evidence</strong><small>Reading XML fields and extractable PDF text.</small></div></li>
+    <li><span>3</span><div><strong>Running deterministic checks</strong><small>Applying versioned package and cross-source rules.</small></div></li>
+    <li><span>4</span><div><strong>Reviewing cross-document coherence with GPT-5.6</strong><small>Using only the extracted evidence supplied to the model.</small></div></li>
+    <li><span>5</span><div><strong>Preparing evidence-backed findings</strong><small>Persisting findings, locations, evidence, and model metadata.</small></div></li>
+  </ol>
+  <div id="processing-status">
+    <form class="demo-progress-form" method="post" action="{% url 'preflight_demo:process' review.pk %}" hx-post="{% url 'preflight_demo:process' review.pk %}" hx-trigger="load delay:500ms" hx-target="#processing-status" hx-swap="outerHTML">
+      {% csrf_token %}
+      <button class="app-button secondary" type="submit">Continue processing</button>
+      <small>The button is a fallback if automatic processing is blocked by the browser.</small>
+    </form>
+  </div>
+</section>
+{% endblock %}

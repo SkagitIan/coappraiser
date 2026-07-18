@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <synthetic_uad_report version="3.6" data_classification="SYNTHETIC_DEMO_ONLY">
   <subject>
-    <identifier>SYNTHETIC-001</identifier>
+    <identifier>SYNTHETIC-READY-001</identifier>
     <property_type>Detached</property_type>
-    <condition>C4</condition>
+    <condition>C3</condition>
     <quality>Q3</quality>
-    <defect>active roof leakage</defect>
   </subject>
   <areas>
-    <above_grade_gla>2180</above_grade_gla>
+    <above_grade_gla>2140</above_grade_gla>
     <below_grade_finished>0</below_grade_finished>
   </areas>
   <commentary>
     <narrative_condition>C3</narrative_condition>
-    <narrative_quality>Q4</narrative_quality>
+    <narrative_quality>Q3</narrative_quality>
   </commentary>
   <sales_comparison>
     <comparable_count>3</comparable_count>
-    <comparable_commentary_count>1</comparable_commentary_count>
+    <comparable_commentary_count>3</comparable_commentary_count>
   </sales_comparison>
 </synthetic_uad_report>

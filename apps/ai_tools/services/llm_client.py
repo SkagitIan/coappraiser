@@ -38,7 +38,11 @@ def run_skill(*, system_prompt, user_prompt, output_schema):
         if not settings.OPENAI_API_KEY:
             raise LLMConfigurationError("OPENAI_API_KEY is required when COAPPRAISER_LLM_PROVIDER=openai.")
         from openai import OpenAI
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        client = OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            timeout=settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS,
+            max_retries=1,
+        )
         request = {
             "model": settings.COAPPRAISER_LLM_MODEL,
             "response_format": {"type": "json_object"},
@@ -79,7 +83,11 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None)
         if not settings.OPENAI_API_KEY:
             raise LLMConfigurationError("OPENAI_API_KEY is required when COAPPRAISER_LLM_PROVIDER=openai.")
         from openai import OpenAI
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        client = OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            timeout=settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS,
+            max_retries=1,
+        )
         request = {
             "model": settings.COAPPRAISER_LLM_MODEL,
             "response_format": _response_format(schema_name),

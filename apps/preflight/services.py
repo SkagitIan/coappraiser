@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.db.models import Case, IntegerField, When
 from django.utils import timezone
 
 from apps.ai_tools.services.file_tools import extract_pdf_text
@@ -226,7 +227,24 @@ def run_deterministic_review(version):
 
 def build_workfile_record(review):
     latest = review.versions.first()
-    findings = list(review.findings.filter(version=latest).select_related("decision")) if latest else []
+    findings = list(
+        review.findings.filter(version=latest)
+        .select_related("decision")
+        .annotate(
+            severity_rank=Case(
+                When(severity="critical", then=0),
+                When(severity="warning", then=1),
+                default=2,
+                output_field=IntegerField(),
+            ),
+            basis_rank=Case(
+                When(basis="deterministic", then=0),
+                default=1,
+                output_field=IntegerField(),
+            ),
+        )
+        .order_by("severity_rank", "basis_rank", "created_at")
+    ) if latest else []
     generated_at = timezone.now()
     ai_executions = latest.ai_executions.order_by("created_at") if latest else []
     snapshot = {

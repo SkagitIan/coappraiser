@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Workfile Record | {{ scenario.title }}{% endblock %}
+{% block content %}
+<div class="demo-workfile-heading">
+  <div><a class="demo-back-link" href="{% url 'preflight_demo:detail' review.pk %}">Back to findings</a><span class="demo-kicker">Auditable review artifact</span><h1>Workfile review record</h1><p>{{ scenario.title }} · Version {{ snapshot.version }}</p></div>
+  <a class="app-button primary" href="{% url 'preflight_demo:workfile_download' review.pk %}">Download JSON record</a>
+</div>
+<div class="demo-workfile-grid">
+  <main>
+    <section class="workspace-panel demo-record-section">
+      <div class="panel-heading"><div><span class="panel-eyebrow">Review record</span><h2>Evidence and decisions</h2></div><span class="panel-note">{{ snapshot.generated_at }}</span></div>
+      {% for finding in snapshot.findings %}
+        <article class="demo-record-finding">
+          <div class="finding-meta"><span class="severity-{{ finding.severity }}">{{ finding.severity|title }}</span><span class="finding-basis">{% if finding.basis == "ai_interpretation" %}GPT-5.6 judgment review{% else %}Deterministic check{% endif %}</span><span class="status-chip">{{ finding.decision_status|title }}</span></div>
+          <h3>{{ finding.title }}</h3>
+          <p><strong>Observed:</strong> {{ finding.observed_issue }}</p>
+          <p><strong>Location:</strong> {{ finding.source_location }}</p>
+          <div class="finding-evidence"><strong>Supporting evidence</strong><ul>{% for evidence in finding.supporting_evidence %}<li>{{ evidence }}</li>{% endfor %}</ul></div>
+          <p><strong>Decision:</strong> {{ finding.decision_status|title }}{% if finding.decision_note %} — {{ finding.decision_note }}{% endif %}</p>
+          <small>Recorded by the session-isolated demonstration user at {{ finding.decided_at }}. Appraiser judgment required.</small>
+        </article>
+      {% endfor %}
+    </section>
+  </main>
+  <aside class="workspace-rail">
+    <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Review metadata</span><h2>Traceability</h2><dl><dt>Scenario</dt><dd>{{ scenario.title }}</dd><dt>Review version</dt><dd>{{ snapshot.version }}</dd><dt>Parser</dt><dd>{{ snapshot.parser_version }}</dd><dt>Rules</dt><dd>{{ snapshot.rule_version }}</dd><dt>Generated</dt><dd>{{ snapshot.generated_at }}</dd></dl></section>
+    <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Model execution</span><h2>GPT-5.6 record</h2>{% for execution in snapshot.ai_executions %}<dl><dt>Provider</dt><dd>{{ execution.provider }}</dd><dt>Model</dt><dd>{{ execution.model }}</dd><dt>Status</dt><dd>{{ execution.status }}</dd><dt>Prompt version</dt><dd>{{ execution.prompt_version }}</dd></dl>{% empty %}<p>No model execution was recorded.</p>{% endfor %}</section>
+    <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Files reviewed</span><h2>Evidence hashes</h2><ul class="demo-hash-list">{% for file in snapshot.file_hashes %}<li><strong>{{ file.name }}</strong><code>{{ file.sha256 }}</code></li>{% endfor %}</ul></section>
+  </aside>
+</div>
+<p class="demo-record-disclaimer">{{ snapshot.limitations }}</p>
+{% endblock %}

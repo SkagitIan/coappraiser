@@ -4,14 +4,14 @@
     <div class="finding-meta">
       <span class="badge">{{ finding.get_category_display }}</span>
       <span class="severity-{{ finding.severity }}">{{ finding.get_severity_display }}</span>
-      <span class="finding-basis">{% if finding.basis == "ai_interpretation" %}GPT-generated{% else %}Deterministic{% endif %}</span>
+      <span class="finding-basis">{% if finding.basis == "ai_interpretation" %}{% if demo_mode %}GPT-5.6 judgment review{% else %}GPT-generated{% endif %}{% else %}Deterministic check{% endif %}</span>
     </div>
     <h3>{{ finding.title }}</h3>
     <p><strong>Observed issue:</strong> {{ finding.observed }}</p>
     <p><strong>Source or report location:</strong> {{ finding.location|default:"Exact location was not available in the extracted evidence." }}</p>
     {% if finding.evidence %}
       <div class="finding-evidence"><strong>Supporting evidence:</strong>
-        <ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
+        <ul>{% for item in finding.evidence %}<li>{% if demo_mode %}<strong>Evidence {{ forloop.counter }}:</strong> {% endif %}{{ item }}</li>{% endfor %}</ul>
       </div>
     {% endif %}
     <div class="finding-details">

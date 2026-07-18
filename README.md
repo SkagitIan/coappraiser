@@ -61,7 +61,9 @@ DATABASE_URL=<Railway PostgreSQL URL>
 COAPPRAISER_LLM_PROVIDER=openai
 COAPPRAISER_LLM_MODEL=gpt-5.6
 OPENAI_API_KEY=<secret>
+COAPPRAISER_OPENAI_TIMEOUT_SECONDS=60
 COAPPRAISER_STORAGE_BACKEND=r2
+COAPPRAISER_DEMO_RETENTION_HOURS=24
 R2_ACCOUNT_ID=<secret>
 R2_BUCKET_NAME=<private bucket>
 R2_ENDPOINT_URL=https://<account>.r2.cloudflarestorage.com
@@ -73,15 +75,14 @@ Set `COAPPRAISER_BILLING_MODE` and the Stripe variables only if billing is enabl
 
 ## Exact Build Week demo
 
-1. Create a fresh account and open **Preflight**.
-2. Choose **New review** and name it `Build Week synthetic review`.
-3. Upload [`demo/coappraiser-build-week-demo.zip`](demo/coappraiser-build-week-demo.zip).
-4. Run the review. The deterministic section reliably flags condition conflicts, a quality/commentary conflict, and incomplete comparable commentary. GPT findings appear in a separate section.
-5. Expand the evidence trail in each finding and compare it with **Extracted evidence**.
-6. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save each decision.
-7. Select **Download workfile record** and show the JSON evidence, model metadata, decisions, notes, limitations, and file hashes.
+1. Open `/demo/` in a fresh private browser. No account or payment information is required.
+2. Select **Conflicting Condition and Commentary** and choose **Run this Preflight**.
+3. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 review.
+4. Compare the prioritized deterministic and GPT-5.6 sections with **Extracted evidence**.
+5. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save it.
+6. Open **View workfile record**, inspect model and evidence metadata, then download the JSON record.
 
-The package is entirely synthetic. Its auditable source files and expected findings are documented in [`demo/README.md`](demo/README.md).
+All three packages are entirely synthetic. Their expected findings and the anonymous isolation design are documented in [`docs/build_week_demo.md`](docs/build_week_demo.md).
 
 ## Tests
 
@@ -92,19 +93,19 @@ python manage.py test
 python manage.py collectstatic --noinput
 ```
 
-The Preflight suite also covers the controlled demo result, user scoping, ZIP safety, evidence-rich conflicts, preserved state after AI failure, decision notes, workfile export, production mock rejection, and GPT-5 structured request parameters.
+The Preflight suite also covers public demo access, replay prevention, anonymous session isolation, all three controlled outcomes, protected customer routes, ZIP safety, preserved state after AI failure, decision notes, workfile export, production mock rejection, and GPT-5 structured request parameters.
 
 ## Known limitations
 
 - This is readiness support, not official UAD, GSE, lender, or USPAP validation.
 - PDF review depends on extractable text; OCR and visual image analysis are not implemented.
 - The initial rule set covers a small, explicit subset of appraisal fields and package checks.
-- Reviews run synchronously and are intended for modest package sizes.
+- Reviews run synchronously and are intended for modest package sizes; the public demo presents truthful stages rather than a fabricated percentage.
 - Production requires private R2 storage and operational privacy/retention controls.
 - GPT findings can vary; the demo's core findings are deterministic so the video remains repeatable.
 
 ## Short demo script
 
-> "Appraisal evidence repeats across structured XML, report commentary, and exhibits, so small inconsistencies can survive until delivery. I will upload a fully synthetic package to CoAppraiser Preflight. The app runs versioned deterministic checks and asks GPT-5.6 for a separate evidence-grounded consistency review. Each finding shows what was observed, the exact source location, supporting evidence, why it matters, and what the appraiser should review. The model never determines value or compliance. I can resolve, defer, or mark an item not applicable, record my reasoning, and download an auditable workfile record containing the evidence, model metadata, decisions, and file hashes."
+> "Traditional validation checks whether appraisal fields are populated and correctly formatted. CoAppraiser asks whether the entire package tells one consistent story. From this public page I can run a fully synthetic package through the real intake, deterministic checks, and GPT-5.6 evidence review. Each finding shows what was observed, its source and supporting evidence, why the relationship matters, and what the appraiser should review. The appraiser records the decision, and CoAppraiser preserves it in an auditable workfile record."
 
 For Devpost, record this as a public YouTube video under three minutes. The audio must explain what was built, how Codex was used, and how GPT-5.6 was used.

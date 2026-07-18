@@ -78,7 +78,10 @@ COAPPRAISER_LLM_PROVIDER = os.getenv("COAPPRAISER_LLM_PROVIDER", "mock").strip()
 COAPPRAISER_LLM_MODEL = os.getenv("COAPPRAISER_LLM_MODEL", "gpt-5.6").strip()
 COAPPRAISER_ALLOW_MOCK_AI = DEBUG or "test" in sys.argv
 COAPPRAISER_ALLOW_LOCAL_UPLOADS = DEBUG or "test" in sys.argv
+COAPPRAISER_DEMO_RETENTION_HOURS = int(os.getenv("COAPPRAISER_DEMO_RETENTION_HOURS", "24"))
+COAPPRAISER_DEMO_STALE_PROCESSING_SECONDS = int(os.getenv("COAPPRAISER_DEMO_STALE_PROCESSING_SECONDS", "120"))
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+COAPPRAISER_OPENAI_TIMEOUT_SECONDS = int(os.getenv("COAPPRAISER_OPENAI_TIMEOUT_SECONDS", "60"))
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 # Accept the explicit private-key name used by Railway, while retaining the
 # documented STRIPE_SECRET_KEY name. Never use a webhook signing secret as an

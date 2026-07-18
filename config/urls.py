@@ -11,6 +11,7 @@ urlpatterns = [
     path("assets/<path:path>", serve, {"document_root": settings.BASE_DIR / "assets"}),
     path("early-access/", legacy_page, {"page": "early-access"}, name="early_access"),
     path("starter-pack/", legacy_page, {"page": "starter-pack"}, name="starter_pack"),
+    path("demo/", include(("apps.preflight.demo_urls", "preflight_demo"), namespace="preflight_demo")),
     path("skills/<path:path>/", skill_page, name="skill_page"),
     path("contact/", contact, name="contact"),
     path("uad-36-readiness-checklist/signup/", checklist_signup, name="checklist_signup"),

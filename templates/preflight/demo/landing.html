@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Try CoAppraiser Preflight{% endblock %}
+{% block content %}
+<section class="demo-hero">
+  <div class="demo-hero-copy">
+    <span class="demo-kicker">Public Build Week demo</span>
+    <h1>Does the entire appraisal package tell one consistent story?</h1>
+    <p>CoAppraiser Preflight extracts evidence from completed residential appraisal packages, applies deterministic checks, and uses GPT-5.6 to identify cross-document inconsistencies that ordinary field validation misses.</p>
+    <a class="app-button primary demo-jump-action" href="#scenario-heading">Choose a scenario</a>
+    <div class="demo-trust-row" aria-label="Demo safeguards">
+      <span>Synthetic appraisal packages</span>
+      <span>{% if uses_live_gpt %}Real GPT-5.6 review{% else %}GPT-5.6 in production{% endif %}</span>
+      <span>No confidential borrower data</span>
+      <span>Appraiser judgment remains required</span>
+    </div>
+  </div>
+  <aside class="demo-distinction">
+    <span>Why this is different</span>
+    <p><strong>Traditional validation</strong> checks whether fields are complete and correctly formatted.</p>
+    <p><strong>CoAppraiser</strong> checks whether structured data, report narrative, commentary, and exhibits support one coherent account.</p>
+    <small>Preflight does not determine value, recommend final adjustments, certify compliance, or guarantee acceptance.</small>
+  </aside>
+</section>
+
+<section class="demo-scenario-section" aria-labelledby="scenario-heading">
+  <div class="demo-section-heading">
+    <div><span class="demo-kicker">Choose one scenario</span><h2 id="scenario-heading">Run a real Preflight in one click.</h2></div>
+    <p>Each selection creates a fresh, session-isolated review and sends the ZIP through the same intake, extraction, rules, GPT-5.6, decision, and workfile pipeline used by normal uploads.</p>
+  </div>
+  <div class="demo-scenario-grid">
+    {% for scenario in scenarios %}
+      <article class="demo-scenario-card scenario-{{ scenario.tone }}">
+        <div class="scenario-number">0{{ forloop.counter }}</div>
+        <span class="scenario-label">Synthetic appraisal package</span>
+        <h3>{{ scenario.title }}</h3>
+        <p>{{ scenario.description }}</p>
+        <div class="scenario-block">
+          <strong>Evidence in the package</strong>
+          <ul>{% for item in scenario.evidence_types %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+        <div class="scenario-block">
+          <strong>What Preflight should reveal</strong>
+          <p>{{ scenario.review_focus }}</p>
+        </div>
+        <form method="post" action="{% url 'preflight_demo:start' scenario.slug %}">
+          {% csrf_token %}
+          <input type="hidden" name="launch_token" value="{{ launch_token }}">
+          <button class="app-button primary demo-run-button" type="submit" {% if not scenario.available %}disabled{% endif %}>Run this Preflight</button>
+        </form>
+      </article>
+    {% endfor %}
+  </div>
+  <div class="demo-own-package">
+    <div><strong>Have your own completed report package?</strong><span>Private customer uploads remain protected by account authentication.</span></div>
+    <a class="app-button secondary" href="{% url 'preflight:create' %}">Upload your own appraisal package</a>
+  </div>
+</section>
+{% endblock %}

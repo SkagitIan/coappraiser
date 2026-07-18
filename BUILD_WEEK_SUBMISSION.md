@@ -22,17 +22,18 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 
 ## Demo account and data
 
-- [ ] A fresh judge flow can create an account without staff access.
-- [ ] If using a prepared demo account, credentials are stored only in the private submission notes and rotated afterward.
-- [ ] The account can create at least one Preflight review without an unexpected billing block.
-- [ ] `demo/coappraiser-build-week-demo.zip` uploads within the production request timeout.
+- [ ] `/demo/` opens in a fresh private browser without registration, credentials, or payment.
+- [ ] All three scenario cards create fresh reviews through the real intake pipeline.
+- [ ] Separate browser sessions cannot open one another's demo reviews, files, decisions, or workfile records.
+- [ ] The demo page and results contain no pricing, Stripe, or legacy skill-library prompts.
+- [ ] `python manage.py cleanup_demo_reviews` is scheduled at least daily.
 
 ## Sanitized demo package
 
 - [ ] `demo/README.md` expected findings match the current rules.
 - [ ] XML, PDF, images, filenames, and metadata contain only synthetic information.
 - [ ] No borrower, client, lender, appraiser, real address, signature, credential, or confidential assignment data is present.
-- [ ] The ZIP hash and final repository copy are the package used in the video.
+- [ ] The ZIP hash and final repository copy match the scenario package used in the video.
 
 ## Verification
 
@@ -62,7 +63,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 
 - [ ] Browser zoom, desktop resolution, and font size make evidence and notes readable.
 - [ ] Notifications, password managers, bookmarks, API keys, Railway variables, and personal tabs are hidden.
-- [ ] Start from account creation or clearly explain the prepared demo account.
+- [ ] Start at `/demo/` and select **Conflicting Condition and Commentary**.
 - [ ] Show the sanitized ZIP, prioritized deterministic and GPT sections, source evidence, three decision states, a decision note, and workfile download.
 - [ ] State the professional boundaries aloud: no value conclusion, final adjustment, USPAP declaration, or acceptance guarantee.
 - [ ] Audio explains what was built, how Codex was used, and how GPT-5.6 was used.
@@ -72,12 +73,14 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 ## Devpost assets and Codex evidence
 
 - [ ] Project state is **Submitted**, not `submission_draft`, before the deadline.
+- [ ] Required **Submitter Type** and **Country of Residence** fields are complete.
 - [ ] Select exactly one category: **Work & Productivity**.
-- [ ] Final title and one-sentence concept match the README.
-- [ ] Short description, long description, repository URL, live URL, demo video, screenshots, thumbnail, and team details are ready.
+- [ ] Final title, one-sentence concept, and edited-in-your-own-voice project description match the README.
+- [ ] Repository URL, public-demo testing instructions, live URL, demo video, screenshots, thumbnail, and team details are ready.
 - [ ] Working test access remains free through judging; put any credentials only in the private testing-instructions field.
 - [ ] Screenshots contain only the synthetic package and no secrets or private browser data.
 - [ ] Technology list accurately names Django, GPT-5.6, OpenAI structured outputs, PostgreSQL, R2, and Railway.
 - [ ] Known limitations and human-in-the-loop boundaries are included where the form permits.
 - [ ] Generate and enter the required Codex Session ID using `/feedback`.
 - [ ] Preserve timestamped Codex session and commit evidence showing the meaningful Build Week extensions, repository inspection, implementation, and verification.
+- [ ] Final submission clearly supports the four judging criteria: technological implementation, coherent design, credible impact, and quality of the idea.

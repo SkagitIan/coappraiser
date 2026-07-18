@@ -1,4 +1,5 @@
-<form method="post" action="{% url 'preflight:decision' finding.pk %}" hx-post="{% url 'preflight:decision' finding.pk %}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" class="styled-form finding-decision-form">
+{% if demo_mode %}{% url 'preflight_demo:decision' finding.pk as decision_url %}{% else %}{% url 'preflight:decision' finding.pk as decision_url %}{% endif %}
+<form method="post" action="{{ decision_url }}" hx-post="{{ decision_url }}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" class="styled-form finding-decision-form">
   {% csrf_token %}
   <p>
     <label for="status-{{ finding.pk }}">Decision</label>
@@ -14,5 +15,5 @@
     <textarea id="note-{{ finding.pk }}" name="note" rows="2" maxlength="2000" placeholder="Briefly record why you made this decision.">{{ finding.decision.note }}</textarea>
   </p>
   <button class="button secondary" type="submit">Save decision</button>
-  <small>Current: {{ finding.decision.get_status_display }}{% if finding.decision.note %} - note saved{% endif %}</small>
+  <small>Current: {{ finding.decision.get_status_display }}{% if finding.decision.note %} - note saved{% endif %}. The appraiser records this decision.</small>
 </form>
