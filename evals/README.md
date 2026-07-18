@@ -56,6 +56,15 @@ finding topics, source citations, appraiser-judgment language, professional
 boundary violations, latency, and token usage. It uses temporary users and media
 and removes them after each run. Reports remain under `.eval-data/reports/`.
 
+When the API key exists only in the linked Railway service, use the isolated
+launcher. It imports the model credentials but replaces `DATABASE_URL` with the
+local SQLite database; the evaluator itself replaces storage with a temporary
+filesystem:
+
+```powershell
+railway run python scripts/run_isolated_gpt_eval.py --repeat 3 --confirm-paid-api --strict
+```
+
 ## Why the archive is not in Git
 
 The samples are published for UAD implementation work, but CoAppraiser does not

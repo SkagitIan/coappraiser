@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--repeat", type=int, default=1, help="Runs per case, from 1 to 5.")
+        parser.add_argument("--case", dest="case_id", help="Run only one case ID.")
         parser.add_argument(
             "--confirm-paid-api",
             action="store_true",
@@ -40,6 +41,11 @@ class Command(BaseCommand):
         specification = json.loads(
             (settings.BASE_DIR / "evals" / "cases" / "gpt56_demo.json").read_text(encoding="utf-8")
         )
+        cases = specification["cases"]
+        if options["case_id"]:
+            cases = [case for case in cases if case["id"] == options["case_id"]]
+            if not cases:
+                raise CommandError(f"Unknown GPT evaluation case: {options['case_id']}")
         results = []
         with tempfile.TemporaryDirectory(prefix="coappraiser-gpt-eval-") as media_root:
             with override_settings(
@@ -48,8 +54,17 @@ class Command(BaseCommand):
                 COAPPRAISER_ALLOW_LOCAL_UPLOADS=True,
                 STORAGE_BACKEND="local",
                 MEDIA_ROOT=media_root,
+                STORAGES={
+                    "default": {
+                        "BACKEND": "django.core.files.storage.FileSystemStorage",
+                        "OPTIONS": {"location": media_root},
+                    },
+                    "staticfiles": {
+                        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+                    },
+                },
             ):
-                for case in specification["cases"]:
+                for case in cases:
                     package_path = settings.BASE_DIR / case["package"]
                     if not package_path.is_file():
                         raise CommandError(f"Evaluation package is missing: {package_path}")
