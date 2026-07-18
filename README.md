@@ -166,9 +166,10 @@ database or production file storage. See [`evals/README.md`](evals/README.md).
 The command validates paths and size limits, extracts only supported files beneath
 the ignored `.eval-data/` directory, identifies candidate PDF/XML pairs, and
 profiles namespace-heavy XML without pretending that unknown tags are supported
-facts. See [`evals/README.md`](evals/README.md) for the process and
-[`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) for the quality gates that turn those
-samples into a professional regression suite.
+facts. See [`evals/README.md`](evals/README.md) for the operator process,
+[`EVAL.md`](EVAL.md) for a plain-English explanation of the tests, results,
+failures, fixes, and locked release protocol, and
+[`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) for the product-quality roadmap.
 
 ## Known limitations
 
