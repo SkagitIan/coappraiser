@@ -17,10 +17,14 @@ Appraiser judgment is required.
 DELIBERATE SCENARIO CONDITIONS
 - The structured XML report export is intentionally omitted.
 - The rendered PDF and five sanitized photo exhibits remain present.
+- Three comparables are shown, but only one has individual commentary.
+- The rear enclosure and incomplete cladding are consistently disclosed in the report and photos.
 
 EXPECTED FINDING TYPES
 - One critical deterministic finding that no UAD XML was found.
 - Review cannot perform XML-to-PDF consistency checks until XML is supplied.
+- One GPT-5.6 review prompt for incomplete comparable commentary.
+- No separate visual-condition conflict is expected.
 
 GPT-5.6 OUTPUT
 GPT-5.6 output may vary slightly in wording, prioritization, or additional

@@ -8,7 +8,7 @@ The public judge route is `/demo/`. It requires no account, password, upload, or
 | --- | --- | --- | --- |
 | Same Subject · Aligned Evidence | `demo/coappraiser-demo-01-ready.zip` | One advisory baseline finding. XML, PDF, narrative, and photos align. | Cleanup or advisory review. |
 | Same Subject · Reconcile Evidence | `demo/coappraiser-demo-02-reconcile.zip` | Four warnings: XML/PDF condition, structured/narrative condition, structured/narrative quality, and incomplete comparable commentary. | A distinct visual prompt may also connect the visible deck/enclosure and incomplete cladding to contradictory PDF language. |
-| Same Subject · Missing XML Export | `demo/coappraiser-demo-03-incomplete.zip` | One critical missing-XML finding. | Fix before delivery and missing-information review. |
+| Same Subject · Missing XML Export | `demo/coappraiser-demo-03-incomplete.zip` | One critical missing-XML finding. | A separate comparable-commentary prompt should identify that only one of three comparables has individual commentary. |
 
 All three use the fictional identifier `SYNTHETIC-SUBJECT-001` so judges can see how the outcome changes when the report evidence changes. Every assignment fact, location, comparable, report statement, and conclusion is synthetic. The five owner-supplied residential photos were selected to exclude addresses, signs, vehicles, people, and personal portraits, then re-encoded without EXIF metadata. They are controlled visual evidence, not evidence from a real assignment. GPT-5.6 wording, prioritization, and additional interpretive findings may vary; deterministic outcomes are regression-tested and predictable.
 

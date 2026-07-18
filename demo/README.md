@@ -10,7 +10,7 @@ Upload a ZIP through **Preflight > New review**:
 | --- | --- | --- |
 | `coappraiser-demo-01-ready.zip` | Same subject, aligned evidence | One advisory baseline finding; XML, PDF, commentary, and photos align. |
 | `coappraiser-demo-02-reconcile.zip` | Same subject, reconcile evidence | Four predictable rule-based warnings plus direct photo/narrative conflicts involving the rear deck, enclosure, and exterior description. |
-| `coappraiser-demo-03-incomplete.zip` | Same subject, missing export | One critical finding because the XML export is intentionally missing. |
+| `coappraiser-demo-03-incomplete.zip` | Same subject, missing export plus incomplete comparable commentary | One critical deterministic finding because the XML export is intentionally missing; GPT-5.6 separately reviews the rendered comparable commentary. |
 
 GPT-5.6 may add evidence-grounded interpretive findings in its separate UI section. The deterministic outcomes above remain predictable.
 

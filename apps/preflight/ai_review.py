@@ -20,6 +20,8 @@ The input includes operational review_context metadata, a file inventory, extrac
 
 When review_context.synthetic_demo is true, synthetic-data notices, demonstration labels, placeholder identities, omitted signatures, and language explaining that the package is not a real appraisal are intentional safeguards. Do not report them or synthetic placeholder phrasing as findings. Review only the deliberate evidence relationships within the fixture.
 
+Apply the same review sequence to every package when the relevant evidence is supplied: compare structured facts with rendered values; compare material facts and reported differences in the comparable grid with the individual comparable commentary for coverage and consistency; then compare report claims with attached visual evidence. Do not force a finding in any step. Missing commentary alone is not a finding unless the supplied grid or report establishes a specific relationship that remains materially unreconciled.
+
 For attached visuals, make narrow observations about what is plainly visible and cross-check those observations against supplied report evidence. Never identify a person, infer protected or sensitive traits, diagnose a cause, estimate age or repair cost, make a safety determination, or convert a visible condition into a valuation conclusion. Poor image quality or ambiguity is not a finding. Prefer no visual finding unless the relationship is clear. Cite the exact image filename; for the rendered PDF cite the filename and page number whenever available. Include visual_sources only when the finding actually relies on visual inspection.
 
 Return structured JSON with summary, no more than three distinct findings, and missing_information. Prefer zero findings to a weak, generic, low-confidence, or merely cautionary finding. Report only a clear contradiction, a materially unsupported relationship, or missing information that directly blocks a meaningful review. Do not report generic limitations, boilerplate language, ordinary appraisal uncertainty, or a request for more explanation unless the supplied evidence shows a specific inconsistency.
@@ -284,6 +286,11 @@ def run_preflight_ai_review(version):
         suppressed_findings = []
         accepted_ai_topics = set()
         attached_names = {source["file"] for source in visual_sources}
+        attached_photo_names = {
+            source["file"]
+            for source in visual_sources
+            if source.get("kind") == "appraisal_photo"
+        }
         for item in result.get("findings", []):
             if not isinstance(item, dict) or not item.get("title"):
                 continue
@@ -292,8 +299,8 @@ def run_preflight_ai_review(version):
                 if isinstance(item.get("visual_sources", []), list)
                 else []
             )
-            has_verified_visual_source = any(
-                any(name in str(source) for name in attached_names)
+            has_verified_photo_source = any(
+                any(name in str(source) for name in attached_photo_names)
                 for source in requested_visual_sources
             )
             topic = _finding_topic(
@@ -326,7 +333,7 @@ def run_preflight_ai_review(version):
                     }
                 )
                 continue
-            if topic and topic in deterministic_topics and not has_verified_visual_source:
+            if topic and topic in deterministic_topics and not has_verified_photo_source:
                 suppressed_findings.append(
                     {
                         "title": str(item.get("title"))[:200],

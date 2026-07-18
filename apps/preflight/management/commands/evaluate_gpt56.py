@@ -1,5 +1,7 @@
 import json
+import hashlib
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,6 +12,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.test import override_settings
 
 from apps.preflight.evaluation import score_gpt_findings
+from apps.preflight.ai_review import SYSTEM_PROMPT
 from apps.preflight.models import PreflightReview
 from apps.preflight.services import delete_review_with_files, ingest_files, run_deterministic_review
 
@@ -38,9 +41,9 @@ class Command(BaseCommand):
         if repeat < 1 or repeat > 5:
             raise CommandError("--repeat must be between 1 and 5.")
 
-        specification = json.loads(
-            (settings.BASE_DIR / "evals" / "cases" / "gpt56_demo.json").read_text(encoding="utf-8")
-        )
+        specification_path = settings.BASE_DIR / "evals" / "cases" / "gpt56_demo.json"
+        specification_text = specification_path.read_text(encoding="utf-8")
+        specification = json.loads(specification_text)
         cases = specification["cases"]
         if options["case_id"]:
             cases = [case for case in cases if case["id"] == options["case_id"]]
@@ -69,7 +72,15 @@ class Command(BaseCommand):
                     if not package_path.is_file():
                         raise CommandError(f"Evaluation package is missing: {package_path}")
                     for iteration in range(1, repeat + 1):
-                        results.append(self._run_case(case, iteration, package_path))
+                        try:
+                            results.append(self._run_case(case, iteration, package_path))
+                        except Exception as exc:
+                            self.stderr.write(
+                                self.style.ERROR(
+                                    f"ERROR {case['id']} run {iteration}: {exc}"
+                                )
+                            )
+                            results.append(self._failed_case(case, iteration, exc))
 
         passed = sum(result["score"]["passed"] for result in results)
         durations = [
@@ -82,10 +93,15 @@ class Command(BaseCommand):
             for result in results
             if result["response_metadata"].get("usage", {}).get("total_tokens") is not None
         ]
+        generated_at = datetime.now(timezone.utc)
         report = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "generated_at": generated_at.isoformat(),
             "model": "gpt-5.6",
             "repeat": repeat,
+            "case_ids": [case["id"] for case in cases],
+            "case_spec_sha256": hashlib.sha256(specification_text.encode("utf-8")).hexdigest(),
+            "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest(),
             "summary": {
                 "runs": len(results),
                 "passed": passed,
@@ -99,14 +115,46 @@ class Command(BaseCommand):
         report_dir = settings.BASE_DIR / ".eval-data" / "reports"
         report_dir.mkdir(parents=True, exist_ok=True)
         report_path = report_dir / "gpt56-demo-evaluation.json"
-        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        case_suffix = f"-{options['case_id']}" if options["case_id"] else "-all"
+        archive_path = report_dir / (
+            f"gpt56-demo-evaluation-{generated_at.strftime('%Y%m%dT%H%M%SZ')}"
+            f"{case_suffix}.json"
+        )
+        report_json = json.dumps(report, indent=2)
+        report_path.write_text(report_json, encoding="utf-8")
+        archive_path.write_text(report_json, encoding="utf-8")
         self.stdout.write(
             self.style.SUCCESS(
-                f"GPT-5.6 evaluation: {passed}/{len(results)} runs passed. Report: {report_path}"
+                f"GPT-5.6 evaluation: {passed}/{len(results)} runs passed. "
+                f"Reports: {report_path} and {archive_path}"
             )
         )
         if options["strict"] and passed != len(results):
             raise CommandError(f"{len(results) - passed} GPT-5.6 evaluation run(s) failed.")
+
+    def _failed_case(self, case, iteration, exc):
+        return {
+            "case_id": case["id"],
+            "iteration": iteration,
+            "score": {
+                "passed": False,
+                "finding_count": 0,
+                "required_topics": sorted(case.get("required_topics", [])),
+                "actual_topics": [],
+                "missing_topics": sorted(case.get("required_topics", [])),
+                "unexpected_topics": [],
+                "citation_failures": [],
+                "judgment_failures": [],
+                "boundary_failures": [],
+                "too_many_findings": False,
+                "topic_precision": 0.0,
+                "topic_recall": 0.0,
+                "execution_error": str(exc)[:2000],
+            },
+            "findings": [],
+            "suppressed_findings": [],
+            "response_metadata": {},
+        }
 
     def _run_case(self, case, iteration, package_path):
         username = f"__coappraiser_eval__{uuid4().hex}"

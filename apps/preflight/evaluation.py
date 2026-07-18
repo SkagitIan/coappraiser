@@ -8,16 +8,19 @@ def score_gpt_findings(findings, case):
     allowed_topics = set(case.get("allowed_topics", required_topics))
     actual_topics = set()
     for finding in findings:
+        semantic_topic = _finding_topic(
+            finding.get("title"),
+            finding.get("observed"),
+            finding.get("why_it_matters"),
+            finding.get("recommended_action"),
+            finding.get("evidence"),
+        )
         topic = (
-            "visual_condition"
+            semantic_topic
+            if semantic_topic == "comparable_commentary"
+            else "visual_condition"
             if finding.get("visual_sources")
-            else _finding_topic(
-                finding.get("title"),
-                finding.get("observed"),
-                finding.get("why_it_matters"),
-                finding.get("recommended_action"),
-                finding.get("evidence"),
-            )
+            else semantic_topic
         )
         if topic:
             actual_topics.add(topic)

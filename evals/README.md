@@ -36,7 +36,10 @@ Run only the visual case:
 
 For a release-quality sample, use `-Repeat 3`. Live runs incur OpenAI usage and
 can take several minutes. A nonzero exit code means at least one gate failed.
-Machine-readable results are written to `.eval-data/reports/`.
+Machine-readable results are written to `.eval-data/reports/`. The evaluator
+writes both a convenient latest report and a timestamped evidence copy. Each
+report records the evaluated case IDs plus SHA-256 hashes of the case
+specification and system prompt.
 
 If Windows blocks local PowerShell scripts, use:
 

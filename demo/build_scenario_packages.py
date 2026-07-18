@@ -50,7 +50,7 @@ SCENARIOS = [
         "gla_pdf": "2,140",
         "comp_count": "3",
         "commentary_count": "3",
-        "defect": "",
+        "defect": "Incomplete cladding at the rear enclosure is disclosed for review; no cause, repair scope, cost, or value effect is represented.",
         "summary": "The same-subject package is complete and its report narrative accounts for the visible exhibits.",
         "visual_narrative": [
             "Rear photographs show a covered deck and an attached storage enclosure.",
@@ -127,8 +127,8 @@ SCENARIOS = [
         "gla_xml": "",
         "gla_pdf": "1,760",
         "comp_count": "3",
-        "commentary_count": "3",
-        "defect": "",
+        "commentary_count": "1",
+        "defect": "Incomplete cladding at the rear enclosure is disclosed for review; no cause, repair scope, cost, or value effect is represented.",
         "summary": "The same-subject rendered report and photos are present, but the structured XML export is missing.",
         "visual_narrative": [
             "Rear photographs show a covered deck and an attached storage enclosure.",
@@ -139,10 +139,14 @@ SCENARIOS = [
         "deliberate": [
             "The structured XML report export is intentionally omitted.",
             "The rendered PDF and five sanitized photo exhibits remain present.",
+            "Three comparables are shown, but only one has individual commentary.",
+            "The rear enclosure and incomplete cladding are consistently disclosed in the report and photos.",
         ],
         "expected": [
             "One critical deterministic finding that no UAD XML was found.",
             "Review cannot perform XML-to-PDF consistency checks until XML is supplied.",
+            "One GPT-5.6 review prompt for incomplete comparable commentary.",
+            "No separate visual-condition conflict is expected.",
         ],
         "include_xml": False,
         "accent": "#B91C1C",
@@ -263,10 +267,19 @@ def build_pdf(path: Path, scenario: dict) -> None:
     c.drawString(54, 450, "Comparable commentary")
     c.setFont(PDF_FONT, 9)
     commentary_total = int(scenario["commentary_count"])
+    comp_conditions = ["C3", "C3", comp_3_condition]
+    comp_context = [
+        "similar utility",
+        "similar market area",
+        "no adjustment conclusion is represented",
+    ]
     commentary = [
-        "Comparable 1: similar utility; verify all reported differences in the workfile.",
-        "Comparable 2: similar market area; commentary is synthetic and requires review.",
-        "Comparable 3: condition differs; no adjustment conclusion is represented here.",
+        (
+            f"Comparable {index}: condition "
+            f"{'differs from' if condition != scenario['condition_pdf'] else 'is consistent with'} "
+            f"the subject; {context}."
+        )
+        for index, (condition, context) in enumerate(zip(comp_conditions, comp_context), start=1)
     ]
     text = c.beginText(54, 425)
     text.setLeading(18)

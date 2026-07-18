@@ -10,8 +10,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from .llm_client import LLMConfigurationError, run_llm_json
-from .ai_review import _finding_topic, run_preflight_ai_review
+from .ai_review import SYSTEM_PROMPT, _finding_topic, run_preflight_ai_review
 from .evaluation import score_gpt_findings
+from .management.commands.evaluate_gpt56 import Command as EvaluateGPT56Command
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import (
     build_workfile_record,
@@ -189,6 +190,27 @@ class PreflightTests(TestCase):
         self.assertFalse(failed_score["passed"])
         self.assertTrue(failed_score["boundary_failures"])
 
+    def test_gpt_evaluation_prefers_comparable_topic_when_rendered_pdf_is_visual_source(self):
+        case = {
+            "required_topics": ["comparable_commentary"],
+            "allowed_topics": ["comparable_commentary"],
+            "max_findings": 1,
+        }
+        finding = {
+            "rule_code": "COMP_COMMENTARY",
+            "title": "Condition differences for Comps 2 and 3 are not addressed",
+            "observed": "The comparable grid reports differences that the commentary does not reconcile.",
+            "location": "report.pdf, page 2",
+            "evidence": ["The grid and comparable commentary differ."],
+            "why_it_matters": "The comparable analysis is unclear.",
+            "recommended_action": "Review the comparable commentary.",
+            "guidance": ["Appraiser judgment is required."],
+            "visual_sources": ["report.pdf"],
+        }
+        score = score_gpt_findings([finding], case)
+        self.assertTrue(score["passed"])
+        self.assertEqual(score["actual_topics"], ["comparable_commentary"])
+
     def test_finding_topic_prefers_specific_comparable_commentary(self):
         self.assertEqual(
             _finding_topic(
@@ -197,6 +219,14 @@ class PreflightTests(TestCase):
             ),
             "comparable_commentary",
         )
+
+    def test_ai_review_protocol_checks_comparable_grid_without_forcing_a_finding(self):
+        self.assertIn(
+            "compare material facts and reported differences in the comparable grid",
+            SYSTEM_PROMPT,
+        )
+        self.assertIn("Do not force a finding in any step.", SYSTEM_PROMPT)
+        self.assertIn("Missing commentary alone is not a finding", SYSTEM_PROMPT)
 
     def test_eval_importer_builds_local_manifest_and_pairs_pdf_with_xml(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -359,7 +389,7 @@ class PreflightTests(TestCase):
                     "recommended_action": "Reconcile the condition evidence.",
                     "guidance": ["Appraiser judgment is required."],
                     "confidence": "high",
-                    "visual_sources": [],
+                    "visual_sources": ["report.pdf"],
                 },
                 {
                     "rule_code": "AI_ROOF",
@@ -442,6 +472,19 @@ class PreflightTests(TestCase):
         self.assertEqual(
             execution.parsed_response["suppressed_findings"][0]["reason"],
             "The model response crossed a professional-boundary rule.",
+        )
+
+    def test_gpt_evaluator_records_execution_failure(self):
+        result = EvaluateGPT56Command()._failed_case(
+            {"id": "case-id", "required_topics": ["visual_condition"]},
+            2,
+            RuntimeError("empty structured response"),
+        )
+        self.assertFalse(result["score"]["passed"])
+        self.assertEqual(result["score"]["missing_topics"], ["visual_condition"])
+        self.assertEqual(
+            result["score"]["execution_error"],
+            "empty structured response",
         )
 
     def test_ai_finding_always_records_judgment_requirement(self):
@@ -670,6 +713,7 @@ class PreflightTests(TestCase):
         self.assertEqual(result, payload)
         self.assertEqual(result.response_metadata["response_id"], "resp_test")
         self.assertEqual(result.response_metadata["usage"]["total_tokens"], 150)
+        self.assertEqual(result.response_metadata["attempts"], 1)
         request = create.call_args.kwargs
         self.assertEqual(request["model"], "gpt-5.6")
         self.assertEqual(request["reasoning"], {"effort": "xhigh"})
@@ -679,6 +723,33 @@ class PreflightTests(TestCase):
         self.assertEqual(request["input"][0]["content"], [{"type": "input_text", "text": "Evidence"}])
         self.assertEqual(request["timeout"], 60)
         openai_client.return_value.chat.completions.create.assert_not_called()
+
+    @override_settings(
+        COAPPRAISER_LLM_PROVIDER="openai",
+        COAPPRAISER_LLM_MODEL="gpt-5.6",
+        OPENAI_API_KEY="test-key",
+    )
+    def test_responses_api_retries_once_after_invalid_structured_output(self):
+        payload = {"summary": "Reviewed", "findings": [], "missing_information": []}
+        with patch("openai.OpenAI") as openai_client:
+            create = openai_client.return_value.responses.create
+            create.side_effect = [
+                SimpleNamespace(output_text="", status="incomplete"),
+                SimpleNamespace(
+                    output_text=json.dumps(payload),
+                    id="resp_retry",
+                    model="gpt-5.6",
+                ),
+            ]
+            result = run_llm_json(
+                system_prompt="Return JSON",
+                user_prompt="Evidence",
+                schema_name="preflight_review",
+                required_keys=payload.keys(),
+            )
+        self.assertEqual(result, payload)
+        self.assertEqual(result.response_metadata["attempts"], 2)
+        self.assertEqual(create.call_count, 2)
 
     @override_settings(
         COAPPRAISER_LLM_PROVIDER="openai",

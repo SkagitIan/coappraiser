@@ -74,7 +74,7 @@ appraiser-judgment language, professional-boundary violations, and excess
 findings. It also records the response ID, returned model, latency, and token
 usage.
 
-### Repeated baseline: July 18, 2026
+### Repeated baseline and protocol refinement: July 18, 2026
 
 Three isolated live runs per case produced:
 
@@ -99,7 +99,34 @@ Across the nine calls:
   16,007 tokens;
 - the API returned `gpt-5.6-sol` for all recorded calls.
 
-These measurements are a baseline, not a public reliability claim.
+Protocol refinement then:
+
+- added a general comparable-grid-to-commentary review step without supplying
+  a fixture answer;
+- corrected the aligned fixture so every reported condition relationship is
+  actually reconciled;
+- corrected the incomplete-commentary fixture so it isolates that gap without
+  an unrelated visual contradiction;
+- corrected semantic scoring so a rendered PDF citation does not turn a
+  commentary finding into a visual-condition topic;
+- limited deterministic-duplicate bypass to findings supported by an actual
+  appraisal photo, not merely the rendered PDF;
+- added one bounded retry for empty or invalid structured output and made the
+  evaluator preserve operational failures in its report.
+
+Final affected-case evidence:
+
+- aligned package: **3/3 clean** in the corrected full regression;
+- incomplete comparable commentary: **3/3 detected** in the corrected full
+  regression;
+- visual conflict: **3/3 detected** after the visual fixture's final
+  grid/commentary correction;
+- every accepted finding in these gates retained citations and
+  appraiser-judgment language, with zero professional-boundary violations.
+
+The aligned and incomplete package hashes did not change during the final
+visual-only correction, so only the affected visual case was rerun. These are
+engineering release gates, not a public statistical reliability claim.
 
 ## Reproducing the evidence
 
@@ -119,18 +146,27 @@ The PowerShell wrapper runs the same gates:
 .\scripts\run_evals.ps1 -Live -Repeat 3
 ```
 
-## Next gates
+## Locked release protocol
 
-1. Add one general review-protocol instruction requiring the model to examine
-   applicable comparable-grid facts against the supplied commentary. Do not
-   mention a fixture answer or force a finding.
-2. Run the comparable case three times. It must pass 3/3 before another full
-   run is justified.
-3. Rerun all three cases three times after that prompt change. Lock only if:
-   the aligned case is 3/3 clean; each seeded topic is detected 3/3; every
-   accepted finding has citations and judgment language; there are zero
-   boundary violations; and finding counts remain within reviewed case labels.
-4. Treat 100 seconds and 20,000 total tokens as provisional monitoring alerts,
+1. Run `.\scripts\run_evals.ps1 -Full`. All Django tests, all 12 official
+   scenarios, and all four deterministic regressions must pass.
+2. When the prompt, model settings, scorer, or shared intake path changes, run
+   `.\scripts\run_evals.ps1 -Live -Repeat 3`. The aligned case must remain
+   3/3 clean and each seeded topic must be detected 3/3.
+3. When only one fixture changes, verify unchanged package hashes and run that
+   case three times. A shared generator change requires all affected cases.
+4. Every accepted finding must have a source location, supporting evidence,
+   appraiser-judgment language, and zero professional-boundary violations.
+5. Operational failures count as failed runs. The evaluator must continue and
+   preserve them in the timestamped report; they are never silently retried
+   beyond the single bounded structured-output retry.
+6. Do not weaken a case threshold after a run. Human label corrections require
+   a written rationale and a rerun of every affected case.
+7. Treat 100 seconds and 20,000 total tokens as provisional monitoring alerts,
    not release failures, until more runs establish stable distributions.
-5. Add provider-timeout recovery to the automated suite before treating the
-   operational protocol as complete.
+
+## Next expansion
+
+- add a controlled provider-timeout test;
+- add more human-reviewed visual scenarios one at a time;
+- collect more repeated runs before making any public reliability claim.

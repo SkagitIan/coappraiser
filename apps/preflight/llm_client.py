@@ -7,6 +7,10 @@ class LLMConfigurationError(RuntimeError):
     pass
 
 
+class LLMResponseError(RuntimeError):
+    pass
+
+
 class LLMResult(dict):
     def __init__(self, value, *, response_metadata=None):
         super().__init__(value)
@@ -66,10 +70,10 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None,
         raise LLMConfigurationError(
             "COAPPRAISER_REASONING_EFFORT must be none, low, medium, high, xhigh, or max."
         )
-    response = client.responses.create(
-        model=settings.COAPPRAISER_LLM_MODEL,
-        instructions=system_prompt,
-        input=[
+    request = {
+        "model": settings.COAPPRAISER_LLM_MODEL,
+        "instructions": system_prompt,
+        "input": [
             {
                 "role": "user",
                 "content": [
@@ -78,28 +82,49 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None,
                 ],
             }
         ],
-        text=_responses_text_format(schema_name),
-        reasoning={"effort": settings.COAPPRAISER_REASONING_EFFORT},
-        max_output_tokens=5000,
-        store=False,
-        timeout=(
+        "text": _responses_text_format(schema_name),
+        "reasoning": {"effort": settings.COAPPRAISER_REASONING_EFFORT},
+        "max_output_tokens": 5000,
+        "store": False,
+        "timeout": (
             settings.COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS
             if multimodal_inputs
             else settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS
         ),
-    )
+    }
+    response = None
+    result = None
+    last_error = None
+    attempts = 0
+    for attempts in range(1, 3):
+        response = client.responses.create(**request)
+        try:
+            result = validate_output(
+                json.loads((response.output_text or "").strip()),
+                required_keys or [],
+            )
+            break
+        except (json.JSONDecodeError, ValueError) as exc:
+            last_error = exc
+    if result is None:
+        status = getattr(response, "status", "unknown")
+        incomplete_details = getattr(response, "incomplete_details", None)
+        raise LLMResponseError(
+            "The AI provider returned invalid structured output after 2 attempts "
+            f"(status={status}, incomplete_details={incomplete_details}): {last_error}"
+        )
     usage = getattr(response, "usage", None)
     if hasattr(usage, "model_dump"):
         usage = usage.model_dump()
     elif usage is not None and not isinstance(usage, (dict, list, str, int, float, bool)):
         usage = vars(usage)
-    result = validate_output(json.loads(response.output_text), required_keys or [])
     return LLMResult(
         result,
         response_metadata={
             "response_id": getattr(response, "id", ""),
             "model": getattr(response, "model", settings.COAPPRAISER_LLM_MODEL),
             "usage": usage or {},
+            "attempts": attempts,
         },
     )
 
