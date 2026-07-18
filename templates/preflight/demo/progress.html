@@ -4,7 +4,7 @@
 <section class="demo-progress-shell" aria-labelledby="progress-title">
   <span class="demo-kicker">Live Preflight review</span>
   <h1 id="progress-title">Reviewing Residential_Report_Package.zip</h1>
-  <p>CoAppraiser is sending the package through the real review pipeline. The activity indicator communicates the current review sequence without inventing a precise percentage.</p>
+  <p>CoAppraiser Preflight is screening the package for contradictions, unsupported conclusions, and UAD 3.6 triggers before client delivery.</p>
   <div class="demo-progress-card">
     <div class="demo-spinner" aria-hidden="true"></div>
     <div>
@@ -15,8 +15,8 @@
   <ol class="demo-stage-list">
     <li class="is-active" data-processing-stage><span>1</span><div><strong>Opening appraisal package</strong><small>Validating the ZIP and package members.</small></div></li>
     <li data-processing-stage><span>2</span><div><strong>Extracting structured and narrative evidence</strong><small>Reading XML fields and extractable PDF text.</small></div></li>
-    <li data-processing-stage><span>3</span><div><strong>Running deterministic checks</strong><small>Applying versioned package and cross-source rules.</small></div></li>
-    <li data-processing-stage><span>4</span><div><strong>Reviewing cross-document coherence with GPT-5.6</strong><small>Using only the extracted evidence supplied to the model.</small></div></li>
+    <li data-processing-stage><span>3</span><div><strong>Running Preflight checks</strong><small>Applying versioned package and cross-source rules.</small></div></li>
+    <li data-processing-stage><span>4</span><div><strong>Running the Preflight evidence review</strong><small>Using GPT-5.6 with only the extracted evidence supplied to the model.</small></div></li>
     <li data-processing-stage><span>5</span><div><strong>Preparing evidence-backed findings</strong><small>Persisting findings, locations, evidence, and model metadata.</small></div></li>
   </ol>
   <div id="processing-status">
@@ -35,8 +35,8 @@
   const messages = [
     "Opening the ZIP and validating package members…",
     "Extracting XML fields and narrative evidence…",
-    "Applying deterministic package and cross-source checks…",
-    "Sending the extracted evidence to GPT-5.6 for coherence review…",
+    "Applying Preflight package and cross-source checks…",
+    "Running the GPT-5.6 Preflight evidence review…",
     "Persisting traceable findings and preparing the review workspace…"
   ];
   let current = 0;

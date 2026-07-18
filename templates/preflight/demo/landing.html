@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Run a CoAppraiser Preflight{% endblock %}
+{% block title %}CoAppraiser Preflight Demo{% endblock %}
 {% block content %}
 <section class="demo-entry">
   <div class="demo-entry-copy">
     <div class="demo-build-week-label"><span class="demo-live-dot"></span> LIVE BUILD WEEK DEMO <b>·</b> 90 seconds</div>
-    <span class="demo-kicker">GPT-5.6 appraisal evidence review</span>
-    <h1>Find the contradiction <em>before delivery.</em></h1>
-    <p class="demo-entry-lede">A residential appraisal package can pass field validation and still tell two different stories. CoAppraiser compares the XML, report narrative, and exhibits, then leaves the decision with the appraiser.</p>
+    <span class="demo-kicker">CoAppraiser Preflight</span>
+    <h1>Find what the reviewer will find—<em>first.</em></h1>
+    <p class="demo-entry-lede">CoAppraiser is a pre-delivery review engine for independent residential appraisers. It cross-checks your XML, PDF narrative, and photos to catch contradictions, unsupported conclusions, and UAD 3.6 triggers before you hit send.</p>
     <div class="demo-proof-row" aria-label="Demo promise">
-      <span><strong>01</strong> Drop a synthetic package</span>
-      <span><strong>02</strong> Trace the evidence</span>
-      <span><strong>03</strong> Preserve the decision</span>
+      <span><strong>01</strong> Appraisal Software</span>
+      <span><strong>02</strong> CoAppraiser Preflight</span>
+      <span><strong>03</strong> Client Delivery</span>
     </div>
   </div>
 
@@ -83,15 +83,15 @@
 
 <section class="demo-journey" aria-labelledby="journey-title">
   <div class="demo-journey-heading">
-    <span class="demo-kicker">The judge path</span>
-    <h2 id="journey-title">One package. Three decisions. One preserved record.</h2>
-    <p>See the complete loop a judge can test in one short session.</p>
+    <span class="demo-kicker">One continuous pre-delivery review system</span>
+    <h2 id="journey-title">Appraisal Software → CoAppraiser Preflight → Client Delivery</h2>
+    <p>One continuous pre-delivery review system.</p>
   </div>
   <ol class="demo-journey-steps">
-    <li><span>1</span><div><strong>Load</strong><p>Drop the synthetic ZIP and watch the package validate.</p></div></li>
-    <li><span>2</span><div><strong>Review</strong><p>Inspect prioritized findings with exact source evidence.</p></div></li>
-    <li><span>3</span><div><strong>Decide</strong><p>Mark a finding resolved, deferred, or not applicable.</p></div></li>
-    <li><span>4</span><div><strong>Preserve</strong><p>Download the auditable workfile review record.</p></div></li>
+    <li><span>1</span><div><strong>Screen</strong><p>Upload the package. The engine flags internal inconsistencies and UAD 3.6 readiness issues.</p></div></li>
+    <li><span>2</span><div><strong>Support</strong><p>Generate clear support for weak market conclusions or complex adjustments before the AMC flags them.</p></div></li>
+    <li><span>3</span><div><strong>Document</strong><p>Export a time-stamped, hashed record of your QA decisions and sources to lock down your workfile.</p></div></li>
+    <li><span>4</span><div><strong>Defend</strong><p>If a client still submits a stip, use the engine to interpret and respond to the request intelligently.</p></div></li>
   </ol>
 </section>
 
@@ -122,11 +122,11 @@
 
 <section class="demo-final-cta">
   <div>
-          <span>Human-in-the-loop by design</span>
-    <strong>CoAppraiser identifies the evidence. The appraiser determines what it means.</strong>
-    <p>Preflight does not determine value, recommend final adjustments, declare USPAP compliance, or guarantee lender, AMC, or GSE acceptance.</p>
+    <span>Appraiser in control</span>
+    <strong>Built to support professional judgment, not replace it.</strong>
+    <p>No automated value opinions. No black-box decisions. You remain 100% responsible for the analysis, comparable selection, and final report.</p>
   </div>
-  <a class="app-button secondary" href="{% url 'preflight:create' %}">Upload your own appraisal package</a>
+  <a class="app-button secondary" href="{% url 'accounts:signup' %}">First Review Free →</a>
 </section>
 <script>
 (() => {

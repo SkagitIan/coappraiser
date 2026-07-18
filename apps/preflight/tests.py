@@ -179,9 +179,11 @@ class PreflightTests(TestCase):
     def test_public_positioning_and_deprecated_routes(self):
         pricing = self.client.get(reverse("pricing"))
         self.assertContains(pricing, "$59/month")
-        self.assertContains(pricing, "first scan is free")
-        self.assertContains(self.client.get(reverse("login")), "Start your free scan")
-        self.assertContains(self.client.get(reverse("accounts:signup")), "Your first Preflight scan is free")
+        self.assertContains(pricing, "First Review Free")
+        self.assertContains(self.client.get(reverse("login")), "Find what the reviewer will find")
+        self.assertContains(self.client.get(reverse("accounts:signup")), "First Review Free")
+        self.assertContains(self.client.get(reverse("preflight_demo:landing")), "First Review Free")
+        self.assertContains(self.client.get(reverse("contact")), "CoAppraiser Preflight")
         self.assertRedirects(self.client.get(reverse("uad_solution_legacy")), reverse("home"))
 
     def test_file_download_is_authorized_and_review_delete_cleans_records(self):

@@ -36,7 +36,7 @@ class PublicDemoTests(TestCase):
     def test_public_landing_has_three_clear_scenarios_and_no_pricing_prompt(self):
         response = self.client.get(reverse("preflight_demo:landing"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Find the contradiction")
+        self.assertContains(response, "Find what the reviewer will find")
         self.assertContains(response, "Drop package to start the demo")
         self.assertContains(response, "Start the evidence review", count=1)
         self.assertContains(response, "See outcome", count=2)

@@ -1,3 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Create your CoAppraiser account{% endblock %}
-{% block content %}<section class="auth-layout"><div class="auth-copy"><div class="eyebrow">Start with one free scan</div><h1>Run Preflight before delivery.</h1><p class="lead">Create your account, upload a completed appraisal package, and see what deserves attention before you send it.</p><div class="auth-benefits"><span>XML, PDF, and photo review</span><span>Prioritized findings</span><span>No software migration</span></div></div><div class="auth-card"><h2>Create account</h2><p>Your first Preflight scan is free. Continue for $59/month when you are ready.</p><form method="post" class="styled-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">Start free scan</button></form><p class="form-footer">Already have an account? <a href="{% url 'login' %}">Sign in</a></p><p class="fine-print">Preflight does not replace appraisal software, appraiser judgment, or official validation.</p></div></section>{% endblock %}
+{% block title %}First Review Free | CoAppraiser Preflight{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-copy">
+    <div class="eyebrow">First Review Free</div>
+    <h1>Find what the reviewer will find—first.</h1>
+    <p class="lead">Create your account, upload a completed appraisal package, and run CoAppraiser Preflight before client delivery.</p>
+    <div class="auth-benefits"><span>Contradictions</span><span>Missing narrative support</span><span>UAD 3.6 triggers</span></div>
+  </div>
+  <div class="auth-card">
+    <h2>Create account</h2>
+    <p>First Review Free. Continue for $59/month.</p>
+    <form method="post" class="styled-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">First Review Free →</button></form>
+    <p class="form-footer">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+    <p class="fine-print">Built to support professional judgment, not replace it. You remain responsible for the analysis, comparable selection, and final report.</p>
+  </div>
+</section>
+{% endblock %}

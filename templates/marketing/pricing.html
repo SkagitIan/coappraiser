@@ -1,10 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Pricing | CoAppraiser Preflight{% endblock %}
-{% block extra_head %}<meta name="description" content="CoAppraiser Preflight is $59/month after your first free scan. Review completed UAD appraisal packages before delivery."><link rel="canonical" href="https://coappraiser.com/pricing/">{% endblock %}
+{% block extra_head %}<meta name="description" content="Your first CoAppraiser Preflight review is free. Continue for $59/month."><link rel="canonical" href="https://coappraiser.com/pricing/">{% endblock %}
 {% block content %}
-<section class="hero page-hero"><div><div class="eyebrow"><span class="dot"></span> One plan · One free scan</div><h1>Simple pricing for a focused review.</h1><p class="lead">Try one completed appraisal package free. Then use CoAppraiser Preflight for $59/month to review reports before delivery and compare revised packages.</p><p class="muted">No migration. No replacement for your appraisal software. Cancel anytime.</p></div><aside class="mini-panel"><b>What counts as a scan?</b><p>One uploaded appraisal package and its resulting Preflight review. A revised upload stays part of that review history.</p></aside></section>
-<section class="grid-3 pricing-grid"><article class="card pricing-card featured"><div class="badge">Preflight</div><h2>$59/month</h2><p>For independent residential appraisers who want a second set of eyes before delivery.</p><ul><li>Your first scan is free</li><li>XML, PDF, and photo package review</li><li>Prioritized findings with evidence locations</li><li>Revised-package comparison</li><li>Downloadable workfile review record</li><li>Cancel anytime</li></ul><div class="pricing-action"><a class="button primary" href="{% url 'accounts:signup' %}">Start your free scan</a><small>Secure billing through Stripe after the free scan.</small></div></article><article class="card"><h2>Built around your workflow</h2><p>Keep using TOTAL, ACI, ClickFORMS, or another established appraisal platform. Preflight reviews the finished export and tells you what deserves attention.</p><p class="muted">It does not complete forms, choose comps, determine value, or guarantee acceptance.</p></article><article class="card"><h2>No feature maze</h2><p>Revision response, UAD explanation, evidence support, and workfile documentation are becoming internal capabilities of one product: Preflight.</p><p class="muted">The customer experience stays focused on one action: run Preflight before delivery.</p></article></section>
-<section class="section"><div class="faq"><details><summary>Is the first scan really free?</summary><p>Yes. You can create an account and run one Preflight review before choosing the $59/month plan.</p></details><details><summary>What happens after my free scan?</summary><p>Subscribe to continue reviewing packages. The account and your existing review history remain available while you decide.</p></details><details><summary>Does this guarantee UAD or lender acceptance?</summary><p>No. Preflight is automated readiness support and a second set of eyes. The appraiser remains responsible for analysis, reporting, and final conclusions.</p></details></div></section>
-<section class="cta"><h2>Start with one real package.</h2><p>Upload a redacted or synthetic package first, see the workflow, then decide whether the monthly plan earns a place in your process.</p><div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">Create your account →</a><a class="button secondary" href="{% url 'contact' %}">Ask a question</a></div></section>
-<p class="disclaimer-line">CoAppraiser Preflight is automated readiness support, not official GSE validation. The appraiser remains responsible for the report.</p>
+<section class="hero page-hero">
+  <div>
+    <div class="eyebrow"><span class="dot"></span> One plan · First Review Free</div>
+    <h1>Find what the reviewer will find—first.</h1>
+    <p class="lead">CoAppraiser is a pre-delivery review engine for independent residential appraisers. Your first completed appraisal package is free. Continue for $59/month.</p>
+    <p class="muted">Works alongside TOTAL, ACI, ClickFORMS, and the software you already use.</p>
+  </div>
+  <aside class="mini-panel"><b>What counts as a review?</b><p>One uploaded appraisal package and its resulting CoAppraiser Preflight review. A revised upload stays in the same review history.</p></aside>
+</section>
+
+<section class="grid-3 pricing-grid">
+  <article class="card pricing-card featured">
+    <div class="badge">CoAppraiser Preflight</div>
+    <h2>$59/month</h2>
+    <p>Pre-delivery screening for independent residential appraisers.</p>
+    <ul>
+      <li>First Review Free</li>
+      <li>XML, PDF narrative, and photo package review</li>
+      <li>Contradictions and missing narrative support</li>
+      <li>Prioritized findings with evidence locations</li>
+      <li>Revised-package comparison</li>
+      <li>Time-stamped, hashed workfile review record</li>
+    </ul>
+    <div class="pricing-action"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a><small>Secure billing through Stripe after the first review.</small></div>
+  </article>
+  <article class="card">
+    <h2>Your software checks empty fields. CoAppraiser checks the story.</h2>
+    <p>Traditional validation stops at invalid data formats. CoAppraiser reviews the report as a connected professional work product.</p>
+  </article>
+  <article class="card">
+    <h2>One continuous pre-delivery review system.</h2>
+    <p>Screen, support, document, and defend inside one CoAppraiser Preflight workflow.</p>
+  </article>
+</section>
+
+<section class="section"><div class="faq">
+  <details><summary>Is the first review really free?</summary><p>Yes. Create an account and run one CoAppraiser Preflight review before choosing the $59/month plan.</p></details>
+  <details><summary>What happens after my first review?</summary><p>Subscribe to continue reviewing packages. Your account and existing review history remain available while you decide.</p></details>
+  <details><summary>Does this guarantee UAD or lender acceptance?</summary><p>No. Built to support professional judgment, not replace it. You remain responsible for the analysis, comparable selection, and final report.</p></details>
+</div></section>
+
+<section class="cta"><h2>Find what the reviewer will find—first.</h2><div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div></section>
 {% endblock %}

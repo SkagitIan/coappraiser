@@ -24,20 +24,20 @@
   <section class="demo-error-panel">
     <span class="demo-kicker">Review preserved</span>
     <h2>CoAppraiser could not complete this run.</h2>
-    <p>The demo review and any files or deterministic findings already created were preserved. No canned findings or mock fallback were substituted.</p>
+    <p>The demo review, uploaded files, and completed Preflight checks were preserved. No canned findings or mock fallback were substituted.</p>
     <form method="post" action="{% url 'preflight_demo:retry' review.pk %}">{% csrf_token %}<button class="app-button primary" type="submit">Retry this Preflight</button></form>
   </section>
 {% else %}
   <div class="workspace-stats compact demo-summary-stats" aria-label="Review summary">
     <div><span>Files reviewed</span><strong>{{ version.files.count }}</strong><small>Private, session-scoped access</small></div>
-    <div><span>Deterministic findings</span><strong>{{ deterministic_findings|length }}</strong><small>Versioned application rules</small></div>
-    <div><span>GPT-5.6 findings</span><strong>{{ ai_findings|length }}</strong><small>{% if ai_execution %}{{ ai_execution.status|title }}{% else %}Not started{% endif %}</small></div>
+    <div><span>Preflight checks</span><strong>{{ deterministic_findings|length }}</strong><small>Versioned application rules</small></div>
+    <div><span>Preflight evidence review</span><strong>{{ ai_findings|length }}</strong><small>{% if ai_execution %}{{ ai_execution.status|title }}{% else %}Not started{% endif %}</small></div>
     <div><span>Highest severity</span><strong>{{ highest_severity }}</strong><small>Review status: {{ review.get_status_display }}</small></div>
   </div>
 
   {% if ai_execution.status == "failed" %}
     <div class="notice demo-ai-notice">
-      <strong>GPT-5.6 review unavailable.</strong> The package and deterministic findings were preserved. No mock or canned results were substituted.
+      <strong>GPT-5.6 review unavailable.</strong> The package and completed Preflight checks were preserved. No mock or canned results were substituted.
       <form method="post" action="{% url 'preflight_demo:retry' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Retry GPT-5.6 review</button></form>
     </div>
   {% endif %}
@@ -48,10 +48,10 @@
     <main>
       <section id="findings" class="workspace-panel">
         <div class="panel-heading"><div><span class="panel-eyebrow">Prioritized evidence review</span><h2>Findings</h2></div><span class="panel-note">Strongest relationship first</span></div>
-        <div class="demo-finding-section-heading"><span class="source-key deterministic-key">Deterministic check</span><p>Direct package, parsing, and cross-source checks from versioned application rules.</p></div>
-        <div class="finding-list">{% for finding in deterministic_findings %}{% include "preflight/partials/finding_card.html" %}{% empty %}<p class="panel-empty">No deterministic findings were produced.</p>{% endfor %}</div>
-        <div class="demo-finding-section-heading"><span class="source-key gpt-key">GPT-5.6 judgment review</span><p>Interpretive cross-document review grounded only in the extracted evidence below.</p></div>
-        <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% empty %}<p class="panel-empty">{% if ai_execution.status == "failed" %}GPT-5.6 findings are unavailable; deterministic findings remain intact.{% else %}GPT-5.6 did not add an interpretive finding for this package.{% endif %}</p>{% endfor %}</div>
+        <div class="demo-finding-section-heading"><span class="source-key deterministic-key">Preflight checks</span><p>Direct package, parsing, and cross-source checks from versioned application rules.</p></div>
+        <div class="finding-list">{% for finding in deterministic_findings %}{% include "preflight/partials/finding_card.html" %}{% empty %}<p class="panel-empty">No Preflight checks produced a finding.</p>{% endfor %}</div>
+        <div class="demo-finding-section-heading"><span class="source-key gpt-key">Preflight evidence review</span><p>Interpretive cross-document review grounded only in the extracted evidence below.</p></div>
+        <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% empty %}<p class="panel-empty">{% if ai_execution.status == "failed" %}The Preflight evidence review is unavailable; completed Preflight checks remain intact.{% else %}The Preflight evidence review did not add a finding for this package.{% endif %}</p>{% endfor %}</div>
       </section>
       <section id="evidence" class="workspace-panel demo-evidence-panel">
         <div class="panel-heading"><div><span class="panel-eyebrow">Traceable source material</span><h2>Extracted evidence</h2></div><span class="panel-note">{{ observations|length }} normalized observations</span></div>
@@ -60,7 +60,7 @@
     </main>
     <aside class="workspace-rail">
       <section class="workspace-panel ai-panel">
-        <span class="panel-eyebrow">AI execution</span><h2>Real model record</h2>
+        <span class="panel-eyebrow">Preflight engine</span><h2>Model record</h2>
         {% if ai_execution %}<div class="execution-status"><span class="status-dot status-dot-{{ ai_execution.status }}"></span><strong>{{ ai_execution.status|title }}</strong><small>{{ ai_execution.model_name }}</small></div><p class="panel-note">Provider: {{ ai_execution.provider }}. GPT receives extracted evidence only. Appraiser judgment is required.</p>{% else %}<p class="panel-empty">No AI execution record is available.</p>{% endif %}
       </section>
       <section class="workspace-panel demo-files-panel">
@@ -68,8 +68,8 @@
         <ul>{% for file in version.files.all %}<li><div><strong>{{ file.original_name }}</strong><small>{{ file.kind|upper }} · {{ file.sha256|slice:":12" }}...</small></div><a href="{% url 'preflight_demo:download_file' file.pk %}">Download</a></li>{% endfor %}</ul>
       </section>
       <section class="workspace-panel demo-boundary-panel">
-        <span class="panel-eyebrow">Professional boundary</span><h2>Appraiser judgment remains required.</h2>
-        <p>Preflight does not determine value, recommend final adjustments, declare USPAP compliance, or guarantee lender, AMC, or GSE acceptance.</p>
+        <span class="panel-eyebrow">Appraiser in control</span><h2>Built to support professional judgment, not replace it.</h2>
+        <p>No automated value opinions. No black-box decisions. You remain 100% responsible for the analysis, comparable selection, and final report.</p>
         <a class="app-button primary" href="{% url 'preflight_demo:workfile' review.pk %}">View workfile record</a>
       </section>
     </aside>

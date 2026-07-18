@@ -1,3 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Sign in | CoAppraiser{% endblock %}
-{% block content %}<section class="auth-layout"><div class="auth-copy"><div class="eyebrow">Welcome back</div><h1>Run your next Preflight review.</h1><p class="lead">Sign in to review completed appraisal packages, compare revised uploads, and keep your workfile review history together.</p><div class="auth-benefits"><span>One free scan</span><span>Prioritized findings</span><span>Private review history</span></div></div><div class="auth-card"><h2>Sign in</h2><p>Use your CoAppraiser account credentials.</p><form method="post" class="styled-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">Open Preflight</button></form><p class="form-footer">New to CoAppraiser? <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Start your free scan</a></p></div></section>{% endblock %}
+{% block title %}Sign in | CoAppraiser Preflight{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-copy">
+    <div class="eyebrow">CoAppraiser Preflight</div>
+    <h1>Find what the reviewer will find—first.</h1>
+    <p class="lead">Sign in to continue your pre-delivery review workflow.</p>
+    <div class="auth-benefits"><span>Contradictions</span><span>Missing narrative support</span><span>Pre-delivery screening</span></div>
+  </div>
+  <div class="auth-card">
+    <h2>Sign in</h2>
+    <p>Open your CoAppraiser Preflight workspace.</p>
+    <form method="post" class="styled-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">Open Preflight</button></form>
+    <p class="form-footer">New to CoAppraiser? <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">First Review Free →</a></p>
+  </div>
+</section>
+{% endblock %}
