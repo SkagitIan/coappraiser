@@ -23,7 +23,7 @@ The runtime sequence is:
 3. GPT-5.6 performs one consistency review through the Responses API at configurable reasoning effort. The same request path and strict finding schema apply whether the package supplies text alone or text plus visual sources.
 4. A strict JSON Schema requires every candidate finding to include its title, category, severity, observed issue, source location, evidence, significance, review action, confidence, visual sources, and an appraiser-judgment reminder.
 5. Application code validates the response, rejects unverified visual filenames, suppresses low-confidence items and duplicates of deterministic findings, and persists the accepted findings separately from rule-based findings.
-6. The appraiser—not the model—resolves, defers, or dismisses each item and records the decision in the workfile record.
+6. The appraiser—not the model—resolves, defers, or marks each item not applicable and records the decision in the workfile record.
 
 ### GPT-5.6 features used
 
