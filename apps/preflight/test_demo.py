@@ -68,6 +68,11 @@ class PublicDemoTests(TestCase):
             self.assertContains(response, reverse("preflight_demo:start", args=[slug]))
         self.assertContains(response, "Synthetic report data")
         self.assertContains(response, "Appraiser judgment is required")
+        self.assertContains(response, "normalizes supported UAD 3.6 XML fields")
+        for stage in ["Inventory", "Cross-check", "Decide", "Document"]:
+            self.assertContains(response, stage)
+        self.assertNotContains(response, "Generate clear support")
+        self.assertNotContains(response, "use the engine to interpret and respond")
         self.assertNotContains(response, "Pricing")
         self.assertNotContains(response, "Stripe")
 
@@ -151,9 +156,16 @@ class PublicDemoTests(TestCase):
         finding.decision.refresh_from_db()
         self.assertEqual(finding.decision.status, "deferred")
         self.assertEqual(finding.decision.note, "Verify the condition evidence before delivery.")
+        not_applicable_finding = review.findings.filter(basis="deterministic").exclude(pk=finding.pk).first()
+        self.client.post(
+            reverse("preflight_demo:decision", args=[not_applicable_finding.pk]),
+            {"status": "not_applicable", "note": "Verified as not applicable to this assignment."},
+        )
         html_record = self.client.get(reverse("preflight_demo:workfile", args=[review.pk]))
         self.assertContains(html_record, "Workfile review record")
         self.assertContains(html_record, finding.decision.note)
+        self.assertContains(html_record, "Not applicable")
+        self.assertNotContains(html_record, "Not_Applicable")
         json_record = self.client.get(reverse("preflight_demo:workfile_download", args=[review.pk]))
         self.assertEqual(json_record.status_code, 200)
         self.assertEqual(json_record["Content-Type"], "application/json")

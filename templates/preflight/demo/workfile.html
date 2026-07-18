@@ -11,12 +11,12 @@
       <div class="panel-heading"><div><span class="panel-eyebrow">Review record</span><h2>Evidence and decisions</h2></div><span class="panel-note">{{ snapshot.generated_at }}</span></div>
       {% for finding in snapshot.findings %}
         <article class="demo-record-finding">
-          <div class="finding-meta"><span class="severity-{{ finding.severity }}">{{ finding.severity|title }}</span><span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight evidence review{% else %}Preflight check{% endif %}</span><span class="status-chip">{{ finding.decision_status|title }}</span></div>
+          <div class="finding-meta"><span class="severity-{{ finding.severity }}">{{ finding.severity|title }}</span><span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight evidence review{% else %}Preflight check{% endif %}</span><span class="status-chip">{% if finding.decision_status == "not_applicable" %}Not applicable{% else %}{{ finding.decision_status|title }}{% endif %}</span></div>
           <h3>{{ finding.title }}</h3>
           <p><strong>Observed:</strong> {{ finding.observed_issue }}</p>
           <p><strong>Location:</strong> {{ finding.source_location }}</p>
           <div class="finding-evidence"><strong>Supporting evidence</strong><ul>{% for evidence in finding.supporting_evidence %}<li>{{ evidence }}</li>{% endfor %}</ul></div>
-          <p><strong>Decision:</strong> {{ finding.decision_status|title }}{% if finding.decision_note %} — {{ finding.decision_note }}{% endif %}</p>
+          <p><strong>Decision:</strong> {% if finding.decision_status == "not_applicable" %}Not applicable{% else %}{{ finding.decision_status|title }}{% endif %}{% if finding.decision_note %} — {{ finding.decision_note }}{% endif %}</p>
           <small>Recorded by the session-isolated demonstration user at {{ finding.decided_at }}. Appraiser judgment required.</small>
         </article>
       {% endfor %}
