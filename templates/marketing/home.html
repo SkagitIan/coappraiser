@@ -1,11 +1,90 @@
 {% extends "base.html" %}
-{% block title %}CoAppraiser Preflight | UAD 3.6 Report Review{% endblock %}
-{% block extra_head %}<meta name="description" content="CoAppraiser Preflight reviews completed UAD 3.6 appraisal packages for likely revision triggers, conflicting information, missing support, and photo or exhibit problems before delivery."><link rel="canonical" href="https://coappraiser.com/">{% endblock %}
+{% block title %}CoAppraiser Preflight | Pre-delivery Appraisal Review{% endblock %}
+{% block extra_head %}<meta name="description" content="CoAppraiser Preflight is a pre-delivery review engine for independent residential appraisers."><link rel="canonical" href="https://coappraiser.com/">{% endblock %}
 {% block content %}
-<section class="hero"><div><div class="eyebrow"><span class="dot"></span> Pre-delivery review for independent appraisers</div><h1>Run a second set of eyes before delivery.</h1><p class="lead">Upload the completed XML, PDF, and photos from the appraisal software you already use. CoAppraiser Preflight identifies likely revision triggers and tells you what deserves attention before you send the report.</p><div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">Start your first review →</a><a class="button secondary" href="{% url 'uad_checklist' %}">See the UAD 3.6 checklist</a></div><p class="form-note">Works alongside TOTAL, ACI, ClickFORMS, and other established appraisal platforms.</p></div><div class="hero-card"><div class="console"><div class="console-top"><div class="traffic"><span></span><span></span><span></span></div><span>Preflight review</span></div><div class="prompt"><div class="label">Completed package uploaded</div><p>XML + PDF + 24 photos</p></div><div class="output"><div class="task"><strong>Fix before delivery</strong><span>Potential conflict between reported condition and documented defects.</span></div><div class="task"><strong>Professional judgment review</strong><span>Confirm the report commentary supports the selected analysis.</span></div><div class="task"><strong>Workfile record</strong><span>Export the review findings, decisions, and file hashes.</span></div></div></div></div></section>
-<section class="section"><div class="stat-strip"><div><b>One task</b><span>Run Preflight before delivery</span></div><div><b>Three sources</b><span>XML, PDF, and photos reviewed together</span></div><div><b>Versioned</b><span>Upload a revision and compare what changed</span></div><div><b>Appraiser-led</b><span>Review findings without changing your report</span></div></div></section>
-<section class="section"><div class="section-heading"><div><h2>A focused review, not another appraisal platform.</h2><p class="lead">Keep your existing software. Preflight helps catch drift between structured data, report language, exhibits, and the workfile before a reviewer does.</p></div></div><div class="grid-2"><article class="card"><span class="kicker">Upload</span><h3>Bring the finished package</h3><p>Upload a UAD ZIP or separate XML, rendered PDF, images, and optional submission feedback.</p></article><article class="card"><span class="kicker">Review</span><h3>See prioritized findings</h3><p>Understand what was observed, where it appears, why it may matter, and what to review next.</p></article><article class="card"><span class="kicker">Revise</span><h3>Correct in your software</h3><p>Make substantive changes where you already work, then upload a revised package.</p></article><article class="card"><span class="kicker">Document</span><h3>Keep a concise review record</h3><p>Record findings, decisions, file hashes, limitations, and the date of the automated review.</p></article></div></section>
-<section class="section split"><div class="bundle"><h2>Built to support judgment, not replace it.</h2><p>Preflight does not determine value, select comps, calculate adjustments, complete forms, or guarantee UAD, USPAP, lender, AMC, or GSE acceptance.</p></div><div class="content-card"><h2>One focused pre-delivery workflow</h2><p>Upload the completed package, inspect evidence-linked findings, record your decisions, and keep the resulting review record with the workfile.</p><a class="button primary" href="{% url 'accounts:signup' %}">Try Preflight</a></div></section>
-<section class="cta"><h2>Before you send the next report, run Preflight.</h2><p>Upload a completed package, review the findings, and decide what deserves attention. Your report stays in your existing appraisal software.</p><div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">Create your account →</a><a class="button secondary" href="{% url 'pricing' %}">See plans</a></div></section>
-<p class="disclaimer-line">CoAppraiser Preflight is automated readiness support, not official GSE validation. The appraiser remains responsible for analysis, reporting, and final conclusions.</p>
+
+<section class="hero preflight-home-hero">
+  <div>
+    <div class="eyebrow"><span class="dot"></span> CoAppraiser Preflight</div>
+    <h1>Find what the reviewer will find—first.</h1>
+    <p class="lead">CoAppraiser is a pre-delivery review engine for independent residential appraisers. It cross-checks your XML, PDF narrative, and photos to catch contradictions, unsupported conclusions, and UAD 3.6 triggers before you hit send.</p>
+    <div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div>
+    <p class="home-trust-line">Works alongside TOTAL, ACI, ClickFORMS, and the software you already use.</p>
+  </div>
+  <div class="home-delivery-flow" aria-label="CoAppraiser workflow">
+    <span>Appraisal Software</span><b>→</b><strong>CoAppraiser Preflight</strong><b>→</b><span>Client Delivery</span>
+  </div>
+</section>
+
+<section class="section home-finding-showcase">
+  <div class="home-review-window">
+    <header>
+      <div><span class="status-dot status-dot-completed"></span><strong>Pre-delivery review: 6 items found</strong></div>
+    </header>
+    <div class="home-finding-list">
+      <article class="is-material">
+        <span>2 Material Inconsistencies</span>
+        <h3>Condition Conflict</h3>
+        <p>Subject condition is rated C3 in the grid, but the improvements section notes deferred maintenance requiring immediate repair.</p>
+      </article>
+      <article class="is-material">
+        <span>2 Material Inconsistencies</span>
+        <h3>Market Trend Mismatch</h3>
+        <p>Neighborhood section indicates stable property values, but time adjustments are applied to Comparables 1–3.</p>
+      </article>
+      <article class="is-support">
+        <span>3 Support Items</span>
+        <h3>Missing Explanation</h3>
+        <p>Location adjustment of $15,000 applied to Comp 2 lacks supporting analysis in the addendum.</p>
+      </article>
+    </div>
+    <footer><span><b>Status:</b> 4 cleared · 2 require appraiser judgment</span></footer>
+  </div>
+</section>
+
+<section class="section home-difference">
+  <div class="section-heading">
+    <div><h2>Your software checks empty fields. CoAppraiser checks the story.</h2></div>
+  </div>
+  <p class="home-difference-copy">Traditional validation stops at invalid data formats. It doesn't know if your narrative contradicts your grid, or if an adjustment lacks visible support. CoAppraiser reviews the report as a connected professional work product, giving you a prioritized queue to resolve before delivery.</p>
+</section>
+
+<section class="section home-workflow">
+  <div class="section-heading">
+    <div>
+      <span class="kicker">One continuous pre-delivery review system</span>
+      <h2>Appraisal Software → CoAppraiser Preflight → Client Delivery</h2>
+    </div>
+  </div>
+  <ol>
+    <li><b>01</b><div><h3>Screen</h3><p>Upload the package. The engine flags internal inconsistencies and UAD 3.6 readiness issues.</p></div></li>
+    <li><b>02</b><div><h3>Support</h3><p>Generate clear support for weak market conclusions or complex adjustments before the AMC flags them.</p></div></li>
+    <li><b>03</b><div><h3>Document</h3><p>Export a time-stamped, hashed record of your QA decisions and sources to lock down your workfile.</p></div></li>
+    <li><b>04</b><div><h3>Defend</h3><p>If a client still submits a stip, use the engine to interpret and respond to the request intelligently.</p></div></li>
+  </ol>
+</section>
+
+<section class="section home-control">
+  <div class="bundle">
+    <span class="kicker">UAD 3.6 readiness</span>
+    <h2>3.6 catches what 2.6 forgave. Preflight catches it first.</h2>
+  </div>
+</section>
+
+<section class="section split">
+  <div class="bundle">
+    <span class="kicker">Appraiser in control</span>
+    <h2>Built to support professional judgment, not replace it.</h2>
+  </div>
+  <div class="content-card">
+    <p>No automated value opinions. No black-box decisions. You remain 100% responsible for the analysis, comparable selection, and final report.</p>
+    <a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Find what the reviewer will find—first.</h2>
+  <div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div>
+</section>
+
 {% endblock %}
