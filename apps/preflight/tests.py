@@ -346,17 +346,22 @@ class PreflightTests(TestCase):
         COAPPRAISER_LLM_MODEL="gpt-5.6",
         OPENAI_API_KEY="test-key",
     )
-    def test_gpt5_request_uses_supported_structured_output_parameters(self):
+    def test_text_only_gpt56_review_uses_responses_api(self):
         payload = {"summary": "Reviewed", "findings": [], "missing_information": []}
         with patch("openai.OpenAI") as openai_client:
-            create = openai_client.return_value.chat.completions.create
-            create.return_value = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(payload)))])
+            create = openai_client.return_value.responses.create
+            create.return_value = SimpleNamespace(output_text=json.dumps(payload))
             result = run_llm_json(system_prompt="Return JSON", user_prompt="Evidence", schema_name="preflight_review", required_keys=payload.keys())
         self.assertEqual(result, payload)
         request = create.call_args.kwargs
         self.assertEqual(request["model"], "gpt-5.6")
+        self.assertEqual(request["reasoning"], {"effort": "xhigh"})
+        self.assertFalse(request["store"])
         self.assertNotIn("temperature", request)
-        self.assertEqual(request["response_format"]["type"], "json_schema")
+        self.assertEqual(request["text"]["format"]["type"], "json_schema")
+        self.assertEqual(request["input"][0]["content"], [{"type": "input_text", "text": "Evidence"}])
+        self.assertEqual(request["timeout"], 60)
+        openai_client.return_value.chat.completions.create.assert_not_called()
 
     @override_settings(
         COAPPRAISER_LLM_PROVIDER="openai",
@@ -390,6 +395,7 @@ class PreflightTests(TestCase):
         self.assertEqual(request["text"]["format"]["type"], "json_schema")
         self.assertEqual(request["input"][0]["content"][1], visual_input)
         self.assertNotIn("temperature", request)
+        openai_client.return_value.chat.completions.create.assert_not_called()
 
     @override_settings(
         DEBUG=False,

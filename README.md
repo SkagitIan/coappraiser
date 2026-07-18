@@ -20,7 +20,7 @@ The runtime sequence is:
 
 1. Django validates the ZIP, hashes and stores its files, extracts XML fields and available PDF text, and runs deterministic package rules.
 2. The application builds a source manifest containing extracted observations, short PDF excerpts, the deterministic findings already produced, one selected rendered report PDF, and—by default—up to six prioritized appraisal photos.
-3. When visual sources are available, GPT-5.6 performs one multimodal consistency review through the Responses API at configurable reasoning effort. A text-only package uses the Chat Completions path with the same strict finding schema.
+3. GPT-5.6 performs one consistency review through the Responses API at configurable reasoning effort. The same request path and strict finding schema apply whether the package supplies text alone or text plus visual sources.
 4. A strict JSON Schema requires every candidate finding to include its title, category, severity, observed issue, source location, evidence, significance, review action, confidence, visual sources, and an appraiser-judgment reminder.
 5. Application code validates the response, rejects unverified visual filenames, suppresses low-confidence items and duplicates of deterministic findings, and persists the accepted findings separately from rule-based findings.
 6. The appraiser—not the model—resolves, defers, or dismisses each item and records the decision in the workfile record.
@@ -29,7 +29,7 @@ The runtime sequence is:
 
 | GPT-5.6 capability | CoAppraiser implementation | Why it matters here |
 | --- | --- | --- |
-| Responses API | Sends normalized text evidence, a rendered PDF, and selected photos in one bounded multimodal request; text-only reviews use Chat Completions. | The reviewer can evaluate the package as one connected body of evidence without making the visual path a requirement for every package. |
+| Responses API | Uses one production API path for text-only and multimodal reviews, adding the rendered PDF and selected photos when available. | The reviewer gets GPT-5.6's preferred reasoning interface without making visual evidence a requirement for every package. |
 | PDF file input | Sends the selected report as a Base64 `input_file` with `detail: high`; the API supplies extracted text and page images to the vision-capable model. | Small print, page layout, labels, and rendered content remain available alongside extracted report text. |
 | Image understanding | Sends supported appraisal photos as high-detail `input_image` items, each paired with its exact filename. | A finding can trace a narrow visual observation back to the actual exhibit and compare it with XML or narrative evidence. |
 | Reasoning effort | Uses `xhigh` for the competition configuration; `max` is supported as an opt-in production experiment. | Cross-source inconsistencies require more deliberate comparison than ordinary summarization, while the setting remains measurable and configurable. |
@@ -60,7 +60,7 @@ CoAppraiser and its initial appraisal workflow existed before Build Week. Work c
 
 - Django, server-rendered templates, HTMX, and PostgreSQL/SQLite.
 - `apps/preflight`: private package intake, extraction, versioned findings, decisions, AI execution records, and workfile export.
-- `apps/preflight/llm_client.py`: explicit mock or OpenAI provider with strict structured output. GPT-5.6 multimodal reviews use the Responses API and omit unsupported temperature overrides.
+- `apps/preflight/llm_client.py`: explicit mock or OpenAI provider with strict structured output. Every production GPT-5.6 review uses the Responses API with configurable reasoning effort and no temperature override.
 - XML and PDF observations retain source locations; deterministic rules and GPT interpretations are stored and displayed separately.
 - Cloudflare R2 is required for production uploads. Downloads are authenticated and user-scoped; files are not served from public static paths.
 - Railway runs migrations, WhiteNoise static assets, and Gunicorn.

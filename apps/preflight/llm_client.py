@@ -56,56 +56,33 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None,
         timeout=settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS,
         max_retries=1,
     )
-    if multimodal_inputs:
-        if settings.COAPPRAISER_REASONING_EFFORT not in {"none", "low", "medium", "high", "xhigh", "max"}:
-            raise LLMConfigurationError(
-                "COAPPRAISER_REASONING_EFFORT must be none, low, medium, high, xhigh, or max."
-            )
-        response = client.responses.create(
-            model=settings.COAPPRAISER_LLM_MODEL,
-            instructions=system_prompt,
-            input=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "input_text", "text": user_prompt},
-                        *multimodal_inputs,
-                    ],
-                }
-            ],
-            text=_responses_text_format(schema_name),
-            reasoning={"effort": settings.COAPPRAISER_REASONING_EFFORT},
-            max_output_tokens=5000,
-            store=False,
-            timeout=settings.COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS,
+    if settings.COAPPRAISER_REASONING_EFFORT not in {"none", "low", "medium", "high", "xhigh", "max"}:
+        raise LLMConfigurationError(
+            "COAPPRAISER_REASONING_EFFORT must be none, low, medium, high, xhigh, or max."
         )
-        return validate_output(json.loads(response.output_text), required_keys or [])
-
-    request = {
-        "model": settings.COAPPRAISER_LLM_MODEL,
-        "response_format": _chat_response_format(schema_name),
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+    response = client.responses.create(
+        model=settings.COAPPRAISER_LLM_MODEL,
+        instructions=system_prompt,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": user_prompt},
+                    *(multimodal_inputs or []),
+                ],
+            }
         ],
-    }
-    if not settings.COAPPRAISER_LLM_MODEL.startswith("gpt-5"):
-        request["temperature"] = 0.1
-    response = client.chat.completions.create(**request)
-    return validate_output(json.loads(response.choices[0].message.content), required_keys or [])
-
-
-def _chat_response_format(schema_name):
-    if schema_name != "preflight_review":
-        return {"type": "json_object"}
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": schema_name,
-            "strict": True,
-            "schema": _preflight_output_schema(),
-        },
-    }
+        text=_responses_text_format(schema_name),
+        reasoning={"effort": settings.COAPPRAISER_REASONING_EFFORT},
+        max_output_tokens=5000,
+        store=False,
+        timeout=(
+            settings.COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS
+            if multimodal_inputs
+            else settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS
+        ),
+    )
+    return validate_output(json.loads(response.output_text), required_keys or [])
 
 
 def _responses_text_format(schema_name):
