@@ -34,6 +34,7 @@ SCENARIOS = [
         "condition_pdf": "C3",
         "condition_narrative": "C3",
         "quality_xml": "Q3",
+        "quality_pdf": "Q3",
         "quality_narrative": "Q3",
         "gla_xml": "2140",
         "gla_pdf": "2,140",
@@ -63,6 +64,7 @@ SCENARIOS = [
         "condition_pdf": "C3",
         "condition_narrative": "C3",
         "quality_xml": "Q3",
+        "quality_pdf": "Q4",
         "quality_narrative": "Q4",
         "gla_xml": "2180",
         "gla_pdf": "2,180",
@@ -94,11 +96,12 @@ SCENARIOS = [
         "condition_pdf": "C4",
         "condition_narrative": "",
         "quality_xml": "",
+        "quality_pdf": "Q3",
         "quality_narrative": "",
         "gla_xml": "",
         "gla_pdf": "1,760",
         "comp_count": "3",
-        "commentary_count": "2",
+        "commentary_count": "3",
         "defect": "water staining at rear bedroom ceiling",
         "summary": "Rendered report and exhibits are present, but the structured XML export is missing.",
         "deliberate": [
@@ -185,7 +188,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     y = _line(c, "Property Type:", "Detached one-unit residence", y)
     y = _line(c, "Above-grade GLA:", f"{scenario['gla_pdf']} sq ft", y)
     y = _line(c, "Condition:", scenario["condition_pdf"], y)
-    y = _line(c, "Quality:", "See narrative commentary", y)
+    y = _line(c, "Quality:", scenario["quality_pdf"], y)
     y = _line(c, "Defect:", scenario["defect"] or "None reported in the synthetic scenario", y)
     c.setFillColor(colors.HexColor("#F8FAFC"))
     c.roundRect(54, 390, 504, 120, 8, fill=1, stroke=0)
@@ -215,7 +218,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
         ["Identifier", scenario["identifier"], "SYN-COMP-01", "SYN-COMP-02", "SYN-COMP-03"],
         ["Sale status", "Subject", "Closed", "Closed", "Closed"],
         ["Condition", scenario["condition_pdf"], "C3", "C3", "C4"],
-        ["Quality", "See narrative", "Q3", "Q3", "Q3"],
+        ["Quality", scenario["quality_pdf"], "Q3", "Q3", "Q3"],
         ["GLA", scenario["gla_pdf"], "2,080", "2,225", "1,990"],
     ]
     x_positions = [54, 150, 270, 380, 490]
@@ -260,6 +263,7 @@ def build_pdf(path: Path, scenario: dict) -> None:
     text.setLeading(17)
     lines = [
         f"Rendered condition commentary: {scenario['condition_pdf']}.",
+        f"Rendered quality commentary: {scenario['quality_pdf']}.",
         f"Scenario identifier: {scenario['identifier']}.",
         "The appraiser must reconcile all source evidence and make every final decision.",
         "This synthetic report does not determine value, recommend an adjustment,",

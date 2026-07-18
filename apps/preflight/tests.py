@@ -9,7 +9,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from apps.ai_tools.services.llm_client import LLMConfigurationError, run_llm_json
-from .models import AIExecution, PreflightReview, ReviewFile
+from .ai_review import run_preflight_ai_review
+from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import build_workfile_record, run_deterministic_review, safe_zip_members
 
 
@@ -67,6 +68,61 @@ class PreflightTests(TestCase):
         self.assertEqual(review.status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_IMAGES_MISSING").exists())
         self.assertEqual(version.ai_executions.get().status, "failed")
+
+    def test_ai_context_and_duplicate_suppression_keep_novel_finding(self):
+        review = PreflightReview.objects.create(user=self.user, title="AI evidence context")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(version=version, original_name="report.pdf", kind="pdf", sha256="pdf", extracted_text="Condition: C3")
+        ReviewFile.objects.create(version=version, original_name="condition_exhibit.jpg", kind="image", sha256="jpg")
+        ReviewFinding.objects.create(
+            review=review,
+            version=version,
+            rule_code="CROSS_SOURCE_SUBJECT_CONDITION",
+            signature="condition-conflict",
+            title="Condition differs between XML and PDF",
+            category="consistency",
+            severity="warning",
+            observed="XML reports C4 while the PDF reports C3.",
+            basis="deterministic",
+        )
+        response = {
+            "summary": "Review complete.",
+            "findings": [
+                {
+                    "rule_code": "AI_CONDITION",
+                    "title": "Conflicting subject condition ratings",
+                    "category": "consistency",
+                    "severity": "critical",
+                    "observed": "Condition differs.",
+                    "location": "report.pdf",
+                    "evidence": ["PDF reports C3."],
+                    "why_it_matters": "The report should be internally consistent.",
+                    "recommended_action": "Reconcile the condition evidence.",
+                    "guidance": ["Appraiser judgment is required."],
+                },
+                {
+                    "rule_code": "AI_ROOF",
+                    "title": "Roof leakage needs supporting reconciliation",
+                    "category": "judgment_review",
+                    "severity": "warning",
+                    "observed": "The narrative reports active roof leakage.",
+                    "location": "report.pdf addendum",
+                    "evidence": ["Observed scenario item: active roof leakage."],
+                    "why_it_matters": "The reported defect may affect report consistency.",
+                    "recommended_action": "Review the report treatment and available exhibit.",
+                    "guidance": ["Appraiser judgment is required."],
+                },
+            ],
+            "missing_information": [],
+        }
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response) as mocked_llm:
+            execution = run_preflight_ai_review(version)
+        context = json.loads(mocked_llm.call_args.kwargs["user_prompt"])
+        self.assertIn({"file": "condition_exhibit.jpg", "kind": "image"}, context["file_inventory"])
+        self.assertEqual(context["deterministic_findings"][0]["rule_code"], "CROSS_SOURCE_SUBJECT_CONDITION")
+        self.assertFalse(review.findings.filter(rule_code="AI_CONDITION").exists())
+        self.assertTrue(review.findings.filter(rule_code="AI_ROOF").exists())
+        self.assertEqual(execution.parsed_response["suppressed_findings"][0]["topic"], "condition")
 
     def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
         review = PreflightReview.objects.create(user=self.user, title="Conflict package")
