@@ -13,7 +13,7 @@ from django.db.models import Case, IntegerField, When
 from django.utils import timezone
 
 from .models import ExtractedObservation, FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
-from .uad36 import inspect_uad_xml
+from .uad36 import inspect_uad_xml, normalize_uad36
 
 MAX_EXPANDED_BYTES = 100 * 1024 * 1024
 MAX_FILES = 500
@@ -25,7 +25,10 @@ def extract_pdf_text(uploaded_file):
         from pypdf import PdfReader
 
         reader = PdfReader(uploaded_file)
-        return "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
+        return "\n\n".join(
+            f"[CoAppraiser PDF page {page_number}]\n{page.extract_text() or ''}"
+            for page_number, page in enumerate(reader.pages, start=1)
+        ).strip()
     except Exception as exc:
         raise ValueError("CoAppraiser could not read this PDF package.") from exc
 
@@ -98,6 +101,23 @@ def extract_xml_observations(version, record):
         root = ET.fromstring(xml_content)
     except (ET.ParseError, ValueError):
         return []
+    normalized_uad = normalize_uad36(
+        xml_content.encode("utf-8") if isinstance(xml_content, str) else xml_content
+    )
+    if normalized_uad:
+        return [
+            ExtractedObservation.objects.create(
+                version=version,
+                source_file=record,
+                field_code=item["field_code"],
+                value=item["value"],
+                normalized_value=_normalized(item["value"]),
+                source_kind="xml",
+                source_location=item["source_location"],
+                metadata=item.get("metadata", {}),
+            )
+            for item in normalized_uad
+        ]
     observations = []
     for element in root.iter():
         field_code = XML_FIELD_MAP.get(element.tag.rsplit("}", 1)[-1])
@@ -110,19 +130,105 @@ def extract_xml_observations(version, record):
 PDF_PATTERNS = {
     "subject.identifier": r"Subject\s+Identifier\s*:\s*([^\r\n]+)",
     "areas.above_grade_gla": r"Above[- ]grade\s+GLA\s*:\s*([\d,]+)",
-    "subject.condition": r"Condition\s*:\s*([^\r\n]+)",
-    "subject.defect": r"Defect\s*:\s*([^\r\n]+)",
+    "subject.condition": r"(?m)^Condition\s*:\s*([^\r\n]+)",
+    "subject.defect": r"(?m)^Defect\s*:\s*([^\r\n]+)",
+    "subject.quality": r"Overall\s+Quality\s+(Q[1-6])\b",
+}
+
+# UAD 3.6 rendered reports use different labels from the legacy synthetic
+# fixtures. Keep the most specific subject-summary label first.
+PDF_UAD36_PATTERNS = {
+    "areas.above_grade_gla": r"Finished\s+Above\s+Grade\s+([\d,]+)\s+Sq\.\s*Ft\.",
+    "subject.condition": r"Overall\s+Condition\s+(C[1-6])\b",
 }
 
 
-def extract_pdf_observations(version, record):
-    observations = []
-    for field_code, pattern in PDF_PATTERNS.items():
-        match = re.search(pattern, record.extracted_text or "", re.IGNORECASE)
-        if match:
+def normalize_pdf_observations(extracted_text, original_name):
+    sections = []
+    marker = re.compile(r"\[CoAppraiser PDF page (\d+)\]\r?\n")
+    matches = list(marker.finditer(extracted_text or ""))
+    if matches:
+        for index, match in enumerate(matches):
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(extracted_text)
+            sections.append((int(match.group(1)), extracted_text[match.end() : end]))
+    else:
+        sections.append((None, extracted_text or ""))
+
+    normalized = []
+    found_fields = set()
+    address_pattern = re.compile(
+        r"Physical\s+Address\s+([^\r\n]+)"
+        r"(?:\r?\n\s*(?:Unit|U\s*\r?\n\s*nit)\s+(\S+))?",
+        re.IGNORECASE,
+    )
+    for page_number, page_text in sections:
+        address_match = address_pattern.search(page_text)
+        if not address_match:
+            continue
+        line = re.sub(r"(?<=\d)\s+(?=\d{2}\b)", "", address_match.group(1).strip())
+        unit = (address_match.group(2) or "").strip()
+        full_address = f"{line}, Unit {unit}" if unit else line
+        location = f"PDF: {original_name}"
+        if page_number:
+            location += f", page {page_number}"
+        page_metadata = {"page": page_number} if page_number else {}
+        normalized.extend(
+            [
+                {
+                    "field_code": "subject.address.full",
+                    "value": full_address,
+                    "source_location": location,
+                    "metadata": page_metadata,
+                },
+                {
+                    "field_code": "subject.address.line",
+                    "value": line,
+                    "source_location": location,
+                    "metadata": {**page_metadata, "derived": "address_line"},
+                },
+            ]
+        )
+        found_fields.update({"subject.address.full", "subject.address.line"})
+        break
+
+    for field_code, pattern in [*PDF_PATTERNS.items(), *PDF_UAD36_PATTERNS.items()]:
+        if field_code in found_fields:
+            continue
+        for page_number, page_text in sections:
+            match = re.search(pattern, page_text, re.IGNORECASE)
+            if not match:
+                continue
             value = match.group(1).strip()
-            observations.append(ExtractedObservation.objects.create(version=version, source_file=record, field_code=field_code, value=value, normalized_value=_normalized(value), source_kind="pdf", source_location=f"PDF: {record.original_name}"))
-    return observations
+            location = f"PDF: {original_name}"
+            if page_number:
+                location += f", page {page_number}"
+            normalized.append(
+                {
+                    "field_code": field_code,
+                    "value": value,
+                    "source_location": location,
+                    "metadata": {"page": page_number} if page_number else {},
+                }
+            )
+            found_fields.add(field_code)
+            break
+    return normalized
+
+
+def extract_pdf_observations(version, record):
+    return [
+        ExtractedObservation.objects.create(
+            version=version,
+            source_file=record,
+            field_code=item["field_code"],
+            value=item["value"],
+            normalized_value=_normalized(item["value"]),
+            source_kind="pdf",
+            source_location=item["source_location"],
+            metadata=item.get("metadata", {}),
+        )
+        for item in normalize_pdf_observations(record.extracted_text or "", record.original_name)
+    ]
 
 
 def extract_observations(version):
@@ -134,6 +240,51 @@ def extract_observations(version):
         elif record.kind == "pdf":
             observations.extend(extract_pdf_observations(version, record))
     return observations
+
+
+CROSS_SOURCE_COMPARISONS = {
+    "subject.identifier": ("Subject identifier", "Subject section"),
+    "subject.address.full": ("Complete subject address", "Subject section"),
+    "areas.above_grade_gla": ("Above-grade GLA", "Area section"),
+    "subject.condition": ("Condition", "Condition section"),
+    "subject.quality": ("Quality", "Quality section"),
+}
+
+
+def compare_cross_source_observations(observations):
+    values = {}
+    for observation in observations:
+        field_code = observation.get("field_code") if isinstance(observation, dict) else observation.field_code
+        source_kind = observation.get("source_kind") if isinstance(observation, dict) else observation.source_kind
+        values.setdefault(field_code, {}).setdefault(source_kind, observation)
+
+    differences = []
+    for field_code, (label, location) in CROSS_SOURCE_COMPARISONS.items():
+        xml_value = values.get(field_code, {}).get("xml")
+        pdf_value = values.get(field_code, {}).get("pdf")
+        if not xml_value or not pdf_value:
+            continue
+
+        def read(item, key):
+            return item.get(key, "") if isinstance(item, dict) else getattr(item, key)
+
+        xml_normalized = read(xml_value, "normalized_value") or _normalized(read(xml_value, "value"))
+        pdf_normalized = read(pdf_value, "normalized_value") or _normalized(read(pdf_value, "value"))
+        if xml_normalized == pdf_normalized:
+            continue
+        differences.append(
+            {
+                "rule_code": "CROSS_SOURCE_" + field_code.upper().replace(".", "_"),
+                "field_code": field_code,
+                "label": label,
+                "location": location,
+                "xml_value": read(xml_value, "value"),
+                "pdf_value": read(pdf_value, "value"),
+                "xml_location": read(xml_value, "source_location"),
+                "pdf_location": read(pdf_value, "source_location"),
+            }
+        )
+    return differences
 
 
 def ingest_files(version, uploaded_files):
@@ -198,15 +349,21 @@ def run_deterministic_review(version, include_ai=True):
     for observation in observations:
         by_field.setdefault(observation.field_code, {}).setdefault(observation.source_kind, []).append(observation)
 
-    def compare_field(field_code, label, location):
-        xml_value = (by_field.get(field_code, {}).get("xml") or [None])[0]
-        pdf_value = (by_field.get(field_code, {}).get("pdf") or [None])[0]
-        if xml_value and pdf_value and xml_value.normalized_value != pdf_value.normalized_value:
-            add("CROSS_SOURCE_" + field_code.upper().replace(".", "_"), f"{label} differs between XML and PDF", "fix_before_delivery", "warning", f"XML reports {xml_value.value}; PDF reports {pdf_value.value}.", location, "Conflicting source values can create a revision trigger or make the report difficult to reconcile.", f"Review the {label.lower()} in the appraisal software and confirm which source is correct.", [f"{xml_value.source_location}: {xml_value.value}", f"{pdf_value.source_location}: {pdf_value.value}"])
-
-    compare_field("subject.identifier", "Subject identifier", "Subject section")
-    compare_field("areas.above_grade_gla", "Above-grade GLA", "Area section")
-    compare_field("subject.condition", "Condition", "Condition section")
+    for difference in compare_cross_source_observations(observations):
+        add(
+            difference["rule_code"],
+            f"{difference['label']} differs between XML and PDF",
+            "fix_before_delivery",
+            "warning",
+            f"XML reports {difference['xml_value']}; PDF reports {difference['pdf_value']}.",
+            difference["location"],
+            "Conflicting source values can create a revision trigger or make the report difficult to reconcile.",
+            f"Review the {difference['label'].lower()} in the appraisal software and confirm which source is correct.",
+            [
+                f"{difference['xml_location']}: {difference['xml_value']}",
+                f"{difference['pdf_location']}: {difference['pdf_value']}",
+            ],
+        )
 
     def compare_xml_narrative(structured_code, narrative_code, label, location):
         structured = (by_field.get(structured_code, {}).get("xml") or [None])[0]

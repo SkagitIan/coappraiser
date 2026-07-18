@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "corpus_id": "fannie-mae-uad-appendix-d-1",
+  "archive_sha256": "9aa50fa479fc6bfd77694298c62947e112854a8c64fb05c8e81f77999df43b19",
+  "cases": [
+    {
+      "id": "sf5-clean-baseline",
+      "scenario_xml": "Appendix D-1 SF5_Appraisal/SF5_Appraisal_v1.2.xml",
+      "mutation": null,
+      "expected_rules": []
+    },
+    {
+      "id": "sf5-condition-conflict",
+      "scenario_xml": "Appendix D-1 SF5_Appraisal/SF5_Appraisal_v1.2.xml",
+      "mutation": {"field": "subject.condition", "value": "C4"},
+      "expected_rules": ["CROSS_SOURCE_SUBJECT_CONDITION"]
+    },
+    {
+      "id": "sf5-quality-conflict",
+      "scenario_xml": "Appendix D-1 SF5_Appraisal/SF5_Appraisal_v1.2.xml",
+      "mutation": {"field": "subject.quality", "value": "Q3"},
+      "expected_rules": ["CROSS_SOURCE_SUBJECT_QUALITY"]
+    },
+    {
+      "id": "sf5-gla-conflict",
+      "scenario_xml": "Appendix D-1 SF5_Appraisal/SF5_Appraisal_v1.2.xml",
+      "mutation": {"field": "areas.above_grade_gla", "value": "1460"},
+      "expected_rules": ["CROSS_SOURCE_AREAS_ABOVE_GRADE_GLA"]
+    }
+  ]
+}

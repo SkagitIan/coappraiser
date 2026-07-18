@@ -35,7 +35,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "Validated {files} files: {xml_files} XML, {pdf_files} PDF, "
-                "{candidate_pairs} candidate PDF/XML pairs.".format(**summary)
+                "{nested_archives} nested ZIPs, {candidate_pairs} candidate PDF/XML pairs.".format(**summary)
             )
         )
         self.stdout.write(f"Archive SHA-256: {manifest['archive']['sha256']}")

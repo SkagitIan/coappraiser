@@ -148,6 +148,8 @@ then create a hashed local inventory:
 
 ```powershell
 python manage.py import_uad_eval_corpus "C:\path\to\the-downloaded.zip"
+python manage.py evaluate_uad_corpus --strict
+python manage.py evaluate_uad_regressions --strict
 ```
 
 The command validates paths and size limits, extracts only supported files beneath

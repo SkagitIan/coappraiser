@@ -47,11 +47,12 @@ are documented and verified against production configuration.
 
 ## Delivery milestones
 
-1. **Evaluation foundation (current):** safe local official-sample importer,
+1. **Evaluation foundation (complete):** safe local official-sample importer,
    archive manifest, UAD XML structure inspection, and unit tests.
-2. **Real UAD normalization:** map a deliberately limited set of high-value UAD
-   3.6 fields from the imported samples and retain exact XML paths.
-3. **Controlled cases:** build local mutations for condition, quality, GLA,
+2. **Real UAD normalization (initial gate complete):** map a deliberately
+   limited set of high-value UAD 3.6 fields from the imported samples and retain
+   exact XML paths. Expand only with verified fields.
+3. **Controlled cases (initial gate complete):** build local mutations for condition, quality, GLA,
    narrative support, and photo-to-report inconsistencies.
 4. **Scoring:** add a repeatable runner and machine-readable report for detection,
    source citation, severity, prohibited claims, and false positives.
@@ -60,7 +61,7 @@ are documented and verified against production configuration.
 
 ## Current definition of done
 
-The first milestone is complete when a developer can download Appendix D-1 from
-Fannie Mae, import it without committing the source files, see an inventory of
-the PDF/XML pairs and XML structures, and reproduce the importer tests locally.
-
+As of July 18, 2026, the reviewed Appendix D-1 archive produces 12/12 successful
+subject-field normalizations and PDF/XML agreement checks. The initial clean,
+condition, quality, and GLA regression cases produce 4/4 exact expected results.
+See [`evals/QUALITY_GATES.md`](evals/QUALITY_GATES.md).

@@ -13,3 +13,4 @@ staticfiles/
 output/
 .coverage
 .eval-data/
+downloads/

@@ -25,6 +25,24 @@ Use `--inventory-only` to inspect the archive without extracting it:
 python manage.py import_uad_eval_corpus "C:\path\to\the-downloaded.zip" --inventory-only
 ```
 
+Measure the currently supported normalization fields across every imported
+scenario:
+
+```powershell
+python manage.py evaluate_uad_corpus --strict
+python manage.py evaluate_uad_regressions --strict
+```
+
+This writes a machine-readable report beneath `.eval-data/reports/`. The strict
+gate requires a subject address, overall condition, overall quality, and
+above-grade finished area in every XML and requires those values to agree with
+the paired rendered PDF. PDF evidence retains its page number.
+
+The regression gate applies controlled condition, quality, and above-grade area
+mutations to a local copy of the official SF5 XML while retaining its paired PDF.
+Each case must return exactly the expected cross-source rule; the clean case must
+return none. Only the mutation recipes and expected rules are committed.
+
 ## Why the archive is not in Git
 
 The samples are published for UAD implementation work, but CoAppraiser does not
@@ -35,4 +53,3 @@ team can confirm that it evaluated the same bytes.
 An official sample is a representation baseline, not proof that Preflight should
 return zero findings. Expected findings must be reviewed and labeled by a
 qualified human before they become release gates.
-

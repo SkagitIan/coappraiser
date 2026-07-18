@@ -12,8 +12,14 @@ from django.urls import reverse
 from .llm_client import LLMConfigurationError, run_llm_json
 from .ai_review import run_preflight_ai_review
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
-from .services import build_workfile_record, run_deterministic_review, safe_zip_members
-from .uad36 import import_uad_archive, inspect_uad_xml
+from .services import (
+    build_workfile_record,
+    compare_cross_source_observations,
+    normalize_pdf_observations,
+    run_deterministic_review,
+    safe_zip_members,
+)
+from .uad36 import import_uad_archive, inspect_uad_xml, normalize_uad36
 
 
 class PreflightTests(TestCase):
@@ -54,6 +60,107 @@ class PreflightTests(TestCase):
         self.assertFalse(profile["parseable"])
         self.assertIn("entity declarations", profile["parse_error"])
 
+    def test_uad36_normalizer_limits_values_to_subject_property(self):
+        xml = b"""<?xml version="1.0"?>
+        <MESSAGE xmlns="http://www.mismo.org/residential/2009/schemas"
+                 MISMOReferenceModelIdentifier="3.6.0366">
+          <PROPERTIES>
+            <PROPERTY ValuationUseType="SubjectProperty">
+              <ADDITIONAL_ADDRESSES><ADDITIONAL_ADDRESS><AddressLineText>PO Box 1</AddressLineText></ADDITIONAL_ADDRESS></ADDITIONAL_ADDRESSES>
+              <ADDRESS><AddressLineText>123 Subject St</AddressLineText><AddressUnitDesignatorType>Unit</AddressUnitDesignatorType><AddressUnitIdentifier>4B</AddressUnitIdentifier><CityName>Testville</CityName></ADDRESS>
+              <STRUCTURE>
+                <CONSTRUCTION><ConstructionMethodType>SiteBuilt</ConstructionMethodType></CONSTRUCTION>
+                <UNIT><UnitStandardAboveGradeFinishedAreaMeasure AreaUnitOfMeasureType="SquareFeet">1840</UnitStandardAboveGradeFinishedAreaMeasure></UNIT>
+                <PROPERTY_DETAIL><OverallConditionRatingCode>C3</OverallConditionRatingCode><OverallQualityRatingCode>Q4</OverallQualityRatingCode></PROPERTY_DETAIL>
+                <UnitValuationCommentText>Well maintained with typical wear.</UnitValuationCommentText>
+              </STRUCTURE>
+            </PROPERTY>
+            <PROPERTY ValuationUseType="SalesComparable">
+              <ADDRESS><AddressLineText>999 Comparable Ave</AddressLineText></ADDRESS>
+              <PROPERTY_DETAIL><OverallConditionRatingCode>C5</OverallConditionRatingCode></PROPERTY_DETAIL>
+            </PROPERTY>
+          </PROPERTIES>
+          <VALUATION_REPORT><SalesComparisonCommentDescription>Three sales were analyzed.</SalesComparisonCommentDescription></VALUATION_REPORT>
+        </MESSAGE>"""
+        observations = normalize_uad36(xml)
+        by_field = {}
+        for item in observations:
+            by_field.setdefault(item["field_code"], []).append(item)
+        self.assertEqual(by_field["subject.address.line"][0]["value"], "123 Subject St")
+        self.assertEqual(by_field["subject.address.full"][0]["value"], "123 Subject St, Unit 4B")
+        self.assertEqual(by_field["subject.condition"][0]["value"], "C3")
+        self.assertEqual(by_field["subject.quality"][0]["value"], "Q4")
+        self.assertEqual(by_field["areas.above_grade_gla"][0]["value"], "1840")
+        self.assertEqual(by_field["comparables.count"][0]["value"], "1")
+        self.assertEqual(by_field["narrative.sales_comparison"][0]["value"], "Three sales were analyzed.")
+        self.assertNotIn("999 Comparable Ave", json.dumps(observations))
+        self.assertIn("PROPERTY[@ValuationUseType='SubjectProperty']", by_field["subject.condition"][0]["source_location"])
+
+    def test_uad36_pdf_normalizer_preserves_page_locations(self):
+        text = """[CoAppraiser PDF page 1]
+        Appendix D-1 cover
+        [CoAppraiser PDF page 2]
+        Physical Address 123 Subject St
+        Overall Quality Q4
+        Overall Condition C3
+        Finished Above Grade 1,840 Sq. Ft.
+        """
+        observations = normalize_pdf_observations(text, "sample.pdf")
+        by_field = {item["field_code"]: item for item in observations}
+        self.assertEqual(by_field["subject.address.line"]["value"], "123 Subject St")
+        self.assertEqual(by_field["subject.address.full"]["value"], "123 Subject St")
+        self.assertEqual(by_field["subject.condition"]["value"], "C3")
+        self.assertEqual(by_field["subject.quality"]["value"], "Q4")
+        self.assertEqual(by_field["areas.above_grade_gla"]["value"], "1,840")
+        self.assertEqual(by_field["subject.condition"]["source_location"], "PDF: sample.pdf, page 2")
+
+    def test_uad36_pdf_normalizer_repairs_split_cooperative_address(self):
+        text = """[CoAppraiser PDF page 4]
+        Subject Property
+        Physical Address 7 00 1st Ave, NW
+        U
+        nit 1206
+        """
+        observations = normalize_pdf_observations(text, "coop.pdf")
+        by_field = {item["field_code"]: item for item in observations}
+        self.assertEqual(by_field["subject.address.line"]["value"], "700 1st Ave, NW")
+        self.assertEqual(by_field["subject.address.full"]["value"], "700 1st Ave, NW, Unit 1206")
+
+    def test_pure_cross_source_comparison_returns_only_changed_rule(self):
+        observations = [
+            {
+                "field_code": "subject.condition",
+                "value": "C4",
+                "normalized_value": "c4",
+                "source_kind": "xml",
+                "source_location": "XML path: subject condition",
+            },
+            {
+                "field_code": "subject.condition",
+                "value": "C3",
+                "normalized_value": "c3",
+                "source_kind": "pdf",
+                "source_location": "PDF: report.pdf, page 2",
+            },
+            {
+                "field_code": "subject.quality",
+                "value": "Q4",
+                "normalized_value": "q4",
+                "source_kind": "xml",
+                "source_location": "XML path: subject quality",
+            },
+            {
+                "field_code": "subject.quality",
+                "value": "Q4",
+                "normalized_value": "q4",
+                "source_kind": "pdf",
+                "source_location": "PDF: report.pdf, page 2",
+            },
+        ]
+        differences = compare_cross_source_observations(observations)
+        self.assertEqual([item["rule_code"] for item in differences], ["CROSS_SOURCE_SUBJECT_CONDITION"])
+        self.assertEqual(differences[0]["pdf_location"], "PDF: report.pdf, page 2")
+
     def test_eval_importer_builds_local_manifest_and_pairs_pdf_with_xml(self):
         with tempfile.TemporaryDirectory() as directory:
             archive_path = Path(directory) / "appendix-d-1.zip"
@@ -71,6 +178,25 @@ class PreflightTests(TestCase):
             self.assertTrue(Path(manifest["manifest_path"]).is_file())
             self.assertTrue((Path(manifest["destination"]) / "Scenario 01" / "Sample Report.xml").is_file())
 
+    def test_eval_importer_recurses_through_scenario_archives(self):
+        with tempfile.TemporaryDirectory() as directory:
+            nested_stream = io.BytesIO()
+            with zipfile.ZipFile(nested_stream, "w") as nested:
+                nested.writestr(
+                    "SF5_Appraisal.xml",
+                    '<MESSAGE xmlns="http://www.mismo.org/residential/2009/schemas" version="3.6"/>',
+                )
+                nested.writestr("SF5_Appraisal.pdf", b"%PDF-1.4 synthetic")
+            archive_path = Path(directory) / "appendix-d-1.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("Appendix D-1 SF5_Appraisal.zip", nested_stream.getvalue())
+            manifest = import_uad_archive(archive_path, Path(directory) / "corpus")
+            self.assertEqual(manifest["summary"]["nested_archives"], 1)
+            self.assertEqual(manifest["summary"]["xml_files"], 1)
+            self.assertEqual(manifest["summary"]["candidate_pairs"], 1)
+            extracted = Path(manifest["destination"]) / "Appendix D-1 SF5_Appraisal" / "SF5_Appraisal.xml"
+            self.assertTrue(extracted.is_file())
+
     def test_eval_importer_rejects_path_traversal(self):
         with tempfile.TemporaryDirectory() as directory:
             archive_path = Path(directory) / "unsafe.zip"
@@ -78,6 +204,18 @@ class PreflightTests(TestCase):
                 archive.writestr("../outside.xml", "<MESSAGE />")
             with self.assertRaisesMessage(ValueError, "unsafe path"):
                 import_uad_archive(archive_path, Path(directory) / "corpus")
+
+    def test_eval_importer_rejects_unreviewed_archive_hash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive_path = Path(directory) / "different.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("scenario.xml", "<MESSAGE />")
+            with self.assertRaisesMessage(ValueError, "does not match"):
+                import_uad_archive(
+                    archive_path,
+                    Path(directory) / "corpus",
+                    source={"archive_sha256": "0" * 64},
+                )
 
     def test_upload_creates_review_and_intake_findings(self):
         xml = SimpleUploadedFile("report.xml", b"<?xml version='1.0'?><report />", content_type="application/xml")
@@ -230,6 +368,79 @@ class PreflightTests(TestCase):
             {item["topic"] for item in execution.parsed_response["suppressed_findings"]},
             {"condition", "demo_metadata"},
         )
+
+    def test_ai_boundary_filter_suppresses_valuation_directive(self):
+        review = PreflightReview.objects.create(user=self.user, title="Boundary test")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+            extracted_text="Condition evidence is supplied.",
+        )
+        response = {
+            "summary": "Review complete.",
+            "findings": [
+                {
+                    "rule_code": "AI_VALUE_DIRECTIVE",
+                    "title": "Adjustment conclusion",
+                    "category": "judgment_review",
+                    "severity": "warning",
+                    "observed": "The comparable differs from the subject.",
+                    "location": "report.pdf, page 4",
+                    "evidence": ["The grid reports a location difference."],
+                    "why_it_matters": "The difference was not reconciled.",
+                    "recommended_action": "Apply a $15,000 adjustment to the comparable.",
+                    "guidance": [],
+                    "confidence": "high",
+                    "visual_sources": [],
+                }
+            ],
+            "missing_information": [],
+        }
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response):
+            execution = run_preflight_ai_review(version)
+        self.assertFalse(review.findings.filter(rule_code="AI_VALUE_DIRECTIVE").exists())
+        self.assertEqual(
+            execution.parsed_response["suppressed_findings"][0]["reason"],
+            "The model response crossed a professional-boundary rule.",
+        )
+
+    def test_ai_finding_always_records_judgment_requirement(self):
+        review = PreflightReview.objects.create(user=self.user, title="Guidance test")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+            extracted_text="An evidence relationship requires review.",
+        )
+        response = {
+            "summary": "Review complete.",
+            "findings": [
+                {
+                    "rule_code": "AI_SUPPORTED",
+                    "title": "Narrative relationship needs review",
+                    "category": "judgment_review",
+                    "severity": "advisory",
+                    "observed": "Two supplied statements may not align.",
+                    "location": "report.pdf, page 4",
+                    "evidence": ["Statement A differs from statement B."],
+                    "why_it_matters": "The report should tell a consistent story.",
+                    "recommended_action": "Review the two supplied statements.",
+                    "guidance": ["Confirm the source evidence."],
+                    "confidence": "medium",
+                    "visual_sources": [],
+                }
+            ],
+            "missing_information": [],
+        }
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response):
+            run_preflight_ai_review(version)
+        finding = review.findings.get(rule_code="AI_SUPPORTED")
+        self.assertIn("Appraiser judgment is required.", finding.guidance)
 
     @override_settings(
         COAPPRAISER_LLM_PROVIDER="openai",

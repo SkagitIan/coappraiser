@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import mimetypes
+import re
 from django.conf import settings
 from django.utils import timezone
 from .llm_client import run_llm_json
@@ -215,6 +216,40 @@ def _finding_topic(*parts):
     return ""
 
 
+PROHIBITED_AI_CLAIM_PATTERNS = (
+    r"\b(?:final|correct|appropriate)\s+(?:opinion\s+of\s+)?value\b",
+    r"\b(?:value|opinion\s+of\s+value)\s+(?:is|should\s+be|must\s+be)\s*\$",
+    r"\b(?:final|recommended)\s+adjustment\b",
+    r"\b(?:apply|make|set|use)\s+(?:an?\s+)?\$?[\d,]+\s+adjustment\b",
+    r"\b(?:select|use|exclude)\s+(?:this\s+)?comparable\b",
+    r"\b(?:is|appears|deemed)\s+(?:fully\s+)?(?:USPAP[- ]?)?compliant\b",
+    r"\b(?:declare|guarantee|certify)\s+(?:USPAP\s+)?compliance\b",
+    r"\bguarantee(?:d|s)?\s+(?:acceptance|approval)\b",
+    r"\b(?:will|must)\s+be\s+(?:accepted|approved)\s+by\b",
+)
+
+
+def _prohibited_ai_claim(item):
+    review_text = " ".join(
+        str(item.get(field, ""))
+        for field in (
+            "title",
+            "observed",
+            "why_it_matters",
+            "recommended_action",
+            "guidance",
+        )
+    )
+    return next(
+        (
+            pattern
+            for pattern in PROHIBITED_AI_CLAIM_PATTERNS
+            if re.search(pattern, review_text, re.IGNORECASE)
+        ),
+        "",
+    )
+
+
 def run_preflight_ai_review(version):
     context = _review_context(version)
     if not context["observations"] and not context["pdf_excerpts"]:
@@ -263,6 +298,17 @@ def run_preflight_ai_review(version):
                     }
                 )
                 continue
+            prohibited_pattern = _prohibited_ai_claim(item)
+            if prohibited_pattern:
+                suppressed_findings.append(
+                    {
+                        "title": str(item.get("title"))[:200],
+                        "topic": topic,
+                        "reason": "The model response crossed a professional-boundary rule.",
+                        "boundary_pattern": prohibited_pattern,
+                    }
+                )
+                continue
             if topic and topic in deterministic_topics:
                 suppressed_findings.append(
                     {
@@ -285,7 +331,18 @@ def run_preflight_ai_review(version):
                 or not isinstance(guidance, list)
                 or not isinstance(item_visual_sources, list)
                 or confidence not in {"high", "medium", "low"}
+                or not evidence
+                or not str(item.get("observed", "")).strip()
+                or not str(item.get("why_it_matters", "")).strip()
+                or not str(item.get("recommended_action", "")).strip()
             ):
+                suppressed_findings.append(
+                    {
+                        "title": title,
+                        "topic": topic,
+                        "reason": "The model response did not include the required evidence-backed finding fields.",
+                    }
+                )
                 continue
             if confidence == "low":
                 suppressed_findings.append(
@@ -303,6 +360,8 @@ def run_preflight_ai_review(version):
                 if any(name in str(source) for name in attached_names)
             ]
             basis = "ai_visual" if verified_visual_sources else "ai_interpretation"
+            if not any("appraiser judgment is required" in str(value).lower() for value in guidance):
+                guidance = [*guidance, "Appraiser judgment is required."]
             finding = ReviewFinding.objects.create(
                 review=version.review,
                 version=version,

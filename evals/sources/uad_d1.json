@@ -4,6 +4,8 @@
   "publisher": "Fannie Mae",
   "source_page": "https://singlefamily.fanniemae.com/delivering/uniform-mortgage-data-program/uniform-appraisal-dataset",
   "download_url": "https://singlefamily.fanniemae.com/media/document/zip/appendix-d-1-urar-sample-scenarios-and-xml-files",
+  "archive_sha256": "9aa50fa479fc6bfd77694298c62947e112854a8c64fb05c8e81f77999df43b19",
+  "verified_on": "2026-07-18",
   "redistribution": "not_assumed",
   "local_directory": ".eval-data/uad-d1"
 }
