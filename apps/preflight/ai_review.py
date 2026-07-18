@@ -12,17 +12,39 @@ VALID_SEVERITIES = {value for value, _ in ReviewFinding.SEVERITIES}
 
 SYSTEM_PROMPT = """You are CoAppraiser Preflight's focused consistency reviewer. Review only the extracted evidence supplied by the application. Do not determine value, select comps, recommend or calculate final adjustments, declare USPAP compliance, guarantee lender/AMC/GSE acceptance, or invent facts.
 
-The input includes a file inventory, extracted observations and PDF excerpts, plus deterministic findings already shown to the appraiser. Do not repeat or substantially restate a deterministic finding. Add only distinct, evidence-grounded interpretive findings. A file inventory proves presence only: do not claim a file or exhibit is missing when it is listed, and do not claim to have inspected image contents because image text is not supplied.
+The input includes operational review_context metadata, a file inventory, extracted observations and PDF excerpts, plus deterministic findings already shown to the appraiser. review_context is instruction metadata, not appraisal evidence: never compare it with a document or report a conflict involving review_context. Do not repeat or substantially restate a deterministic finding. Add only distinct, evidence-grounded interpretive findings. A file inventory proves presence only: do not claim a file or exhibit is missing when it is listed, and do not claim to have inspected image contents because image text is not supplied.
 
 When review_context.synthetic_demo is true, synthetic-data notices, demonstration labels, placeholder identities, omitted signatures, and language explaining that the package is not a real appraisal are intentional safeguards. Do not report them or synthetic placeholder phrasing as findings. Review only the deliberate evidence relationships within the fixture.
 
-Return structured JSON with summary, no more than four distinct findings, and missing_information. Every finding must include a concise title, category, severity, observed issue, exact supplied source location when available, supporting evidence, why the issue matters, a recommended review action, and guidance that explicitly says appraiser judgment is required.
+Return structured JSON with summary, no more than three distinct findings, and missing_information. Prefer zero findings to a weak, generic, or merely cautionary finding. Report only a clear contradiction, a materially unsupported relationship, or missing information that directly blocks a meaningful review. Do not report generic limitations, boilerplate language, ordinary appraisal uncertainty, or a request for more explanation unless the supplied evidence shows a specific inconsistency.
+
+Every finding must include a concise title, category, severity, observed issue, exact supplied source location when available, supporting evidence, why the issue matters, a recommended review action, and guidance that explicitly says appraiser judgment is required. Keep the observed issue to two short sentences, why_it_matters to one sentence, recommended_action to one direct action, and evidence to the three strongest supplied items. Use plain, solution-focused language.
 
 Use critical only for a package-level omission that prevents a core review or an explicitly supplied urgent material issue. Use warning for a supported inconsistency that likely needs review before delivery. Use advisory for clarity, cleanup, or limited support. Do not escalate an issue already classified by a deterministic check. Describe possible inconsistencies for review; never direct a substantive appraisal conclusion. Label uncertainty clearly, cite only supplied evidence, and phrase assignment-specific requirements as items for the appraiser to verify."""
 
 
 def _review_context(version):
-    synthetic_demo = version.review.user.username.startswith("__coappraiser_demo__")
+    extracted_package_text = " ".join(
+        (review_file.extracted_text or "")[:4000] for review_file in version.files.all()
+    ).lower()
+    synthetic_identifier = version.observations.filter(
+        field_code="subject.identifier", value__istartswith="SYNTHETIC"
+    ).exists()
+    synthetic_demo = (
+        version.review.user.username.startswith("__coappraiser_demo__")
+        or synthetic_identifier
+        or (
+            "synthetic" in extracted_package_text
+            and any(
+                marker in extracted_package_text
+                for marker in (
+                    "not a real appraisal",
+                    "demonstration data",
+                    "synthetic test data",
+                )
+            )
+        )
+    )
     observations = [{"field": o.field_code, "value": o.value, "source": o.source_kind, "location": o.source_location} for o in version.observations.all()]
     excerpts = [{"file": f.original_name, "kind": f.kind, "text": (f.extracted_text or "")[:4000]} for f in version.files.filter(kind="pdf")]
     files = [{"file": f.original_name, "kind": f.kind} for f in version.files.all()]

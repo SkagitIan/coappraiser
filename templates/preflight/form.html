@@ -1,1 +1,88 @@
-{% extends "base.html" %}{% block title %}New Preflight Review | CoAppraiser{% endblock %}{% block content %}<div class="narrow card"><span class="eyebrow">New review</span><h1>Upload your completed appraisal package.</h1><p class="muted">Keep using TOTAL, ACI, ClickFORMS, or your existing software. Preflight reviews the exported files together.</p><form method="post" enctype="multipart/form-data" class="styled-form" data-processing-form>{% csrf_token %}{{ form.as_p }}<button class="button primary" type="submit">Run Preflight Review</button><span class="processing-note" aria-live="polite">Your files stay private while the package is processed.</span></form><p class="fine-print">Files are private to your account. This review does not guarantee compliance, acceptance, or appraisal accuracy.</p></div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}New Preflight Review | CoAppraiser{% endblock %}
+{% block content %}
+<div class="preflight-intake">
+  <header class="preflight-intake-heading">
+    <span class="panel-eyebrow">New evidence review</span>
+    <h1>Drop in the completed appraisal package.</h1>
+    <p>Preflight opens the exported package, traces the evidence, and returns a prioritized action queue.</p>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" class="workspace-panel intake-form" data-processing-form>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="intake-fields">
+      <p>
+        <label for="{{ form.title.id_for_label }}">Review name</label>
+        {{ form.title }}
+        {% if form.title.errors %}<span class="field-error">{{ form.title.errors|striptags }}</span>{% endif %}
+        <small>Use a name you will recognize in review history.</small>
+      </p>
+      <p>
+        <label for="{{ form.subject_identifier.id_for_label }}">Subject or file identifier <em>Optional</em></label>
+        {{ form.subject_identifier }}
+        {% if form.subject_identifier.errors %}<span class="field-error">{{ form.subject_identifier.errors|striptags }}</span>{% endif %}
+        <small>An address or internal assignment identifier.</small>
+      </p>
+    </div>
+
+    <label class="intake-dropzone" for="{{ form.files.id_for_label }}" data-intake-dropzone tabindex="0">
+      {{ form.files }}
+      <span class="intake-drop-icon" aria-hidden="true">↓</span>
+      <strong data-drop-title>Drag the appraisal package here</strong>
+      <span data-drop-detail>or click to choose a ZIP, XML, PDF, images, and supporting files</span>
+      <b data-file-summary>No package selected</b>
+    </label>
+    {% if form.files.errors %}<span class="field-error">{{ form.files.errors|striptags }}</span>{% endif %}
+
+    <details class="intake-note">
+      <summary>Add an appraiser note <span>Optional</span></summary>
+      {{ form.appraiser_note }}
+    </details>
+
+    <div class="intake-submit">
+      <div><strong>Ready when the package is attached</strong><span>Next: watch evidence extraction and the GPT-5.6 review live.</span></div>
+      <button class="app-button primary" type="submit" data-run-preflight>Run Preflight</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(() => {
+  const zone = document.querySelector("[data-intake-dropzone]");
+  const input = zone.querySelector('input[type="file"]');
+  const title = zone.querySelector("[data-drop-title]");
+  const detail = zone.querySelector("[data-drop-detail]");
+  const summary = zone.querySelector("[data-file-summary]");
+  const runButton = document.querySelector("[data-run-preflight]");
+  runButton.disabled = !input.files.length;
+
+  function showFiles(files) {
+    if (!files || !files.length) return;
+    zone.classList.add("is-ready");
+    title.textContent = files.length === 1 ? files[0].name : `${files.length} files attached`;
+    detail.textContent = "Package ready. Run Preflight to begin the evidence review.";
+    const bytes = Array.from(files).reduce((total, file) => total + file.size, 0);
+    summary.textContent = `${files.length} file${files.length === 1 ? "" : "s"} · ${(bytes / 1048576).toFixed(1)} MB`;
+    runButton.disabled = false;
+  }
+  input.addEventListener("change", () => showFiles(input.files));
+  zone.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); input.click(); }
+  });
+  ["dragenter", "dragover"].forEach(name => zone.addEventListener(name, event => {
+    event.preventDefault();
+    zone.classList.add("is-dragging");
+  }));
+  ["dragleave", "drop"].forEach(name => zone.addEventListener(name, event => {
+    event.preventDefault();
+    zone.classList.remove("is-dragging");
+  }));
+  zone.addEventListener("drop", event => {
+    if (!event.dataTransfer.files.length) return;
+    input.files = event.dataTransfer.files;
+    showFiles(input.files);
+  });
+})();
+</script>
+{% endblock %}

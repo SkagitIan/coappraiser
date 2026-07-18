@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Running Preflight | CoAppraiser{% endblock %}
+{% block content %}
+<section class="live-review-shell" data-stream-url="{% url 'preflight:stream' review.pk %}" data-csrf="{{ csrf_token }}">
+  <div class="live-review-heading">
+    <span class="panel-eyebrow">Live Preflight activity</span>
+    <h1>Reviewing {{ review.title }}</h1>
+    <p>Watch the package move from uploaded files to an evidence-backed action queue.</p>
+  </div>
+
+  <div class="live-review-layout">
+    <section class="workspace-panel live-review-current" aria-live="polite">
+      <span class="live-review-pulse" aria-hidden="true"></span>
+      <div>
+        <small>Working now</small>
+        <h2 data-current-title>Starting Preflight</h2>
+        <p data-current-detail>Your package is stored. Preparing the evidence review.</p>
+      </div>
+    </section>
+
+    <section class="workspace-panel live-review-feed">
+      <div class="panel-heading">
+        <div><span class="panel-eyebrow">Traceable progress</span><h2>Review activity</h2></div>
+        <span class="status-chip status-processing" data-stream-status>In progress</span>
+      </div>
+      <ol data-activity-feed>
+        <li class="is-complete"><span></span><div><strong>Upload received</strong><p>{{ version.files.count }} file{{ version.files.count|pluralize }} ready for review.</p></div></li>
+      </ol>
+      <div class="live-review-error" data-stream-error hidden>
+        <strong>Preflight paused</strong>
+        <p data-error-message></p>
+        <button class="app-button primary" type="button" data-retry>Retry review</button>
+      </div>
+    </section>
+
+    <aside class="workspace-panel live-review-explainer">
+      <span class="panel-eyebrow">What you are seeing</span>
+      <h2>Results, not hidden reasoning</h2>
+      <p>CoAppraiser streams verifiable processing milestones and saved findings. GPT-5.6’s private internal reasoning is never displayed or stored.</p>
+      <div><span>1</span><p><strong>Extract</strong> Trace fields back to their source.</p></div>
+      <div><span>2</span><p><strong>Compare</strong> Run package rules and evidence review.</p></div>
+      <div><span>3</span><p><strong>Record</strong> Save findings for appraiser action.</p></div>
+    </aside>
+  </div>
+</section>
+
+<script>
+(() => {
+  const shell = document.querySelector(".live-review-shell");
+  const feed = shell.querySelector("[data-activity-feed]");
+  const currentTitle = shell.querySelector("[data-current-title]");
+  const currentDetail = shell.querySelector("[data-current-detail]");
+  const status = shell.querySelector("[data-stream-status]");
+  const errorBox = shell.querySelector("[data-stream-error]");
+  const errorMessage = shell.querySelector("[data-error-message]");
+  const retry = shell.querySelector("[data-retry]");
+
+  function addItem(item) {
+    const li = document.createElement("li");
+    li.className = item.kind === "warning" ? "is-warning" : item.kind === "finding" ? "is-finding" : "is-complete";
+    const marker = document.createElement("span");
+    const body = document.createElement("div");
+    const title = document.createElement("strong");
+    const detail = document.createElement("p");
+    title.textContent = item.title;
+    detail.textContent = item.detail || "";
+    body.append(title, detail);
+    li.append(marker, body);
+    feed.append(li);
+    li.scrollIntoView({behavior: "smooth", block: "nearest"});
+  }
+
+  async function start() {
+    retry.disabled = true;
+    errorBox.hidden = true;
+    status.textContent = "In progress";
+    try {
+      const response = await fetch(shell.dataset.streamUrl, {
+        method: "POST",
+        headers: {"X-CSRFToken": shell.dataset.csrf, "Accept": "application/x-ndjson"},
+        credentials: "same-origin"
+      });
+      if (!response.ok || !response.body) throw new Error("The review stream could not be opened.");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const {value, done} = await reader.read();
+        buffer += decoder.decode(value || new Uint8Array(), {stream: !done});
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const item = JSON.parse(line);
+          currentTitle.textContent = item.title;
+          currentDetail.textContent = item.detail || "";
+          if (item.kind === "active") continue;
+          if (item.kind === "error") throw new Error(item.detail);
+          addItem(item);
+          if (item.kind === "complete") {
+            status.textContent = "Complete";
+            window.setTimeout(() => window.location.replace(item.redirect), 650);
+            return;
+          }
+        }
+        if (done) break;
+      }
+      throw new Error("The review stream ended before completion.");
+    } catch (error) {
+      status.textContent = "Paused";
+      currentTitle.textContent = "Preflight paused";
+      currentDetail.textContent = error.message;
+      errorMessage.textContent = error.message + " Your uploaded package remains saved.";
+      errorBox.hidden = false;
+      retry.disabled = false;
+    }
+  }
+  retry.addEventListener("click", start);
+  start();
+})();
+</script>
+{% endblock %}

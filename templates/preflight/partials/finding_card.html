@@ -1,24 +1,30 @@
-<article class="finding-row">
+<article class="finding-row finding-{{ finding.severity }}">
   <div class="finding-marker"></div>
   <div class="finding-content">
     <div class="finding-meta">
       <span class="badge">{{ finding.get_category_display }}</span>
       <span class="severity-{{ finding.severity }}">{{ finding.get_severity_display }}</span>
-      <span class="finding-basis">{% if finding.basis == "ai_interpretation" %}{% if demo_mode %}GPT-5.6 judgment review{% else %}GPT-generated{% endif %}{% else %}Deterministic check{% endif %}</span>
+      <span class="finding-basis">{% if finding.basis == "ai_interpretation" %}Preflight reasoning{% else %}Preflight check{% endif %}</span>
     </div>
     <h3>{{ finding.title }}</h3>
-    <p><strong>Observed issue:</strong> {{ finding.observed }}</p>
-    <p><strong>Source or report location:</strong> {{ finding.location|default:"Exact location was not available in the extracted evidence." }}</p>
-    {% if finding.evidence %}
-      <div class="finding-evidence"><strong>Supporting evidence:</strong>
-        <ul>{% for item in finding.evidence %}<li>{% if demo_mode %}<strong>Evidence {{ forloop.counter }}:</strong> {% endif %}{{ item }}</li>{% endfor %}</ul>
-      </div>
-    {% endif %}
-    <div class="finding-details">
-      <p><strong>Why it matters:</strong> {{ finding.why_it_matters }}</p>
-      <p><strong>Recommended review action:</strong> {{ finding.recommended_action }}</p>
+    <div class="finding-observed">
+      <span>What Preflight found</span>
+      <p>{{ finding.observed }}</p>
     </div>
-    <p class="panel-note"><strong>Appraiser judgment required.</strong> Confirm the evidence and decide what, if anything, to change in the appraisal software.</p>
+    <div class="finding-action">
+      <span>Review next</span>
+      <p>{{ finding.recommended_action }}</p>
+    </div>
+    <div class="finding-context">
+      <p><strong>Why it matters</strong><span>{{ finding.why_it_matters }}</span></p>
+      <p><strong>Where to look</strong><span>{{ finding.location|default:"Exact location was not available in the extracted evidence." }}</span></p>
+    </div>
+    {% if finding.evidence %}
+      <details class="finding-evidence">
+        <summary>View supporting evidence <span>{{ finding.evidence|length }}</span></summary>
+        <ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
+      </details>
+    {% endif %}
     <div id="finding-{{ finding.pk }}">
       {% include "preflight/partials/finding_status.html" %}
     </div>

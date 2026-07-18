@@ -32,5 +32,30 @@
 {% endif %}
 {% block content %}{% endblock %}
 {% if request.resolver_match.namespace == 'preflight_demo' %}</main>{% elif user.is_authenticated and request.path != '/' %}</main></div></div>{% else %}</main>{% endif %}
-<script>document.addEventListener('submit',function(event){var form=event.target.closest('[data-processing-form]');if(!form)return;var button=form.querySelector('button[type="submit"]');if(!button)return;button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Uploading and reviewing…';});</script>
+<div class="processing-overlay" data-processing-overlay hidden aria-live="polite" aria-label="Preflight processing">
+  <div class="processing-overlay-card">
+    <span class="processing-spinner" aria-hidden="true"></span>
+    <span class="panel-eyebrow">Preflight in progress</span>
+    <h2>Reviewing the appraisal package</h2>
+    <p>Uploading files, extracting evidence, running package checks, and starting the GPT-5.6 evidence review.</p>
+    <div class="processing-steps"><span>Upload</span><span>Extract</span><span>Check</span><span>Review</span></div>
+  </div>
+</div>
+<script>
+document.addEventListener("submit", function(event) {
+  const form = event.target.closest("[data-processing-form]");
+  if (!form) return;
+  const button = form.querySelector('button[type="submit"]');
+  const overlay = document.querySelector("[data-processing-overlay]");
+  if (button) {
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.textContent = "Uploading package…";
+  }
+  if (overlay) {
+    overlay.hidden = false;
+    document.body.classList.add("is-processing");
+  }
+});
+</script>
 </body></html>

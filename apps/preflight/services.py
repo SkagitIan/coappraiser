@@ -150,7 +150,7 @@ def ingest_files(version, uploaded_files):
     return list(version.files.all())
 
 
-def run_deterministic_review(version):
+def run_deterministic_review(version, include_ai=True):
     review = version.review
     files = list(version.files.all())
     kinds = {f.kind for f in files}
@@ -216,13 +216,20 @@ def run_deterministic_review(version):
         add("PREFLIGHT_BASELINE", "Package contents are ready for review", "cleanup", "advisory", "XML, PDF, and image files were identified and hashed.", "Package contents", "The package passed basic intake checks; this is not official validation.", "Review the prioritized findings and confirm the report in your existing software.", list(kinds))
     version.status = "reviewed"
     version.save(update_fields=["status"])
+    if not include_ai:
+        return findings
     from .ai_review import run_preflight_ai_review
     run_preflight_ai_review(version)
+    complete_review(version)
+    return findings
+
+
+def complete_review(version):
+    review = version.review
     version.status = "completed"
     version.save(update_fields=["status"])
     review.status = "completed"
     review.save(update_fields=["status", "updated_at"])
-    return findings
 
 
 def build_workfile_record(review):

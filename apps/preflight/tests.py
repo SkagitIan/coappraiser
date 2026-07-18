@@ -19,6 +19,13 @@ class PreflightTests(TestCase):
         self.user = User.objects.create_user("preflight", password="pass12345")
         self.client.login(username="preflight", password="pass12345")
 
+    def complete_stream(self, review):
+        response = self.client.post(reverse("preflight:stream", args=[review.pk]))
+        payload = b"".join(response.streaming_content).decode()
+        response.close()
+        review.refresh_from_db()
+        return [json.loads(line) for line in payload.splitlines()]
+
     def test_zip_path_traversal_is_rejected(self):
         stream = io.BytesIO()
         with zipfile.ZipFile(stream, "w") as archive:
@@ -31,6 +38,8 @@ class PreflightTests(TestCase):
         response = self.client.post(reverse("preflight:create"), {"title": "Test package", "subject_identifier": "123 Main", "files": [xml]})
         self.assertEqual(response.status_code, 302)
         review = PreflightReview.objects.get(user=self.user)
+        events = self.complete_stream(review)
+        self.assertEqual(events[-1]["kind"], "complete")
         self.assertEqual(review.status, "completed")
         self.assertEqual(review.versions.get().status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
@@ -42,10 +51,11 @@ class PreflightTests(TestCase):
         self.assertEqual(response.status_code, 302)
         review = PreflightReview.objects.get(user=self.user, title="ZIP package")
         self.assertEqual(review.versions.first().files.count(), 4)
-        detail = self.client.get(response.url)
+        self.complete_stream(review)
+        detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
         self.assertEqual(detail.status_code, 200)
-        self.assertContains(detail, "Extracted evidence")
-        self.assertContains(detail, "Consistency review")
+        self.assertContains(detail, "Source evidence")
+        self.assertContains(detail, "Review complete")
 
     def test_ai_review_is_saved_and_adds_interpretation_finding(self):
         fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
@@ -53,10 +63,12 @@ class PreflightTests(TestCase):
         response = self.client.post(reverse("preflight:create"), {"title": "AI package", "files": [package]})
         self.assertEqual(response.status_code, 302)
         review = PreflightReview.objects.get(user=self.user, title="AI package")
+        events = self.complete_stream(review)
         execution = AIExecution.objects.get(version=review.versions.first())
         self.assertEqual(execution.status, "completed")
         self.assertEqual(execution.provider, "mock")
         self.assertTrue(review.findings.filter(basis="ai_interpretation").exists())
+        self.assertTrue(any(item["title"] == "Preflight evidence finding" for item in events))
 
     def test_ai_failure_does_not_discard_deterministic_findings(self):
         review = PreflightReview.objects.create(user=self.user, title="AI failure")
@@ -70,11 +82,15 @@ class PreflightTests(TestCase):
         self.assertEqual(version.ai_executions.get().status, "failed")
 
     def test_ai_context_and_duplicate_suppression_keep_novel_finding(self):
-        self.user.username = "__coappraiser_demo__evidence"
-        self.user.save(update_fields=["username"])
         review = PreflightReview.objects.create(user=self.user, title="AI evidence context")
         version = review.versions.create(number=1, status="uploaded")
-        ReviewFile.objects.create(version=version, original_name="report.pdf", kind="pdf", sha256="pdf", extracted_text="Condition: C3")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+            extracted_text="Synthetic CoAppraiser Preflight report. This is synthetic test data, not a real appraisal report. Condition: C3",
+        )
         ReviewFile.objects.create(version=version, original_name="condition_exhibit.jpg", kind="image", sha256="jpg")
         ReviewFinding.objects.create(
             review=review,
@@ -197,18 +213,20 @@ class PreflightTests(TestCase):
             response = self.client.post(reverse("preflight:create"), {"title": f"Demo scenario {index}", "files": [package]})
             self.assertEqual(response.status_code, 302)
             review = PreflightReview.objects.get(title=f"Demo scenario {index}")
+            self.complete_stream(review)
             codes = set(review.findings.filter(basis="deterministic").values_list("rule_code", flat=True))
             self.assertEqual(codes, expected_codes)
-            detail = self.client.get(response.url)
-            self.assertContains(detail, "Deterministic checks")
-            self.assertContains(detail, "GPT-generated findings")
-            self.assertContains(detail, "Appraiser judgment required")
+            detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
+            self.assertContains(detail, "Preflight checks")
+            self.assertContains(detail, "Preflight evidence review")
+            self.assertContains(detail, "You make and document every final appraisal decision")
 
     def test_decision_note_is_saved_in_workfile_record(self):
         fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-demo-02-reconcile.zip"
         package = SimpleUploadedFile("demo.zip", fixture.read_bytes(), content_type="application/zip")
         self.client.post(reverse("preflight:create"), {"title": "Decision demo", "files": [package]})
         review = PreflightReview.objects.get(title="Decision demo")
+        self.complete_stream(review)
         finding = review.findings.filter(basis="deterministic").first()
         response = self.client.post(reverse("preflight:decision", args=[finding.pk]), {"status": "deferred", "note": "Verify the source commentary before delivery."})
         self.assertEqual(response.status_code, 200)
@@ -251,9 +269,10 @@ class PreflightTests(TestCase):
         fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
         package = SimpleUploadedFile("failure-demo.zip", fixture.read_bytes(), content_type="application/zip")
         with patch("apps.preflight.ai_review.run_llm_json", side_effect=RuntimeError("provider unavailable")):
-            response = self.client.post(reverse("preflight:create"), {"title": "Failure demo", "files": [package]}, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "uploaded package and deterministic findings were saved")
-        review = PreflightReview.objects.get(title="Failure demo")
+            response = self.client.post(reverse("preflight:create"), {"title": "Failure demo", "files": [package]})
+            review = PreflightReview.objects.get(title="Failure demo")
+            events = self.complete_stream(review)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any(item["kind"] == "warning" and item["title"] == "GPT review unavailable" for item in events))
         self.assertTrue(review.versions.first().files.exists())
         self.assertTrue(review.findings.filter(basis="deterministic").exists())

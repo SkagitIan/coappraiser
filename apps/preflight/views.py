@@ -3,12 +3,13 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, IntegerField, When
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .forms import PreflightReviewForm
 from .models import FindingDecision, PreflightReview, ReviewFile, ReviewFinding
-from .services import build_workfile_record, delete_review_with_files, ingest_files, run_deterministic_review
+from .services import build_workfile_record, complete_review, delete_review_with_files, ingest_files, run_deterministic_review
 from apps.billing.views import billing_mode, has_active_subscription
 
 logger = logging.getLogger(__name__)
@@ -34,17 +35,13 @@ def create(request):
             version.package_hash = "".join(sorted([str(getattr(f, "size", 0)) for f in uploaded]))[:64]
             version.save(update_fields=["package_hash"])
             ingest_files(version, uploaded)
-            run_deterministic_review(version)
-            ai_execution = version.ai_executions.first()
-            if ai_execution and ai_execution.status == "failed":
-                messages.warning(request, "Your package and deterministic findings were saved, but the GPT review is temporarily unavailable. Check the AI configuration and try the package again later.")
         except Exception as exc:
             logger.exception("Preflight upload failed for review %s", review.pk)
             review.status = "failed"
             review.save(update_fields=["status", "updated_at"])
             form.add_error("files", "CoAppraiser could not process this package. The failed attempt was saved; try again with the exported ZIP or separate files.")
             return render(request, "preflight/form.html", {"form": form})
-        return redirect("preflight:detail", review.pk)
+        return redirect("preflight:progress", review.pk)
     return render(request, "preflight/form.html", {"form": form})
 
 
@@ -70,6 +67,78 @@ def detail(request, pk):
 
 
 @login_required
+def progress(request, pk):
+    review = get_object_or_404(PreflightReview, pk=pk, user=request.user)
+    if review.status == "completed":
+        return redirect("preflight:detail", pk)
+    return render(request, "preflight/progress.html", {"review": review, "version": review.versions.first()})
+
+
+@login_required
+@require_POST
+def stream_review(request, pk):
+    review = get_object_or_404(PreflightReview, pk=pk, user=request.user)
+    version = review.versions.first()
+
+    def event(kind, title, detail="", **extra):
+        return json.dumps({"kind": kind, "title": title, "detail": detail, **extra}) + "\n"
+
+    def generate():
+        try:
+            review.refresh_from_db()
+            version.refresh_from_db()
+            if review.status == "completed":
+                yield event("complete", "Preflight complete", redirect=reverse("preflight:detail", args=[review.pk]))
+                return
+
+            file_count = version.files.count()
+            yield event("complete_step", "Package stored", f"{file_count} file{'s' if file_count != 1 else ''} secured for this review.")
+
+            if not version.findings.exists():
+                yield event("active", "Extracting and comparing evidence", "Reading structured fields, report text, and package contents.")
+                deterministic = run_deterministic_review(version, include_ai=False)
+            else:
+                deterministic = list(version.findings.filter(basis="deterministic"))
+
+            observation_count = version.observations.count()
+            yield event("complete_step", "Evidence extracted", f"{observation_count} traceable observation{'s' if observation_count != 1 else ''} normalized.")
+            yield event("complete_step", "Package checks complete", f"{len(deterministic)} rule-based item{'s' if len(deterministic) != 1 else ''} recorded.")
+            for finding in deterministic:
+                yield event("finding", "Preflight check recorded", finding.title)
+
+            execution = version.ai_executions.first()
+            if execution is None:
+                from django.conf import settings
+                from .ai_review import run_preflight_ai_review
+                model = getattr(settings, "COAPPRAISER_LLM_MODEL", "gpt-5.6")
+                yield event("active", f"{model} evidence review", "Comparing extracted evidence for material relationships not covered by package rules.")
+                execution = run_preflight_ai_review(version)
+
+            ai_findings = list(version.findings.filter(basis="ai_interpretation"))
+            if execution.status == "failed":
+                yield event("warning", "GPT review unavailable", "Your package and rule-based findings are preserved.")
+            else:
+                yield event("complete_step", "Evidence review complete", f"{len(ai_findings)} additional item{'s' if len(ai_findings) != 1 else ''} recorded.")
+                for finding in ai_findings:
+                    yield event("finding", "Preflight evidence finding", finding.title)
+
+            complete_review(version)
+            yield event("complete", "Preflight ready", "Opening the action queue.", redirect=reverse("preflight:detail", args=[review.pk]))
+        except Exception:
+            logger.exception("Preflight streaming review failed for review %s", review.pk)
+            version.status = "failed"
+            version.save(update_fields=["status"])
+            review.status = "failed"
+            review.save(update_fields=["status", "updated_at"])
+            yield event("error", "Review could not finish", "The uploaded package remains saved. Retry the review or upload a revised package.")
+
+    response = StreamingHttpResponse(generate(), content_type="application/x-ndjson")
+    response["Cache-Control"] = "no-cache, no-store"
+    response["X-Accel-Buffering"] = "no"
+    return response
+
+
+@login_required
 @require_POST
 def decision(request, pk):
     finding = get_object_or_404(ReviewFinding, pk=pk, review__user=request.user)
@@ -89,15 +158,11 @@ def revise(request, pk):
     version = review.versions.create(number=review.versions.count() + 1, status="uploaded")
     try:
         ingest_files(version, files)
-        run_deterministic_review(version)
-        ai_execution = version.ai_executions.first()
-        if ai_execution and ai_execution.status == "failed":
-            messages.warning(request, "The revised package and deterministic findings were saved, but the GPT review is temporarily unavailable.")
     except Exception:
         logger.exception("Preflight revised upload failed for review %s", review.pk)
         review.status = "failed"
         review.save(update_fields=["status", "updated_at"])
-    return redirect("preflight:detail", pk)
+    return redirect("preflight:progress", pk)
 
 
 @login_required
