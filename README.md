@@ -8,11 +8,49 @@ A completed appraisal can repeat the same fact across XML fields, rendered repor
 
 ## Why GPT-5.6
 
-Deterministic rules are best for known package and field checks. GPT-5.6 adds the multimodal reasoning needed to compare structured XML, the rendered report, narrative evidence, and selected appraisal photos while still returning a strict finding schema. CoAppraiser uses the Responses API with high-detail visual inputs and configurable reasoning effort, limits the model to supplied evidence, and stores the model, prompt version, source manifest, response, confidence, and resulting findings. The production model alias is `gpt-5.6`; see the [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+Appraisal review is not a simple extraction or classification task. A useful review may require connecting a structured condition rating to narrative language on another report page and to a visible condition in a photograph, then explaining that relationship without making the appraiser's decision. Deterministic rules remain the better tool for known omissions and exact field mismatches; GPT-5.6 handles the bounded cross-document interpretation that fixed rules cannot express well.
+
+The production alias is `gpt-5.6`, which currently routes to GPT-5.6 Sol, OpenAI's frontier model for complex professional work. We chose it for the submission because it combines text and image input, reasoning controls, PDF file input through the Responses API, and strict Structured Outputs in one model. The model supports a much larger context than CoAppraiser currently sends; the application deliberately limits each review to the relevant evidence rather than filling the context window. See OpenAI's [GPT-5.6 model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol), [GPT-5.6 guidance](https://developers.openai.com/api/docs/guides/latest-model), and [file-input documentation](https://developers.openai.com/api/docs/guides/file-inputs).
+
+### The Preflight reviewer agent
+
+“Agent” in CoAppraiser means a specialized, bounded reviewer controlled by the Django workflow. It is not an autonomous valuation agent, an Agents SDK deployment, or a multi-agent system. Django performs package intake, source selection, deterministic checks, persistence, permissions, and workfile generation. GPT-5.6 receives one constrained review task and returns candidate findings; it has no browser, external data source, report-writing tool, or ability to alter an appraisal.
+
+The runtime sequence is:
+
+1. Django validates the ZIP, hashes and stores its files, extracts XML fields and available PDF text, and runs deterministic package rules.
+2. The application builds a source manifest containing extracted observations, short PDF excerpts, the deterministic findings already produced, one selected rendered report PDF, and—by default—up to six prioritized appraisal photos.
+3. When visual sources are available, GPT-5.6 performs one multimodal consistency review through the Responses API at configurable reasoning effort. A text-only package uses the Chat Completions path with the same strict finding schema.
+4. A strict JSON Schema requires every candidate finding to include its title, category, severity, observed issue, source location, evidence, significance, review action, confidence, visual sources, and an appraiser-judgment reminder.
+5. Application code validates the response, rejects unverified visual filenames, suppresses low-confidence items and duplicates of deterministic findings, and persists the accepted findings separately from rule-based findings.
+6. The appraiser—not the model—resolves, defers, or dismisses each item and records the decision in the workfile record.
+
+### GPT-5.6 features used
+
+| GPT-5.6 capability | CoAppraiser implementation | Why it matters here |
+| --- | --- | --- |
+| Responses API | Sends normalized text evidence, a rendered PDF, and selected photos in one bounded multimodal request; text-only reviews use Chat Completions. | The reviewer can evaluate the package as one connected body of evidence without making the visual path a requirement for every package. |
+| PDF file input | Sends the selected report as a Base64 `input_file` with `detail: high`; the API supplies extracted text and page images to the vision-capable model. | Small print, page layout, labels, and rendered content remain available alongside extracted report text. |
+| Image understanding | Sends supported appraisal photos as high-detail `input_image` items, each paired with its exact filename. | A finding can trace a narrow visual observation back to the actual exhibit and compare it with XML or narrative evidence. |
+| Reasoning effort | Uses `xhigh` for the competition configuration; `max` is supported as an opt-in production experiment. | Cross-source inconsistencies require more deliberate comparison than ordinary summarization, while the setting remains measurable and configurable. |
+| Structured Outputs | Uses a strict JSON Schema with no additional properties and fixed category, severity, and confidence values. | Model output becomes validated application data rather than an unstructured wall of prose. |
+| Data-control option | Sets `store=False` on the Responses API request and sends only files selected within configured count and byte limits. | The integration minimizes unnecessary model-side persistence and unnecessary evidence transfer; operators still remain responsible for the applicable OpenAI account and retention settings. |
+
+CoAppraiser does **not** use GPT-5.6's web search, programmatic tool calling, computer use, persisted reasoning, or multi-agent beta during an appraisal review. Those capabilities are powerful, but they would add external state or autonomous action without improving this submission's central promise: a traceable review of the evidence already inside the package. The application stores the model name, prompt, input snapshot, visual-source manifest, final structured response, suppressed-item reasons, and resulting findings. It does not display or store private chain-of-thought.
 
 ## How Codex was used
 
-Codex was used as the repository-level engineering partner: it audited the existing Django workflow, traced upload-to-workfile persistence, hardened the OpenAI request path, created the sanitized demo fixture, added regression tests, and ran the production-readiness checks. Keep Build Week session evidence with the submission materials.
+Codex was the repository-level engineering agent used to turn an existing Django prototype into the Build Week submission. Working against the real repository, it:
+
+- inspected the upload-to-workfile path before changing it;
+- implemented and tested the GPT-5.6 Responses API, visual-input, reasoning-effort, and Structured Output path;
+- hardened production configuration so a failed or missing model request preserves the uploaded package and never silently substitutes mock output;
+- created the synthetic demo packages and predictable deterministic findings;
+- iterated on the server-rendered interface using screenshots and end-to-end workflow feedback;
+- audited secrets, storage defaults, stale product paths, migrations, static assets, and deployment configuration; and
+- repeatedly ran the Django checks, full test suite, fresh-database migration, and GitHub Actions workflow.
+
+Codex is a development collaborator, not part of the production appraisal decision path. Runtime findings come from the deployed Preflight rules and configured GPT-5.6 request. Keep the Build Week Codex session evidence with the submission materials.
 
 ## Build Week scope
 
