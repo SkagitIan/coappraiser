@@ -66,6 +66,10 @@ def contact(request):
     return render(request, "marketing/contact.html", {"sent": sent})
 
 
+def terms(request):
+    return render(request, "marketing/terms.html", {"public_page": True})
+
+
 @csrf_exempt
 def checklist_signup(request):
     # Lead-capture form on the statically served UAD 3.6 checklist page.

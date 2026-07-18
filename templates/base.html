@@ -8,14 +8,14 @@
   <meta name="robots" content="index,follow"><link rel="stylesheet" href="{% static 'styles.css' %}">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>{% block extra_head %}{% endblock %}
 </head>
-<body class="{% if request.resolver_match.namespace == 'preflight_demo' %}demo-body{% elif user.is_authenticated and request.path != '/' %}app-body{% endif %}">
+<body class="{% if request.resolver_match.namespace == 'preflight_demo' %}demo-body{% elif user.is_authenticated and request.path != '/' and not public_page %}app-body{% endif %}">
 {% if request.resolver_match.namespace == 'preflight_demo' %}
   <header class="demo-topbar">
     <a class="brand" href="{% url 'preflight_demo:landing' %}"><span class="logo">CA</span><span>CoAppraiser</span></a>
     <nav aria-label="Demo navigation"><a href="{% url 'preflight_demo:landing' %}">Start a new Preflight</a><a class="demo-nav-action" href="{% url 'accounts:signup' %}">First Review Free</a></nav>
   </header>
   <main class="demo-main">{% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
-{% elif user.is_authenticated and request.path != '/' %}
+{% elif user.is_authenticated and request.path != '/' and not public_page %}
   <div class="app-frame">
     <aside class="app-sidebar">
       <a class="brand" href="{% url 'preflight:dashboard' %}"><span class="logo">CA</span><span>CoAppraiser</span></a>
@@ -31,7 +31,31 @@
   <header class="shell nav"><a class="brand" href="{% url 'home' %}"><span class="logo">CA</span><span>CoAppraiser</span></a><nav class="nav-links"><a href="{% url 'home' %}">Home</a>{% if user.is_authenticated %}<a href="{% url 'preflight:dashboard' %}">Preflight</a><a href="{% url 'billing:account' %}">Account</a>{% if user.is_staff %}<a href="{% url 'admin_dashboard' %}">Admin</a>{% endif %}<a class="pill-link" href="{% url 'preflight:create' %}">New review</a><form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button class="pill-link" type="submit">Sign out</button></form>{% else %}<a href="{% url 'pricing' %}">Pricing</a><a href="{% url 'contact' %}">Help</a><a class="pill-link" href="{% url 'accounts:signup' %}">First Review Free</a><a class="pill-link" href="{% url 'login' %}">Sign in</a>{% endif %}</nav></header><main class="shell app-main">{% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
 {% endif %}
 {% block content %}{% endblock %}
-{% if request.resolver_match.namespace == 'preflight_demo' %}</main>{% elif user.is_authenticated and request.path != '/' %}</main></div></div>{% else %}</main>{% endif %}
+{% if request.resolver_match.namespace == 'preflight_demo' %}</main>{% elif user.is_authenticated and request.path != '/' and not public_page %}</main></div></div>{% else %}</main>{% endif %}
+{% if request.resolver_match.namespace == 'preflight_demo' or not user.is_authenticated or request.path == '/' or public_page %}
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-primary">
+        <a class="site-footer-brand" href="{% url 'home' %}" aria-label="CoAppraiser home">
+          <span class="logo" aria-hidden="true">CA</span>
+          <span><strong>CoAppraiser</strong><small>Pre-delivery appraisal review</small></span>
+        </a>
+        <p>Find what the reviewer will find—before client delivery.</p>
+      </div>
+      <nav class="site-footer-nav" aria-label="Footer navigation">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'preflight_demo:landing' %}">Demo</a>
+        {% if request.resolver_match.namespace != 'preflight_demo' %}<a href="{% url 'pricing' %}">Pricing</a>{% endif %}
+        <a href="{% url 'contact' %}">Contact</a>
+        <a href="{% url 'terms' %}">Terms &amp; Conditions</a>
+      </nav>
+      <div class="site-footer-meta">
+        <span>&copy; {% now "Y" %} CoAppraiser. All rights reserved.</span>
+        <span>Built to support professional judgment, not replace it.</span>
+      </div>
+    </div>
+  </footer>
+{% endif %}
 <div class="processing-overlay" data-processing-overlay hidden aria-live="polite" aria-label="Preflight processing">
   <div class="processing-overlay-card">
     <span class="processing-spinner" aria-hidden="true"></span>
