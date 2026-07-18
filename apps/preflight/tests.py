@@ -1,6 +1,7 @@
 import io
 import json
 import zipfile
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 from django.contrib.auth.models import User
@@ -12,6 +13,7 @@ from .llm_client import LLMConfigurationError, run_llm_json
 from .ai_review import run_preflight_ai_review
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import build_workfile_record, run_deterministic_review, safe_zip_members
+from .uad36 import import_uad_archive, inspect_uad_xml
 
 
 class PreflightTests(TestCase):
@@ -32,6 +34,50 @@ class PreflightTests(TestCase):
             archive.writestr("../secret.txt", "no")
         with self.assertRaisesMessage(ValueError, "unsafe path"):
             safe_zip_members(io.BytesIO(stream.getvalue()))
+
+    def test_uad_xml_inspection_handles_namespaces_without_guessing_fields(self):
+        xml = b"""<?xml version="1.0"?>
+        <m:MESSAGE xmlns:m="http://www.mismo.org/residential/2009/schemas"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.mismo.org/residential/2009/schemas MISMO_3.6.xsd">
+          <m:DEAL_SETS><m:DEAL_SET><m:DEALS><m:DEAL /></m:DEALS></m:DEAL_SET></m:DEAL_SETS>
+        </m:MESSAGE>"""
+        profile = inspect_uad_xml(xml)
+        self.assertTrue(profile["parseable"])
+        self.assertEqual(profile["root_tag"], "MESSAGE")
+        self.assertTrue(profile["likely_mismo_3_6"])
+        self.assertEqual(profile["local_tag_counts"]["DEAL"], 1)
+        self.assertIn("MESSAGE/DEAL_SETS/DEAL_SET/DEALS/DEAL", profile["sample_paths"])
+
+    def test_uad_xml_inspection_rejects_entity_declarations(self):
+        profile = inspect_uad_xml(b'<!DOCTYPE x [<!ENTITY risky "value">]><MESSAGE>&risky;</MESSAGE>')
+        self.assertFalse(profile["parseable"])
+        self.assertIn("entity declarations", profile["parse_error"])
+
+    def test_eval_importer_builds_local_manifest_and_pairs_pdf_with_xml(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive_path = Path(directory) / "appendix-d-1.zip"
+            destination = Path(directory) / "corpus"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr(
+                    "Scenario 01/Sample Report.xml",
+                    '<MESSAGE xmlns="http://www.mismo.org/residential/2009/schemas" version="3.6"/>',
+                )
+                archive.writestr("Scenario 01/Sample Report.pdf", b"%PDF-1.4 synthetic")
+                archive.writestr("Scenario 01/matrix.xlsx", b"synthetic")
+            manifest = import_uad_archive(archive_path, destination)
+            self.assertEqual(manifest["summary"]["candidate_pairs"], 1)
+            self.assertEqual(manifest["summary"]["xml_files"], 1)
+            self.assertTrue(Path(manifest["manifest_path"]).is_file())
+            self.assertTrue((Path(manifest["destination"]) / "Scenario 01" / "Sample Report.xml").is_file())
+
+    def test_eval_importer_rejects_path_traversal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive_path = Path(directory) / "unsafe.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("../outside.xml", "<MESSAGE />")
+            with self.assertRaisesMessage(ValueError, "unsafe path"):
+                import_uad_archive(archive_path, Path(directory) / "corpus")
 
     def test_upload_creates_review_and_intake_findings(self):
         xml = SimpleUploadedFile("report.xml", b"<?xml version='1.0'?><report />", content_type="application/xml")

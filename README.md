@@ -140,6 +140,23 @@ python manage.py collectstatic --noinput
 
 The Preflight suite also covers public demo access, replay prevention, anonymous session isolation, all three controlled outcomes, protected customer routes, ZIP safety, preserved state after AI failure, decision notes, workfile export, production mock rejection, and GPT-5 structured request parameters.
 
+### Official-sample evaluation foundation
+
+CoAppraiser keeps third-party evaluation data out of Git. Download **Appendix D-1:
+URAR Sample Scenarios and XML Files** from the Fannie Mae UAD Documentation page,
+then create a hashed local inventory:
+
+```powershell
+python manage.py import_uad_eval_corpus "C:\path\to\the-downloaded.zip"
+```
+
+The command validates paths and size limits, extracts only supported files beneath
+the ignored `.eval-data/` directory, identifies candidate PDF/XML pairs, and
+profiles namespace-heavy XML without pretending that unknown tags are supported
+facts. See [`evals/README.md`](evals/README.md) for the process and
+[`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) for the quality gates that turn those
+samples into a professional regression suite.
+
 ## Known limitations
 
 - This is readiness support, not official UAD, GSE, lender, or USPAP validation.

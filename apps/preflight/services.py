@@ -13,9 +13,11 @@ from django.db.models import Case, IntegerField, When
 from django.utils import timezone
 
 from .models import ExtractedObservation, FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
+from .uad36 import inspect_uad_xml
 
 MAX_EXPANDED_BYTES = 100 * 1024 * 1024
 MAX_FILES = 500
+MAX_STORED_XML_TEXT_BYTES = 2 * 1024 * 1024
 
 
 def extract_pdf_text(uploaded_file):
@@ -82,8 +84,18 @@ def _normalized(value):
 
 
 def extract_xml_observations(version, record):
+    xml_profile = (record.metadata or {}).get("xml_profile")
+    if xml_profile and not xml_profile.get("parseable"):
+        return []
+    xml_content = record.extracted_text
+    if record.file:
+        try:
+            with record.file.open("rb") as source:
+                xml_content = source.read()
+        except OSError:
+            pass
     try:
-        root = ET.fromstring(record.extracted_text)
+        root = ET.fromstring(xml_content)
     except (ET.ParseError, ValueError):
         return []
     observations = []
@@ -154,7 +166,12 @@ def ingest_files(version, uploaded_files):
         elif record.kind == "image":
             record.metadata = {"bytes": len(raw), "supported": True}
         elif record.kind == "xml":
-            record.extracted_text = raw.decode("utf-8", errors="replace")[:250000]
+            stored = raw[:MAX_STORED_XML_TEXT_BYTES]
+            record.extracted_text = stored.decode("utf-8", errors="replace")
+            record.metadata = {
+                "xml_profile": inspect_uad_xml(raw),
+                "text_truncated": len(raw) > len(stored),
+            }
         record.save()
     return list(version.files.all())
 

@@ -12,3 +12,4 @@ staticfiles/
 .playwright-cli/
 output/
 .coverage
+.eval-data/

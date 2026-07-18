@@ -1,0 +1,9 @@
+{
+  "corpus_id": "fannie-mae-uad-appendix-d-1",
+  "title": "Appendix D-1: URAR Sample Scenarios and XML Files",
+  "publisher": "Fannie Mae",
+  "source_page": "https://singlefamily.fanniemae.com/delivering/uniform-mortgage-data-program/uniform-appraisal-dataset",
+  "download_url": "https://singlefamily.fanniemae.com/media/document/zip/appendix-d-1-urar-sample-scenarios-and-xml-files",
+  "redistribution": "not_assumed",
+  "local_directory": ".eval-data/uad-d1"
+}
