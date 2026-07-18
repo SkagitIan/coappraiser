@@ -33,19 +33,31 @@
     </header>
     <div class="home-finding-list">
       <article class="is-material">
-        <span>2 Material Inconsistencies</span>
-        <h3>Condition Conflict</h3>
-        <p>Subject condition is rated C3 in the grid, but the improvements section notes deferred maintenance requiring immediate repair.</p>
+        <div class="home-finding-copy">
+          <span class="home-finding-category">Material</span>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Conflict</h3>
+          <p>Subject condition is rated C3 in the grid, but the improvements section notes deferred maintenance requiring immediate repair.</p>
+          <div class="home-source-pills"><span>📄 XML Grid</span><b>↔</b><span>📝 PDF Addendum</span></div>
+        </div>
+        <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
       <article class="is-material">
-        <span>2 Material Inconsistencies</span>
-        <h3>Market Trend Mismatch</h3>
-        <p>Neighborhood section indicates stable property values, but time adjustments are applied to Comparables 1–3.</p>
+        <div class="home-finding-copy">
+          <span class="home-finding-category">Material</span>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Market Trend Mismatch</h3>
+          <p>Neighborhood section indicates stable property values, but time adjustments are applied to Comparables 1–3.</p>
+          <div class="home-source-pills"><span>📝 PDF Neighborhood</span><b>↔</b><span>📄 XML Sales Grid</span></div>
+        </div>
+        <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
       <article class="is-support">
-        <span>3 Support Items</span>
-        <h3>Missing Explanation</h3>
-        <p>Location adjustment of $15,000 applied to Comp 2 lacks supporting analysis in the addendum.</p>
+        <div class="home-finding-copy">
+          <span class="home-finding-category">Support Item</span>
+          <h3><span class="home-finding-icon" aria-hidden="true">i</span> Missing Explanation</h3>
+          <p>Location adjustment of $15,000 applied to Comp 2 lacks supporting analysis in the addendum.</p>
+          <div class="home-source-pills"><span>📊 Sales Grid</span><b>↔</b><span>📝 PDF Addendum</span></div>
+        </div>
+        <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
     </div>
     <footer><span><b>Status:</b> 4 cleared · 2 require appraiser judgment</span></footer>
