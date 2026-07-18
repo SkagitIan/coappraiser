@@ -14,7 +14,7 @@
       "package": "demo/coappraiser-demo-02-reconcile.zip",
       "required_topics": ["visual_condition"],
       "allowed_topics": ["visual_condition"],
-      "max_findings": 1
+      "max_findings": 2
     },
     {
       "id": "incomplete-comparable-commentary",

@@ -731,6 +731,6 @@ class PreflightTests(TestCase):
             review = PreflightReview.objects.get(title="Failure demo")
             events = self.complete_stream(review)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(any(item["kind"] == "warning" and item["title"] == "GPT review unavailable" for item in events))
+        self.assertTrue(any(item["kind"] == "warning" and item["title"] == "Model review unavailable" for item in events))
         self.assertTrue(review.versions.first().files.exists())
         self.assertTrue(review.findings.filter(basis="deterministic").exists())

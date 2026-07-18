@@ -74,9 +74,32 @@ appraiser-judgment language, professional-boundary violations, and excess
 findings. It also records the response ID, returned model, latency, and token
 usage.
 
-Current smoke result: each case has passed one isolated live GPT-5.6 run. This
-proves the execution path and reviewed labels, but is not yet a statistically
-meaningful pass-rate claim.
+### Repeated baseline: July 18, 2026
+
+Three isolated live runs per case produced:
+
+| Case | Detection result | Original strict result | Review |
+| --- | --- | --- | --- |
+| Aligned package | 3/3 returned no GPT finding | 3/3 | Correct negative behavior. |
+| Visual report conflict | 3/3 detected cited visual conflicts | 2/3 | One run returned both deliberately seeded visual conflicts; the original one-finding maximum was incorrect and is now two. |
+| Incomplete comparable commentary | 1/3 detected the required gap | 1/3 | Recall is not reliable enough to lock. |
+
+The unadjusted report recorded **6/9 strict passes**. Human review found the
+visual failure was a label-definition error rather than a bad model result.
+Comparable-commentary recall remains a genuine model/prompt failure.
+
+Across the nine calls:
+
+- every accepted finding included a source location and supporting evidence;
+- every accepted finding included appraiser-judgment language;
+- no accepted finding violated a professional boundary;
+- average latency was 52.5 seconds, with an observed range of 15.5 to 80.2
+  seconds;
+- average total usage was 14,615 tokens, with an observed range of 12,305 to
+  16,007 tokens;
+- the API returned `gpt-5.6-sol` for all recorded calls.
+
+These measurements are a baseline, not a public reliability claim.
 
 ## Reproducing the evidence
 
@@ -98,7 +121,16 @@ The PowerShell wrapper runs the same gates:
 
 ## Next gates
 
-- collect at least three live repetitions per GPT case and set empirical
-  pass-rate, latency, and token thresholds;
-- expand human-reviewed labels before adding more visual scenarios;
-- add operational recovery tests for provider timeouts.
+1. Add one general review-protocol instruction requiring the model to examine
+   applicable comparable-grid facts against the supplied commentary. Do not
+   mention a fixture answer or force a finding.
+2. Run the comparable case three times. It must pass 3/3 before another full
+   run is justified.
+3. Rerun all three cases three times after that prompt change. Lock only if:
+   the aligned case is 3/3 clean; each seeded topic is detected 3/3; every
+   accepted finding has citations and judgment language; there are zero
+   boundary violations; and finding counts remain within reviewed case labels.
+4. Treat 100 seconds and 20,000 total tokens as provisional monitoring alerts,
+   not release failures, until more runs establish stable distributions.
+5. Add provider-timeout recovery to the automated suite before treating the
+   operational protocol as complete.
