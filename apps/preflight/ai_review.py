@@ -204,12 +204,12 @@ def _finding_topic(*parts):
         return "property_defect"
     if "xml" in text and any(term in text for term in ("missing", "omitted", "not found", "not supplied")):
         return "xml_missing"
+    if ("comparable" in text or "comp " in text) and "comment" in text:
+        return "comparable_commentary"
     if "quality" in text:
         return "quality"
     if "condition" in text:
         return "condition"
-    if ("comparable" in text or "comp " in text) and "comment" in text:
-        return "comparable_commentary"
     if "gla" in text or "gross living area" in text:
         return "gla"
     if "identifier" in text:
@@ -282,9 +282,20 @@ def run_preflight_ai_review(version):
         }
         deterministic_topics.discard("")
         suppressed_findings = []
+        accepted_ai_topics = set()
+        attached_names = {source["file"] for source in visual_sources}
         for item in result.get("findings", []):
             if not isinstance(item, dict) or not item.get("title"):
                 continue
+            requested_visual_sources = (
+                item.get("visual_sources", [])
+                if isinstance(item.get("visual_sources", []), list)
+                else []
+            )
+            has_verified_visual_source = any(
+                any(name in str(source) for name in attached_names)
+                for source in requested_visual_sources
+            )
             topic = _finding_topic(
                 item.get("title"),
                 item.get("observed"),
@@ -315,7 +326,7 @@ def run_preflight_ai_review(version):
                     }
                 )
                 continue
-            if topic and topic in deterministic_topics:
+            if topic and topic in deterministic_topics and not has_verified_visual_source:
                 suppressed_findings.append(
                     {
                         "title": str(item.get("title"))[:200],
@@ -359,13 +370,24 @@ def run_preflight_ai_review(version):
                     }
                 )
                 continue
-            attached_names = {source["file"] for source in visual_sources}
             verified_visual_sources = [
                 str(source)[:300]
                 for source in item_visual_sources
                 if any(name in str(source) for name in attached_names)
             ]
             basis = "ai_visual" if verified_visual_sources else "ai_interpretation"
+            dedupe_topic = ("visual" if verified_visual_sources else "interpretation", topic)
+            if topic and dedupe_topic in accepted_ai_topics:
+                suppressed_findings.append(
+                    {
+                        "title": title,
+                        "topic": topic,
+                        "reason": "A stronger GPT finding already covers this evidence topic.",
+                    }
+                )
+                continue
+            if topic:
+                accepted_ai_topics.add(dedupe_topic)
             if not any("appraiser judgment is required" in str(value).lower() for value in guidance):
                 guidance = [*guidance, "Appraiser judgment is required."]
             finding = ReviewFinding.objects.create(

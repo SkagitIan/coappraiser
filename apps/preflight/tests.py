@@ -10,7 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from .llm_client import LLMConfigurationError, run_llm_json
-from .ai_review import run_preflight_ai_review
+from .ai_review import _finding_topic, run_preflight_ai_review
 from .evaluation import score_gpt_findings
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import (
@@ -164,8 +164,8 @@ class PreflightTests(TestCase):
 
     def test_gpt_evaluation_scores_topics_citations_and_boundaries(self):
         case = {
-            "required_topics": ["property_defect"],
-            "allowed_topics": ["property_defect"],
+            "required_topics": ["visual_condition"],
+            "allowed_topics": ["visual_condition"],
             "max_findings": 1,
         }
         finding = {
@@ -177,6 +177,7 @@ class PreflightTests(TestCase):
             "why_it_matters": "The report and exhibit should tell the same story.",
             "recommended_action": "Confirm the exhibit and reconcile the report commentary.",
             "guidance": ["Appraiser judgment is required."],
+            "visual_sources": ["rear_exterior.jpg"],
         }
         score = score_gpt_findings([finding], case)
         self.assertTrue(score["passed"])
@@ -187,6 +188,15 @@ class PreflightTests(TestCase):
         failed_score = score_gpt_findings([prohibited], case)
         self.assertFalse(failed_score["passed"])
         self.assertTrue(failed_score["boundary_failures"])
+
+    def test_finding_topic_prefers_specific_comparable_commentary(self):
+        self.assertEqual(
+            _finding_topic(
+                "Condition difference is acknowledged for only one comparable",
+                "The commentary does not address two comparable condition differences.",
+            ),
+            "comparable_commentary",
+        )
 
     def test_eval_importer_builds_local_manifest_and_pairs_pdf_with_xml(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -492,6 +502,17 @@ class PreflightTests(TestCase):
             kind="image",
             sha256="image-hash",
         )
+        ReviewFinding.objects.create(
+            review=review,
+            version=version,
+            rule_code="DETERMINISTIC_CONDITION",
+            signature="deterministic-condition",
+            title="Condition evidence needs review",
+            category="consistency",
+            severity="warning",
+            observed="The extracted report contains condition evidence.",
+            basis="deterministic",
+        )
         response = {
             "summary": "A visual-to-narrative relationship needs review.",
             "findings": [
@@ -522,6 +543,7 @@ class PreflightTests(TestCase):
         self.assertEqual(finding.basis, "ai_visual")
         self.assertEqual(finding.confidence, "high")
         self.assertEqual(finding.visual_sources, ["condition_exhibit.jpg"])
+        self.assertFalse(execution.parsed_response["suppressed_findings"])
         context = json.loads(mocked_llm.call_args.kwargs["user_prompt"])
         self.assertEqual(
             {source["file"] for source in context["visual_review"]["sources"]},

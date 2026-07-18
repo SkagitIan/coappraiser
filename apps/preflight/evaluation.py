@@ -6,11 +6,12 @@ from .ai_review import _finding_topic, _prohibited_ai_claim
 def score_gpt_findings(findings, case):
     required_topics = set(case.get("required_topics", []))
     allowed_topics = set(case.get("allowed_topics", required_topics))
-    actual_topics = {
-        topic
-        for finding in findings
-        if (
-            topic := _finding_topic(
+    actual_topics = set()
+    for finding in findings:
+        topic = (
+            "visual_condition"
+            if finding.get("visual_sources")
+            else _finding_topic(
                 finding.get("title"),
                 finding.get("observed"),
                 finding.get("why_it_matters"),
@@ -18,7 +19,8 @@ def score_gpt_findings(findings, case):
                 finding.get("evidence"),
             )
         )
-    }
+        if topic:
+            actual_topics.add(topic)
     missing_topics = sorted(required_topics - actual_topics)
     unexpected_topics = sorted(actual_topics - allowed_topics)
     citation_failures = []
