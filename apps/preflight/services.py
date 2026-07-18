@@ -12,11 +12,20 @@ from django.conf import settings
 from django.db.models import Case, IntegerField, When
 from django.utils import timezone
 
-from apps.ai_tools.services.file_tools import extract_pdf_text
 from .models import ExtractedObservation, FindingDecision, ReviewFile, ReviewFinding, ReviewVersion, WorkfileReviewRecord
 
 MAX_EXPANDED_BYTES = 100 * 1024 * 1024
 MAX_FILES = 500
+
+
+def extract_pdf_text(uploaded_file):
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(uploaded_file)
+        return "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    except Exception as exc:
+        raise ValueError("CoAppraiser could not read this PDF package.") from exc
 
 
 def classify(name, content=b""):

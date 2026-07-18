@@ -1,10 +1,8 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
 
-from apps.ai_tools.models import AIActionLog
-from apps.assignments.models import Assignment, Document
 from apps.billing.models import Subscription
-from apps.workfile.models import OutputArtifact, VerificationItem
+from apps.preflight.models import AIExecution, FindingDecision, PreflightReview, ReviewFile
 from django.contrib.auth import get_user_model
 
 
@@ -12,11 +10,10 @@ from django.contrib.auth import get_user_model
 def dashboard(request):
     return render(request, "admin/dashboard.html", {
         "user_count": get_user_model().objects.count(),
-        "assignment_count": Assignment.objects.count(),
-        "document_count": Document.objects.count(),
-        "action_count": AIActionLog.objects.count(),
-        "artifact_count": OutputArtifact.objects.count(),
-        "open_verification_count": VerificationItem.objects.filter(status="open").count(),
+        "review_count": PreflightReview.objects.count(),
+        "file_count": ReviewFile.objects.count(),
+        "execution_count": AIExecution.objects.count(),
+        "open_finding_count": FindingDecision.objects.filter(status="open").count(),
         "active_subscription_count": Subscription.objects.filter(status__in=["active", "trialing"]).count(),
-        "recent_actions": AIActionLog.objects.select_related("assignment", "created_by").order_by("-created_at")[:10],
+        "recent_reviews": PreflightReview.objects.select_related("user").order_by("-updated_at")[:10],
     })

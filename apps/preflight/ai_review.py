@@ -4,7 +4,7 @@ import logging
 import mimetypes
 from django.conf import settings
 from django.utils import timezone
-from apps.ai_tools.services.llm_client import run_llm_json
+from .llm_client import run_llm_json
 from .models import AIExecution, FindingDecision, ReviewFinding
 
 logger = logging.getLogger(__name__)

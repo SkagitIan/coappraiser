@@ -1,2 +1,0 @@
-{% extends "base.html" %}{% block content %}<div class="narrow card"><div class="eyebrow">New project</div><h1>Create an assignment</h1><form method="post">{% csrf_token %}{{ form.as_p }}<button class="button primary" type="submit">Create assignment</button></form></div>{% endblock %}
-

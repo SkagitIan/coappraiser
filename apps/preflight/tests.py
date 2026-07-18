@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from apps.ai_tools.services.llm_client import LLMConfigurationError, run_llm_json
+from .llm_client import LLMConfigurationError, run_llm_json
 from .ai_review import run_preflight_ai_review
 from .models import AIExecution, PreflightReview, ReviewFile, ReviewFinding
 from .services import build_workfile_record, run_deterministic_review, safe_zip_members
@@ -263,7 +263,7 @@ class PreflightTests(TestCase):
         response = self.client.get(reverse("preflight:detail", args=[review.pk]))
         self.assertEqual(response.status_code, 404)
 
-    def test_public_positioning_and_deprecated_routes(self):
+    def test_public_positioning_and_removed_legacy_routes(self):
         home = self.client.get(reverse("home"))
         self.assertContains(home, "Terms &amp; Conditions")
         self.assertContains(home, "All rights reserved")
@@ -283,7 +283,8 @@ class PreflightTests(TestCase):
         self.assertContains(faq, "Before you run your first Preflight")
         self.assertContains(faq, "Does it replace TOTAL, ACI, ClickFORMS")
         self.assertContains(faq, "uses GPT-5.6 to visually review the rendered report")
-        self.assertRedirects(self.client.get(reverse("uad_solution_legacy")), reverse("home"))
+        self.assertEqual(self.client.get("/solutions/uad-36-compliance-copilot/").status_code, 404)
+        self.assertEqual(self.client.get("/app/assignments/").status_code, 404)
 
     def test_file_download_is_authorized_and_review_delete_cleans_records(self):
         xml = SimpleUploadedFile("private.xml", b"<?xml version='1.0'?><report />", content_type="application/xml")

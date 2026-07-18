@@ -22,7 +22,7 @@ CoAppraiser and its initial appraisal workflow existed before Build Week. Work c
 
 - Django, server-rendered templates, HTMX, and PostgreSQL/SQLite.
 - `apps/preflight`: private package intake, extraction, versioned findings, decisions, AI execution records, and workfile export.
-- `apps/ai_tools/services/llm_client.py`: explicit mock or OpenAI provider with strict structured output. GPT-5.6 multimodal reviews use the Responses API and omit unsupported temperature overrides.
+- `apps/preflight/llm_client.py`: explicit mock or OpenAI provider with strict structured output. GPT-5.6 multimodal reviews use the Responses API and omit unsupported temperature overrides.
 - XML and PDF observations retain source locations; deterministic rules and GPT interpretations are stored and displayed separately.
 - Cloudflare R2 is required for production uploads. Downloads are authenticated and user-scoped; files are not served from public static paths.
 - Railway runs migrations, WhiteNoise static assets, and Gunicorn.

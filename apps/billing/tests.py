@@ -3,7 +3,6 @@ from unittest.mock import patch, Mock
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from apps.assignments.models import Assignment
 from .models import StripeEvent, Subscription
 from .plans import PLANS
 
@@ -78,20 +77,8 @@ class BillingTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
     @override_settings(COAPPRAISER_BILLING_MODE="stripe")
-    def test_unsubscribed_user_is_sent_to_plans_for_paid_workflow(self):
-        assignment = Assignment.objects.create(user=self.user, title="Paid workflow")
-        self.client.login(username="subscriber", password="pass12345")
-        response = self.client.get(reverse("ai_tools:revision_response", args=[assignment.pk]))
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("billing:pricing"), response["Location"])
-
-    @override_settings(COAPPRAISER_BILLING_MODE="stripe")
-    def test_past_due_user_keeps_billing_access_but_not_paid_workflows(self):
+    def test_past_due_user_keeps_billing_access(self):
         Subscription.objects.create(user=self.user, status="past_due", plan="preflight")
         self.client.login(username="subscriber", password="pass12345")
         billing = self.client.get(reverse("billing:account"))
         self.assertEqual(billing.status_code, 200)
-        assignment = Assignment.objects.create(user=self.user, title="Past due workflow")
-        workflow = self.client.get(reverse("ai_tools:revision_response", args=[assignment.pk]))
-        self.assertEqual(workflow.status_code, 302)
-        self.assertIn(reverse("billing:pricing"), workflow["Location"])

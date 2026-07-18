@@ -27,7 +27,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 - [ ] `/demo/` opens in a fresh private browser without registration, credentials, or payment.
 - [ ] The featured drag/tap package and both secondary package states create fresh reviews through the real intake pipeline.
 - [ ] Separate browser sessions cannot open one another's demo reviews, files, decisions, or workfile records.
-- [ ] The demo page and results contain no pricing, Stripe, or legacy skill-library prompts.
+- [ ] The demo page and results contain no pricing, Stripe, or retired-workflow prompts.
 - [ ] `python manage.py cleanup_demo_reviews` is scheduled at least daily.
 
 ## Sanitized demo package

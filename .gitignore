@@ -9,4 +9,6 @@ env/
 media/
 staticfiles/
 *.log
-
+.playwright-cli/
+output/
+.coverage

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<synthetic_uad_report version="3.6">
-  <subject><identifier>SYNTHETIC-001</identifier><property_type>Detached</property_type><condition>C3</condition></subject>
-  <areas><above_grade_gla>2180</above_grade_gla><below_grade_finished>0</below_grade_finished></areas>
-  <reconciliation><selected_comparable>1</selected_comparable><commentary>Comparable 1 receives primary weight based on proximity and similarity.</commentary></reconciliation>
-</synthetic_uad_report>
