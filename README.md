@@ -76,11 +76,12 @@ Set `COAPPRAISER_BILLING_MODE` and the Stripe variables only if billing is enabl
 ## Exact Build Week demo
 
 1. Open `/demo/` in a fresh private browser. No account or payment information is required.
-2. Select **Conflicting Condition and Commentary** and choose **Run this Preflight**.
-3. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 review.
-4. Compare the prioritized deterministic and GPT-5.6 sections with **Extracted evidence**.
-5. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save it.
-6. Open **View workfile record**, inspect model and evidence metadata, then download the JSON record.
+2. Drag the provided synthetic appraisal ZIP into the Preflight intake area (or tap it on mobile/keyboard).
+3. Confirm the package validation message and choose **Run Preflight**.
+4. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 review.
+5. Compare the prioritized deterministic and GPT-5.6 sections with **Extracted evidence**.
+6. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save it.
+7. Open **View workfile record**, inspect model and evidence metadata, then download the JSON record.
 
 All three packages are entirely synthetic. Their expected findings and the anonymous isolation design are documented in [`docs/build_week_demo.md`](docs/build_week_demo.md).
 

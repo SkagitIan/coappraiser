@@ -23,7 +23,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 ## Demo account and data
 
 - [ ] `/demo/` opens in a fresh private browser without registration, credentials, or payment.
-- [ ] All three scenario cards create fresh reviews through the real intake pipeline.
+- [ ] The featured drag/tap package and both secondary package states create fresh reviews through the real intake pipeline.
 - [ ] Separate browser sessions cannot open one another's demo reviews, files, decisions, or workfile records.
 - [ ] The demo page and results contain no pricing, Stripe, or legacy skill-library prompts.
 - [ ] `python manage.py cleanup_demo_reviews` is scheduled at least daily.
@@ -63,7 +63,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 
 - [ ] Browser zoom, desktop resolution, and font size make evidence and notes readable.
 - [ ] Notifications, password managers, bookmarks, API keys, Railway variables, and personal tabs are hidden.
-- [ ] Start at `/demo/` and select **Conflicting Condition and Commentary**.
+- [ ] Start at `/demo/`, drag the synthetic ZIP into Preflight, and show the package-validation message before starting the review.
 - [ ] Show the sanitized ZIP, prioritized deterministic and GPT sections, source evidence, three decision states, a decision note, and workfile download.
 - [ ] State the professional boundaries aloud: no value conclusion, final adjustment, USPAP declaration, or acceptance guarantee.
 - [ ] Audio explains what was built, how Codex was used, and how GPT-5.6 was used.

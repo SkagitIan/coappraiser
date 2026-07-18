@@ -16,11 +16,11 @@ DEMO_SCENARIOS = {
         "tone": "ready",
     },
     "reconcile": {
-        "title": "Conflicting Condition and Commentary",
-        "short_title": "Reconcile evidence",
+        "title": "Residential Appraisal Package 002",
+        "short_title": "Package 002",
         "filename": "coappraiser-demo-02-reconcile.zip",
         "subject_identifier": "SYNTHETIC-REVIEW-002",
-        "description": "A complete package with deliberate condition, quality, and comparable-commentary inconsistencies.",
+        "description": "A complete six-file residential appraisal package ready for evidence consistency review.",
         "evidence_types": ["XML condition and quality", "PDF condition narrative", "Comparable commentary summary"],
         "review_focus": "Surfaces relationships that ordinary completeness and field-format validation would not reconcile.",
         "expected_deterministic": [

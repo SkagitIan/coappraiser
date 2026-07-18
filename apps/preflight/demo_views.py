@@ -83,6 +83,8 @@ def landing(request):
         item["slug"] = slug
         item["available"] = scenario_package_path(scenario).is_file()
         scenarios.append(item)
+    featured_scenario = next(item for item in scenarios if item["slug"] == "reconcile")
+    alternate_scenarios = [item for item in scenarios if item["slug"] != "reconcile"]
     uses_live_gpt = (
         settings.COAPPRAISER_LLM_PROVIDER == "openai"
         and settings.COAPPRAISER_LLM_MODEL == "gpt-5.6"
@@ -90,7 +92,13 @@ def landing(request):
     return render(
         request,
         "preflight/demo/landing.html",
-        {"scenarios": scenarios, "launch_token": launch_token, "uses_live_gpt": uses_live_gpt},
+        {
+            "scenarios": scenarios,
+            "featured_scenario": featured_scenario,
+            "alternate_scenarios": alternate_scenarios,
+            "launch_token": launch_token,
+            "uses_live_gpt": uses_live_gpt,
+        },
     )
 
 

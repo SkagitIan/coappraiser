@@ -36,12 +36,14 @@ class PublicDemoTests(TestCase):
     def test_public_landing_has_three_clear_scenarios_and_no_pricing_prompt(self):
         response = self.client.get(reverse("preflight_demo:landing"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Does the entire appraisal package tell one consistent story?")
-        self.assertContains(response, "Run this Preflight", count=3)
-        for scenario in DEMO_SCENARIOS.values():
-            self.assertContains(response, scenario["title"])
-        self.assertContains(response, "Synthetic appraisal packages")
-        self.assertContains(response, "Appraiser judgment remains required")
+        self.assertContains(response, "Review the package.")
+        self.assertContains(response, "Drop appraisal package here")
+        self.assertContains(response, "Run Preflight", count=1)
+        self.assertContains(response, "Run package", count=2)
+        for slug in DEMO_SCENARIOS:
+            self.assertContains(response, reverse("preflight_demo:start", args=[slug]))
+        self.assertContains(response, "Synthetic package")
+        self.assertContains(response, "Appraiser judgment is required")
         self.assertNotContains(response, "Pricing")
         self.assertNotContains(response, "Stripe")
 

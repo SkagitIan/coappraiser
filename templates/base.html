@@ -12,7 +12,7 @@
 {% if request.resolver_match.namespace == 'preflight_demo' %}
   <header class="demo-topbar">
     <a class="brand" href="{% url 'preflight_demo:landing' %}"><span class="logo">CA</span><span>CoAppraiser</span></a>
-    <nav aria-label="Demo navigation"><a href="{% url 'preflight_demo:landing' %}">Choose scenario</a><a class="demo-nav-action" href="{% url 'preflight:create' %}">Upload your own appraisal package</a></nav>
+    <nav aria-label="Demo navigation"><a href="{% url 'preflight_demo:landing' %}">Start a new Preflight</a><a class="demo-nav-action" href="{% url 'preflight:create' %}">Upload your own appraisal package</a></nav>
   </header>
   <main class="demo-main">{% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
 {% elif user.is_authenticated and request.path != '/' %}
