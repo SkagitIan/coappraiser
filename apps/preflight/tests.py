@@ -573,6 +573,7 @@ class PreflightTests(TestCase):
         home = self.client.get(reverse("home"))
         self.assertContains(home, "Terms &amp; Conditions")
         self.assertContains(home, "All rights reserved")
+        self.assertContains(home, "all 12 paired PDF/XML scenarios")
         pricing = self.client.get(reverse("pricing"))
         self.assertContains(pricing, "$59/month")
         self.assertContains(pricing, "First Review Free")
@@ -589,6 +590,7 @@ class PreflightTests(TestCase):
         self.assertContains(faq, "Before you run your first Preflight")
         self.assertContains(faq, "Does it replace TOTAL, ACI, ClickFORMS")
         self.assertContains(faq, "uses GPT-5.6 to visually review the rendered report")
+        self.assertContains(faq, "How do you measure whether Preflight works?")
         self.assertEqual(self.client.get("/solutions/uad-36-compliance-copilot/").status_code, 404)
         self.assertEqual(self.client.get("/app/assignments/").status_code, 404)
 

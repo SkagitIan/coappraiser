@@ -7,9 +7,9 @@
   <div>
     <div class="eyebrow"><span class="dot"></span> CoAppraiser Preflight</div>
     <h1>Find what the reviewer will find—first.</h1>
-    <p class="lead">CoAppraiser is a pre-delivery review engine for independent residential appraisers. It cross-checks your XML, PDF narrative, and photos to catch contradictions, unsupported conclusions, and UAD 3.6 triggers before you hit send.</p>
+    <p class="lead">CoAppraiser is a pre-delivery review engine for independent residential appraisers. It normalizes supported UAD 3.6 XML fields, cross-checks them against the rendered report, and uses GPT-5.6 to review selected pages and photos for traceable inconsistencies before you hit send.</p>
     <div class="actions"><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div>
-    <p class="home-trust-line">Works alongside TOTAL, ACI, ClickFORMS, and the software you already use.</p>
+    <p class="home-trust-line">Works alongside TOTAL, ACI, ClickFORMS, and the software you already use. Tested against all 12 paired PDF/XML scenarios in Fannie Mae Appendix D-1; not official UAD validation.</p>
   </div>
   <div class="home-cleared-queue" aria-label="Cleared Preflight queue">
     <header>
@@ -35,27 +35,27 @@
       <article class="is-material">
         <div class="home-finding-copy">
           <span class="home-finding-category">Material</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Evidence Conflict</h3>
-          <p>The grid rates the subject C3 and the addendum says well maintained, while the condition photo shows visible ceiling staining.</p>
-          <div class="home-source-pills"><span>XML Grid</span><b>↔</b><span>Condition Photo</span><b>↔</b><span>PDF Addendum</span></div>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Rear Description Conflicts With Photos</h3>
+          <p>The report says no rear deck or accessory enclosure was observed, while selected rear photographs visibly show both.</p>
+          <div class="home-source-pills"><span>Rendered Report</span><b>↔</b><span>Rear Photos</span></div>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
       <article class="is-material">
         <div class="home-finding-copy">
           <span class="home-finding-category">Material</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Market Trend Mismatch</h3>
-          <p>Neighborhood section indicates stable property values, but time adjustments are applied to Comparables 1–3.</p>
-          <div class="home-source-pills"><span>📝 PDF Neighborhood</span><b>↔</b><span>📄 XML Sales Grid</span></div>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Rating Mismatch</h3>
+          <p>The structured XML reports C4 while the rendered report reports C3.</p>
+          <div class="home-source-pills"><span>UAD XML</span><b>↔</b><span>Rendered Report</span></div>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
       <article class="is-support">
         <div class="home-finding-copy">
           <span class="home-finding-category">Support Item</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">i</span> Missing Explanation</h3>
-          <p>Location adjustment of $15,000 applied to Comp 2 lacks supporting analysis in the addendum.</p>
-          <div class="home-source-pills"><span>📊 Sales Grid</span><b>↔</b><span>📝 PDF Addendum</span></div>
+          <h3><span class="home-finding-icon" aria-hidden="true">i</span> Comparable Commentary Incomplete</h3>
+          <p>Three comparables are identified, but the supplied commentary addresses only one.</p>
+          <div class="home-source-pills"><span>Sales Comparison</span><b>↔</b><span>Commentary</span></div>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
@@ -96,7 +96,7 @@
       <ul>
         <li>Cross-references structured XML, rendered report pages, narrative, and selected photos.</li>
         <li>Cites the exact visual source and confidence behind each visual review prompt.</li>
-        <li>Ensures grid adjustments have visible supporting analysis.</li>
+        <li>Surfaces missing or incomplete support for appraiser review.</li>
         <li>Organizes findings into a prioritized, pre-delivery resolution queue.</li>
       </ul>
     </article>
@@ -117,17 +117,18 @@
     </div>
   </div>
   <ol>
-    <li><b>01</b><div><h3>Screen</h3><p>Upload the package. The engine flags internal inconsistencies and UAD 3.6 readiness issues.</p></div></li>
-    <li><b>02</b><div><h3>Support</h3><p>Generate clear support for weak market conclusions or complex adjustments before the AMC flags them.</p></div></li>
-    <li><b>03</b><div><h3>Document</h3><p>Export a time-stamped, hashed record of your QA decisions and sources to lock down your workfile.</p></div></li>
-    <li><b>04</b><div><h3>Defend</h3><p>If a client still submits a stip, use the engine to interpret and respond to the request intelligently.</p></div></li>
+    <li><b>01</b><div><h3>Inventory</h3><p>Open the package, identify its XML, rendered report, photos, and supporting files, and preserve file hashes.</p></div></li>
+    <li><b>02</b><div><h3>Cross-check</h3><p>Run repeatable field checks, then use GPT-5.6 to compare selected report and visual evidence.</p></div></li>
+    <li><b>03</b><div><h3>Decide</h3><p>Review each cited source, then resolve, defer, dismiss, or keep the finding open with a note.</p></div></li>
+    <li><b>04</b><div><h3>Document</h3><p>Export a time-stamped record of the package, findings, evidence, and appraiser decisions.</p></div></li>
   </ol>
 </section>
 
 <section class="section home-control">
   <div class="bundle">
-    <span class="kicker">UAD 3.6 readiness</span>
-    <h2>3.6 catches what 2.6 forgave. Preflight catches it first.</h2>
+    <span class="kicker">Measured UAD 3.6 intake</span>
+    <h2>Built against all 12 paired PDF/XML scenarios in Fannie Mae Appendix D-1.</h2>
+    <p>Supported fields must normalize with exact source paths and agree with the rendered report. Controlled mutations must produce only the expected finding. This is reproducible readiness testing, not official UAD validation.</p>
   </div>
 </section>
 

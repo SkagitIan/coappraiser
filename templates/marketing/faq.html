@@ -57,7 +57,7 @@
         </details>
         <details>
           <summary>What should I upload?</summary>
-          <p>Upload the completed package you intend to deliver: the UAD XML export, rendered report PDF, and available photos or exhibits. A complete package gives Preflight more sources to cross-check and makes missing-evidence findings more meaningful.</p>
+          <p>Upload the completed package you intend to deliver as one exported ZIP, or select the UAD XML, rendered report PDF, and available photos or exhibits together. A complete package gives Preflight more sources to cross-check and makes missing-evidence findings more meaningful.</p>
         </details>
       </div>
     </section>
@@ -66,8 +66,8 @@
       <header><span>02</span><div><p class="eyebrow">The review</p><h2>What the engine checks</h2></div></header>
       <div class="faq">
         <details>
-          <summary>Can I upload a ZIP, or do the files need to be separate?</summary>
-          <p>Either works. You can upload the exported appraisal ZIP or select supported XML, PDF, and image files together. Preflight safely opens the package, inventories the files, and preserves their hashes with the review version.</p>
+          <summary>How do you measure whether Preflight works?</summary>
+          <p>CoAppraiser uses three separate gates. The UAD normalizer must extract supported fields from all 12 paired PDF/XML scenarios in Fannie Mae Appendix D-1. Controlled mutations must produce exactly the expected condition, quality, and above-grade area findings. Paid GPT-5.6 cases separately score expected topics, source citations, professional boundaries, latency, and token use. These are reproducible engineering tests, not official UAD certification.</p>
         </details>
         <details>
           <summary>What kinds of problems can Preflight find?</summary>
@@ -79,7 +79,7 @@
         </details>
         <details>
           <summary>What does GPT-5.6 do in the review?</summary>
-          <p>GPT-5.6 cross-checks structured XML, the rendered report, narrative evidence, and selected appraisal photos for relationships fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, confidence, why the issue matters, and a recommended review action. Deterministic package checks remain separately identified.</p>
+          <p>GPT-5.6 cross-checks structured XML, the rendered report, narrative evidence, and selected appraisal photos for relationships fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, confidence, why the issue matters, and a recommended review action. Application code then verifies visual filenames, suppresses low-confidence or incomplete output, and keeps deterministic package checks separately identified.</p>
         </details>
       </div>
     </section>

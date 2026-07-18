@@ -152,6 +152,17 @@ python manage.py evaluate_uad_corpus --strict
 python manage.py evaluate_uad_regressions --strict
 ```
 
+On Windows, the same no-cost gates can be run with:
+
+```powershell
+.\scripts\run_evals.ps1
+```
+
+Add `-Full` for Django checks and tests. Add `-Live -Repeat 1` for the three
+paid, isolated GPT-5.6 cases; use `-Repeat 3` when collecting release evidence.
+The live wrapper imports Railway model credentials but never uses the production
+database or production file storage. See [`evals/README.md`](evals/README.md).
+
 The command validates paths and size limits, extracts only supported files beneath
 the ignored `.eval-data/` directory, identifies candidate PDF/XML pairs, and
 profiles namespace-heavy XML without pretending that unknown tags are supported

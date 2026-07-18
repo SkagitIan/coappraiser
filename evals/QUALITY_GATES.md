@@ -60,6 +60,24 @@ The automated Django tests require:
 - low-confidence and evidence-incomplete model findings are not displayed;
 - deterministic findings survive a model failure.
 
+## Gate 4: bounded GPT-5.6 behavior
+
+The paid runner uses three controlled packages:
+
+- an aligned package expected to produce no GPT finding;
+- a report-to-photo conflict expected to produce one cited visual finding;
+- incomplete comparable commentary expected to produce one cited commentary
+  finding.
+
+Each run rejects unexpected topics, missing citations, missing
+appraiser-judgment language, professional-boundary violations, and excess
+findings. It also records the response ID, returned model, latency, and token
+usage.
+
+Current smoke result: each case has passed one isolated live GPT-5.6 run. This
+proves the execution path and reviewed labels, but is not yet a statistically
+meaningful pass-rate claim.
+
 ## Reproducing the evidence
 
 ```powershell
@@ -71,9 +89,16 @@ python manage.py test
 
 Machine-readable reports are written to `.eval-data/reports/`.
 
+The PowerShell wrapper runs the same gates:
+
+```powershell
+.\scripts\run_evals.ps1 -Full
+.\scripts\run_evals.ps1 -Live -Repeat 3
+```
+
 ## Next gates
 
-- execute the live GPT-5.6 runner for at least three repetitions per case;
-- establish reviewed pass-rate, latency, and token thresholds from those runs;
-- controlled photo-to-report cases with reviewed expected labels;
-- operational recovery tests for timeouts and provider failures.
+- collect at least three live repetitions per GPT case and set empirical
+  pass-rate, latency, and token thresholds;
+- expand human-reviewed labels before adding more visual scenarios;
+- add operational recovery tests for provider timeouts.

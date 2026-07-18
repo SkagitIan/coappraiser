@@ -95,14 +95,14 @@ def stream_review(request, pk):
             yield event("complete_step", "Package stored", f"{file_count} file{'s' if file_count != 1 else ''} secured for this review.")
 
             if not version.findings.exists():
-                yield event("active", "Extracting and comparing evidence", "Reading structured fields, report text, and package contents.")
+                yield event("active", "Normalizing package evidence", "Tracing supported UAD fields, rendered report text, and package contents back to their sources.")
                 deterministic = run_deterministic_review(version, include_ai=False)
             else:
                 deterministic = list(version.findings.filter(basis="deterministic"))
 
             observation_count = version.observations.count()
-            yield event("complete_step", "Evidence extracted", f"{observation_count} traceable observation{'s' if observation_count != 1 else ''} normalized.")
-            yield event("complete_step", "Package checks complete", f"{len(deterministic)} rule-based item{'s' if len(deterministic) != 1 else ''} recorded.")
+            yield event("complete_step", "Evidence normalized", f"{observation_count} traceable observation{'s' if observation_count != 1 else ''} retained with source locations.")
+            yield event("complete_step", "Cross-source checks complete", f"{len(deterministic)} repeatable rule-based item{'s' if len(deterministic) != 1 else ''} recorded.")
             for finding in deterministic:
                 yield event("finding", "Preflight check recorded", finding.title)
 
@@ -111,14 +111,14 @@ def stream_review(request, pk):
                 from django.conf import settings
                 from .ai_review import run_preflight_ai_review
                 model = getattr(settings, "COAPPRAISER_LLM_MODEL", "gpt-5.6")
-                yield event("active", f"{model} evidence review", "Cross-checking the rendered report, selected photos, and extracted evidence.")
+                yield event("active", f"{model} evidence review", "Cross-checking the rendered report, selected photos, and normalized evidence under the structured finding protocol.")
                 execution = run_preflight_ai_review(version)
 
             ai_findings = list(version.findings.exclude(basis="deterministic"))
             if execution.status == "failed":
-                yield event("warning", "GPT review unavailable", "Your package and rule-based findings are preserved.")
+                yield event("warning", "Model review unavailable", "Your uploaded package, normalized evidence, and rule-based findings are preserved.")
             else:
-                yield event("complete_step", "Evidence review complete", f"{len(ai_findings)} additional item{'s' if len(ai_findings) != 1 else ''} recorded.")
+                yield event("complete_step", "Evidence review complete", f"{len(ai_findings)} evidence-backed Preflight item{'s' if len(ai_findings) != 1 else ''} accepted.")
                 for finding in ai_findings:
                     yield event("finding", "Preflight evidence finding", finding.title)
 

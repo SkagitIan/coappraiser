@@ -4,6 +4,52 @@ This directory contains code and metadata for evaluations, not appraisal files.
 Downloaded corpora and generated cases belong under `.eval-data/`, which Git
 ignores.
 
+## Run the evaluations yourself
+
+From PowerShell in the repository root, the shortest no-cost command is:
+
+```powershell
+.\scripts\run_evals.ps1
+```
+
+It runs the official-sample normalization gate and controlled cross-source
+regressions. It does not call OpenAI.
+
+Add the Django system check and full test suite:
+
+```powershell
+.\scripts\run_evals.ps1 -Full
+```
+
+Run one paid pass of all three GPT-5.6 cases using linked Railway credentials
+while forcing a local temporary database and file store:
+
+```powershell
+.\scripts\run_evals.ps1 -Live -Repeat 1
+```
+
+Run only the visual case:
+
+```powershell
+.\scripts\run_evals.ps1 -Live -Repeat 1 -Case visual-condition-evidence
+```
+
+For a release-quality sample, use `-Repeat 3`. Live runs incur OpenAI usage and
+can take several minutes. A nonzero exit code means at least one gate failed.
+Machine-readable results are written to `.eval-data/reports/`.
+
+If Windows blocks local PowerShell scripts, use:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_evals.ps1
+```
+
+If `.eval-data/uad-d1/` does not exist yet, import the archive once:
+
+```powershell
+python manage.py import_uad_eval_corpus ".\downloads\Appendix D-1 URAR Sample Use Cases and XML Files_0.zip"
+```
+
 ## Import the official UAD sample archive
 
 1. Visit the [Fannie Mae UAD page](https://singlefamily.fanniemae.com/delivering/uniform-mortgage-data-program/uniform-appraisal-dataset).
