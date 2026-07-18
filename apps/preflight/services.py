@@ -267,6 +267,8 @@ def build_workfile_record(review):
             "category": f.category,
             "severity": f.severity,
             "basis": f.basis,
+            "confidence": f.confidence,
+            "visual_sources": f.visual_sources,
             "observed_issue": f.observed,
             "source_location": f.location,
             "supporting_evidence": f.evidence,

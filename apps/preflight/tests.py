@@ -46,7 +46,7 @@ class PreflightTests(TestCase):
 
     def test_dashboard_uses_first_review_dropzone_then_full_width_queue(self):
         empty_dashboard = self.client.get(reverse("preflight:dashboard"))
-        self.assertContains(empty_dashboard, "Drop your completed XML and PDF package here to run your first Preflight")
+        self.assertContains(empty_dashboard, "Drop your completed appraisal package here to run your first Preflight")
         self.assertContains(empty_dashboard, 'data-first-review-form')
         self.assertNotContains(empty_dashboard, "Quick actions")
         self.assertNotContains(empty_dashboard, "How it works")
@@ -58,7 +58,7 @@ class PreflightTests(TestCase):
             status="completed",
         )
         populated_dashboard = self.client.get(reverse("preflight:dashboard"))
-        self.assertNotContains(populated_dashboard, "Drop your completed XML and PDF package here")
+        self.assertNotContains(populated_dashboard, "Drop your completed appraisal package here")
         self.assertContains(populated_dashboard, "Long residential appraisal package filename")
         self.assertContains(populated_dashboard, "12345 Example Avenue")
         create_href = f'href="{reverse("preflight:create")}"'.encode()
@@ -137,6 +137,8 @@ class PreflightTests(TestCase):
                     "why_it_matters": "The report should be internally consistent.",
                     "recommended_action": "Reconcile the condition evidence.",
                     "guidance": ["Appraiser judgment is required."],
+                    "confidence": "high",
+                    "visual_sources": [],
                 },
                 {
                     "rule_code": "AI_ROOF",
@@ -149,6 +151,8 @@ class PreflightTests(TestCase):
                     "why_it_matters": "The reported defect may affect report consistency.",
                     "recommended_action": "Review the report treatment and available exhibit.",
                     "guidance": ["Appraiser judgment is required."],
+                    "confidence": "medium",
+                    "visual_sources": [],
                 },
                 {
                     "rule_code": "AI_DEMO_NOTICE",
@@ -161,6 +165,8 @@ class PreflightTests(TestCase):
                     "why_it_matters": "This is not a live assignment.",
                     "recommended_action": "Replace the demonstration package.",
                     "guidance": ["Appraiser judgment is required."],
+                    "confidence": "high",
+                    "visual_sources": [],
                 },
             ],
             "missing_information": [],
@@ -178,6 +184,67 @@ class PreflightTests(TestCase):
             {item["topic"] for item in execution.parsed_response["suppressed_findings"]},
             {"condition", "demo_metadata"},
         )
+
+    @override_settings(
+        COAPPRAISER_LLM_PROVIDER="openai",
+        OPENAI_API_KEY="test-key",
+        COAPPRAISER_VISUAL_REVIEW_ENABLED=True,
+    )
+    def test_visual_finding_records_attached_source_and_confidence(self):
+        review = PreflightReview.objects.create(user=self.user, title="Visual package")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            file=SimpleUploadedFile("report.pdf", b"%PDF-1.4 synthetic report", content_type="application/pdf"),
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf-hash",
+            extracted_text="Subject condition C3. Improvements are well maintained.",
+        )
+        ReviewFile.objects.create(
+            version=version,
+            file=SimpleUploadedFile("condition_exhibit.jpg", b"\xff\xd8\xff\xd9", content_type="image/jpeg"),
+            original_name="condition_exhibit.jpg",
+            kind="image",
+            sha256="image-hash",
+        )
+        response = {
+            "summary": "A visual-to-narrative relationship needs review.",
+            "findings": [
+                {
+                    "rule_code": "AI_VISUAL_CONDITION",
+                    "title": "Condition photo may conflict with maintenance narrative",
+                    "category": "judgment_review",
+                    "severity": "warning",
+                    "observed": "Visible ceiling staining appears in the condition exhibit while the report describes the subject as well maintained.",
+                    "location": "condition_exhibit.jpg and report.pdf",
+                    "evidence": [
+                        "condition_exhibit.jpg: visible ceiling staining",
+                        "report.pdf: improvements described as well maintained",
+                    ],
+                    "why_it_matters": "The photo and narrative may not tell the same condition story.",
+                    "recommended_action": "Confirm the visible condition and reconcile the narrative before delivery.",
+                    "guidance": ["Appraiser judgment is required."],
+                    "confidence": "high",
+                    "visual_sources": ["condition_exhibit.jpg"],
+                }
+            ],
+            "missing_information": [],
+        }
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response) as mocked_llm:
+            execution = run_preflight_ai_review(version)
+        finding = review.findings.get(rule_code="AI_VISUAL_CONDITION")
+        self.assertEqual(execution.status, "completed")
+        self.assertEqual(finding.basis, "ai_visual")
+        self.assertEqual(finding.confidence, "high")
+        self.assertEqual(finding.visual_sources, ["condition_exhibit.jpg"])
+        context = json.loads(mocked_llm.call_args.kwargs["user_prompt"])
+        self.assertEqual(
+            {source["file"] for source in context["visual_review"]["sources"]},
+            {"report.pdf", "condition_exhibit.jpg"},
+        )
+        self.assertTrue(mocked_llm.call_args.kwargs["multimodal_inputs"])
+        self.assertNotIn("base64", json.dumps(execution.input_snapshot))
 
     def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
         review = PreflightReview.objects.create(user=self.user, title="Conflict package")
@@ -215,7 +282,7 @@ class PreflightTests(TestCase):
         self.assertEqual(faq.content.count(b"<details>"), 20)
         self.assertContains(faq, "Before you run your first Preflight")
         self.assertContains(faq, "Does it replace TOTAL, ACI, ClickFORMS")
-        self.assertContains(faq, "does not perform OCR or a full visual condition analysis")
+        self.assertContains(faq, "uses GPT-5.6 to visually review the rendered report")
         self.assertRedirects(self.client.get(reverse("uad_solution_legacy")), reverse("home"))
 
     def test_file_download_is_authorized_and_review_delete_cleans_records(self):
@@ -289,6 +356,39 @@ class PreflightTests(TestCase):
         self.assertEqual(request["model"], "gpt-5.6")
         self.assertNotIn("temperature", request)
         self.assertEqual(request["response_format"]["type"], "json_schema")
+
+    @override_settings(
+        COAPPRAISER_LLM_PROVIDER="openai",
+        COAPPRAISER_LLM_MODEL="gpt-5.6",
+        OPENAI_API_KEY="test-key",
+        COAPPRAISER_REASONING_EFFORT="xhigh",
+        COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS=180,
+    )
+    def test_gpt56_multimodal_review_uses_responses_api_and_xhigh_reasoning(self):
+        payload = {"summary": "Reviewed", "findings": [], "missing_information": []}
+        visual_input = {
+            "type": "input_image",
+            "image_url": "data:image/jpeg;base64,dGVzdA==",
+            "detail": "high",
+        }
+        with patch("openai.OpenAI") as openai_client:
+            create = openai_client.return_value.responses.create
+            create.return_value = SimpleNamespace(output_text=json.dumps(payload))
+            result = run_llm_json(
+                system_prompt="Return JSON",
+                user_prompt="Evidence",
+                schema_name="preflight_review",
+                required_keys=payload.keys(),
+                multimodal_inputs=[visual_input],
+            )
+        self.assertEqual(result, payload)
+        request = create.call_args.kwargs
+        self.assertEqual(request["model"], "gpt-5.6")
+        self.assertEqual(request["reasoning"], {"effort": "xhigh"})
+        self.assertFalse(request["store"])
+        self.assertEqual(request["text"]["format"]["type"], "json_schema")
+        self.assertEqual(request["input"][0]["content"][1], visual_input)
+        self.assertNotIn("temperature", request)
 
     @override_settings(
         DEBUG=False,

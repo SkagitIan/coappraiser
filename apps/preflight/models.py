@@ -96,6 +96,8 @@ class ReviewFinding(models.Model):
     evidence = models.JSONField(default=list)
     guidance = models.JSONField(default=list)
     basis = models.CharField(max_length=30, default="deterministic")
+    confidence = models.CharField(max_length=12, blank=True)
+    visual_sources = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -115,4 +117,3 @@ class WorkfileReviewRecord(models.Model):
     review = models.OneToOneField(PreflightReview, on_delete=models.CASCADE, related_name="workfile_record")
     snapshot = models.JSONField(default=dict)
     generated_at = models.DateTimeField(auto_now_add=True)
-

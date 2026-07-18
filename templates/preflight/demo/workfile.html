@@ -11,7 +11,7 @@
       <div class="panel-heading"><div><span class="panel-eyebrow">Review record</span><h2>Evidence and decisions</h2></div><span class="panel-note">{{ snapshot.generated_at }}</span></div>
       {% for finding in snapshot.findings %}
         <article class="demo-record-finding">
-          <div class="finding-meta"><span class="severity-{{ finding.severity }}">{{ finding.severity|title }}</span><span class="finding-basis">{% if finding.basis == "ai_interpretation" %}Preflight evidence review{% else %}Preflight check{% endif %}</span><span class="status-chip">{{ finding.decision_status|title }}</span></div>
+          <div class="finding-meta"><span class="severity-{{ finding.severity }}">{{ finding.severity|title }}</span><span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight evidence review{% else %}Preflight check{% endif %}</span><span class="status-chip">{{ finding.decision_status|title }}</span></div>
           <h3>{{ finding.title }}</h3>
           <p><strong>Observed:</strong> {{ finding.observed_issue }}</p>
           <p><strong>Location:</strong> {{ finding.source_location }}</p>

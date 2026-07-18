@@ -7,7 +7,7 @@ Upload a ZIP through **Preflight > New review**:
 | Package | Intended outcome | Stable deterministic result |
 | --- | --- | --- |
 | `coappraiser-demo-01-ready.zip` | Ready for appraiser review | One advisory baseline finding; XML, PDF, commentary, and exhibits are aligned. |
-| `coappraiser-demo-02-reconcile.zip` | Reconcile before delivery | Four warnings: PDF/XML condition conflict, structured/narrative condition conflict, structured/narrative quality conflict, and incomplete comparable commentary. |
+| `coappraiser-demo-02-reconcile.zip` | Reconcile before delivery | Four predictable rule-based warnings plus a controlled visual-to-narrative review cue: synthetic ceiling staining against the rendered condition narrative. |
 | `coappraiser-demo-03-incomplete.zip` | Incomplete package | One critical finding because the XML export is intentionally missing. |
 
 GPT-5.6 may add evidence-grounded interpretive findings in its separate UI section. The deterministic outcomes above remain predictable.

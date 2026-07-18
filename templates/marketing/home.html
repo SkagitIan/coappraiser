@@ -35,9 +35,9 @@
       <article class="is-material">
         <div class="home-finding-copy">
           <span class="home-finding-category">Material</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Conflict</h3>
-          <p>Subject condition is rated C3 in the grid, but the improvements section notes deferred maintenance requiring immediate repair.</p>
-          <div class="home-source-pills"><span>📄 XML Grid</span><b>↔</b><span>📝 PDF Addendum</span></div>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Evidence Conflict</h3>
+          <p>The grid rates the subject C3 and the addendum says well maintained, while the condition photo shows visible ceiling staining.</p>
+          <div class="home-source-pills"><span>XML Grid</span><b>↔</b><span>Condition Photo</span><b>↔</b><span>PDF Addendum</span></div>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
@@ -91,10 +91,11 @@
       </header>
       <div class="comparison-ui preflight-conflict">
         <span aria-hidden="true">!</span>
-        <p><strong>CONFLICT:</strong> Grid rates subject C3, but the improvements addendum notes “severe deferred maintenance requiring immediate roof repair.”</p>
+        <p><strong>CONFLICT:</strong> Grid rates subject C3 and the narrative says well maintained, but a selected condition photo shows visible ceiling staining.</p>
       </div>
       <ul>
-        <li>Cross-references structured XML data with your written narrative.</li>
+        <li>Cross-references structured XML, rendered report pages, narrative, and selected photos.</li>
+        <li>Cites the exact visual source and confidence behind each visual review prompt.</li>
         <li>Ensures grid adjustments have visible supporting analysis.</li>
         <li>Organizes findings into a prioritized, pre-delivery resolution queue.</li>
       </ul>

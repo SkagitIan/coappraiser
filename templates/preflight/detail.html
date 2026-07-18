@@ -42,7 +42,7 @@
       {% endif %}
 
       {% if ai_findings %}
-        <div class="finding-section-label preflight-reasoning-label"><strong>Preflight evidence review</strong><span>Relationships found by GPT-5.6 from the supplied evidence</span></div>
+        <div class="finding-section-label preflight-reasoning-label"><strong>Preflight evidence review</strong><span>Cross-document and visual relationships found by GPT-5.6</span></div>
         <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
       {% elif ai_execution.status != "failed" %}
         <p class="panel-empty">Preflight did not find an additional evidence relationship beyond the package checks.</p>

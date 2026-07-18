@@ -54,7 +54,7 @@ def _findings_context(review, scenario, slug):
     severity_rank = {"critical": 0, "warning": 1, "advisory": 2}
     findings.sort(key=lambda item: (severity_rank.get(item.severity, 3), 0 if item.basis == "deterministic" else 1, item.created_at))
     deterministic_findings = [item for item in findings if item.basis == "deterministic"]
-    ai_findings = [item for item in findings if item.basis == "ai_interpretation"]
+    ai_findings = [item for item in findings if item.basis != "deterministic"]
     ai_execution = version.ai_executions.order_by("-created_at").first() if version else None
     highest_severity = findings[0].get_severity_display() if findings else "None"
     return {
@@ -151,7 +151,7 @@ def retry(request, pk):
     version = review.versions.first()
     ai_execution = version.ai_executions.order_by("-created_at").first() if version else None
     if version and ai_execution and ai_execution.status == "failed":
-        version.findings.filter(basis="ai_interpretation").delete()
+        version.findings.exclude(basis="deterministic").delete()
         version.ai_executions.all().delete()
         run_preflight_ai_review(version)
 

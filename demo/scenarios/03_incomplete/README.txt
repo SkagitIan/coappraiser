@@ -19,6 +19,6 @@ EXPECTED DETERMINISTIC FINDING TYPES
 
 GPT-5.6 OUTPUT
 GPT-5.6 output may vary slightly in wording, prioritization, or additional
-evidence-grounded interpretive findings. GPT-generated findings appear separately
-from deterministic findings. The deterministic outcome listed above is designed
+evidence-grounded interpretive findings. Preflight evidence-review findings appear
+separately from deterministic findings. The deterministic outcome listed above is designed
 to remain predictable.

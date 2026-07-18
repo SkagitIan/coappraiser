@@ -56,7 +56,7 @@ def detail(request, pk):
         )
     ).order_by("severity_rank", "category", "created_at") if version else []
     deterministic_findings = findings.filter(basis="deterministic") if version else []
-    ai_findings = findings.filter(basis="ai_interpretation") if version else []
+    ai_findings = findings.exclude(basis="deterministic") if version else []
     observations = version.observations.all() if version else []
     ai_execution = version.ai_executions.first() if version else None
     previous = review.versions.all()[1] if review.versions.count() > 1 else None
@@ -111,10 +111,10 @@ def stream_review(request, pk):
                 from django.conf import settings
                 from .ai_review import run_preflight_ai_review
                 model = getattr(settings, "COAPPRAISER_LLM_MODEL", "gpt-5.6")
-                yield event("active", f"{model} evidence review", "Comparing extracted evidence for material relationships not covered by package rules.")
+                yield event("active", f"{model} evidence review", "Cross-checking the rendered report, selected photos, and extracted evidence.")
                 execution = run_preflight_ai_review(version)
 
-            ai_findings = list(version.findings.filter(basis="ai_interpretation"))
+            ai_findings = list(version.findings.exclude(basis="deterministic"))
             if execution.status == "failed":
                 yield event("warning", "GPT review unavailable", "Your package and rule-based findings are preserved.")
             else:

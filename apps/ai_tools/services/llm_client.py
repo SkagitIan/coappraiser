@@ -68,13 +68,15 @@ def mock_preflight_review():
             "why_it_matters": "A reviewer may question a report when structured fields, commentary, and exhibits do not support the same explanation.",
             "recommended_action": "Review the relevant report commentary and confirm it accurately explains the extracted evidence.",
             "evidence": ["Structured XML/PDF observations"],
-            "guidance": ["Appraiser judgment required; this is not official validation."]
+            "guidance": ["Appraiser judgment required; this is not official validation."],
+            "confidence": "medium",
+            "visual_sources": [],
         }],
         "missing_information": []
     }
 
 
-def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None):
+def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None, multimodal_inputs=None):
     if settings.COAPPRAISER_LLM_PROVIDER == "mock":
         if not settings.COAPPRAISER_ALLOW_MOCK_AI:
             raise LLMConfigurationError("Mock AI is disabled when DEBUG is false.")
@@ -88,6 +90,30 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None)
             timeout=settings.COAPPRAISER_OPENAI_TIMEOUT_SECONDS,
             max_retries=1,
         )
+        if multimodal_inputs:
+            if settings.COAPPRAISER_REASONING_EFFORT not in {"none", "low", "medium", "high", "xhigh", "max"}:
+                raise LLMConfigurationError(
+                    "COAPPRAISER_REASONING_EFFORT must be none, low, medium, high, xhigh, or max."
+                )
+            response = client.responses.create(
+                model=settings.COAPPRAISER_LLM_MODEL,
+                instructions=system_prompt,
+                input=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": user_prompt},
+                            *multimodal_inputs,
+                        ],
+                    }
+                ],
+                text=_responses_text_format(schema_name),
+                reasoning={"effort": settings.COAPPRAISER_REASONING_EFFORT},
+                max_output_tokens=5000,
+                store=False,
+                timeout=settings.COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS,
+            )
+            return validate_output(json.loads(response.output_text), required_keys or [])
         request = {
             "model": settings.COAPPRAISER_LLM_MODEL,
             "response_format": _response_format(schema_name),
@@ -103,6 +129,30 @@ def run_llm_json(*, system_prompt, user_prompt, schema_name, required_keys=None)
 def _response_format(schema_name):
     if schema_name != "preflight_review":
         return {"type": "json_object"}
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": schema_name,
+            "strict": True,
+            "schema": _preflight_output_schema(),
+        },
+    }
+
+
+def _responses_text_format(schema_name):
+    if schema_name != "preflight_review":
+        return {"format": {"type": "json_object"}}
+    return {
+        "format": {
+            "type": "json_schema",
+            "name": schema_name,
+            "strict": True,
+            "schema": _preflight_output_schema(),
+        }
+    }
+
+
+def _preflight_output_schema():
     finding_schema = {
         "type": "object",
         "additionalProperties": False,
@@ -117,23 +167,18 @@ def _response_format(schema_name):
             "recommended_action": {"type": "string"},
             "evidence": {"type": "array", "items": {"type": "string"}},
             "guidance": {"type": "array", "items": {"type": "string"}},
+            "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+            "visual_sources": {"type": "array", "items": {"type": "string"}},
         },
-        "required": ["rule_code", "title", "category", "severity", "observed", "location", "why_it_matters", "recommended_action", "evidence", "guidance"],
+        "required": ["rule_code", "title", "category", "severity", "observed", "location", "why_it_matters", "recommended_action", "evidence", "guidance", "confidence", "visual_sources"],
     }
     return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": schema_name,
-            "strict": True,
-            "schema": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "summary": {"type": "string"},
-                    "findings": {"type": "array", "items": finding_schema},
-                    "missing_information": {"type": "array", "items": {"type": "string"}},
-                },
-                "required": ["summary", "findings", "missing_information"],
-            },
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "summary": {"type": "string"},
+            "findings": {"type": "array", "items": finding_schema},
+            "missing_information": {"type": "array", "items": {"type": "string"}},
         },
+        "required": ["summary", "findings", "missing_information"],
     }

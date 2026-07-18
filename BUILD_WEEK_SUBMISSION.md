@@ -17,6 +17,8 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 - [ ] `COAPPRAISER_LLM_PROVIDER=openai`.
 - [ ] `COAPPRAISER_LLM_MODEL=gpt-5.6`.
 - [ ] `OPENAI_API_KEY` is present and authorized for the model.
+- [ ] `COAPPRAISER_VISUAL_REVIEW_ENABLED=true`, and a deployed review records rendered-PDF/photo sources in the AI execution manifest.
+- [ ] `COAPPRAISER_REASONING_EFFORT=xhigh` (or deliberately tested `max`), with a sufficient multimodal timeout.
 - [ ] A completed production review records provider `openai`, model `gpt-5.6`, and status `completed`.
 - [ ] A forced or observed model failure preserves files and deterministic findings, shows a useful message, and never creates a mock result.
 
@@ -64,6 +66,7 @@ Submission deadline: **Tuesday, July 21, 2026 at 5:00 PM Pacific**. The recommen
 - [ ] Browser zoom, desktop resolution, and font size make evidence and notes readable.
 - [ ] Notifications, password managers, bookmarks, API keys, Railway variables, and personal tabs are hidden.
 - [ ] Start at `/demo/`, drag the synthetic ZIP into Preflight, and show the package-validation message before starting the review.
+- [ ] Show the controlled condition exhibit and its exact filename on a GPT-5.6 visual finding; do not promise identical wording on every run.
 - [ ] Show the sanitized ZIP, prioritized deterministic and GPT sections, source evidence, three decision states, a decision note, and workfile download.
 - [ ] State the professional boundaries aloud: no value conclusion, final adjustment, USPAP declaration, or acceptance guarantee.
 - [ ] Audio explains what was built, how Codex was used, and how GPT-5.6 was used.

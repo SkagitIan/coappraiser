@@ -4,8 +4,15 @@
     <div class="finding-meta">
       <span class="badge">{{ finding.get_category_display }}</span>
       <span class="severity-{{ finding.severity }}">{{ finding.get_severity_display }}</span>
-      <span class="finding-basis">{% if finding.basis == "ai_interpretation" %}Preflight reasoning{% else %}Preflight check{% endif %}</span>
+      <span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight reasoning{% else %}Preflight check{% endif %}</span>
+      {% if finding.confidence %}<span class="finding-confidence">{{ finding.confidence|title }} confidence</span>{% endif %}
     </div>
+    {% if finding.visual_sources %}
+      <div class="finding-visual-sources">
+        <strong>Visual sources reviewed</strong>
+        {% for source in finding.visual_sources %}<span>{{ source }}</span>{% endfor %}
+      </div>
+    {% endif %}
     <h3>{{ finding.title }}</h3>
     <div class="finding-observed">
       <span>What Preflight found</span>

@@ -71,7 +71,7 @@
         </details>
         <details>
           <summary>What kinds of problems can Preflight find?</summary>
-          <p>Examples include condition or quality conflicts between XML and narrative, values that differ between the structured export and rendered PDF, missing core files, unreadable PDF text, incomplete comparable commentary, and reported defects without corresponding package evidence.</p>
+          <p>Examples include condition or quality conflicts between XML and narrative, values that differ between the structured export and rendered PDF, missing core files, incomplete comparable commentary, and visible photo evidence that may not align with the rendered report narrative.</p>
         </details>
         <details>
           <summary>How is this different from the validation in my appraisal software?</summary>
@@ -79,7 +79,7 @@
         </details>
         <details>
           <summary>What does GPT-5.6 do in the review?</summary>
-          <p>GPT-5.6 reviews extracted evidence relationships that fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, why the issue matters, and a recommended review action. Deterministic package checks remain separately identified.</p>
+          <p>GPT-5.6 cross-checks structured XML, the rendered report, narrative evidence, and selected appraisal photos for relationships fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, confidence, why the issue matters, and a recommended review action. Deterministic package checks remain separately identified.</p>
         </details>
       </div>
     </section>
@@ -89,7 +89,7 @@
       <div class="faq">
         <details>
           <summary>What is the difference between deterministic and Preflight findings?</summary>
-          <p>Deterministic findings come from repeatable application rules, such as a missing XML or a direct cross-source mismatch. Preflight findings use GPT-5.6 to interpret relationships in the extracted evidence. The interface separates the two so you know how each item was produced.</p>
+          <p>Deterministic findings come from repeatable application rules, such as a missing XML or a direct cross-source mismatch. Preflight evidence findings use GPT-5.6 to interpret relationships across extracted and visual evidence. The interface separates the two so you know how each item was produced.</p>
         </details>
         <details>
           <summary>Will CoAppraiser tell me the value or which comparables to use?</summary>
@@ -133,11 +133,11 @@
       <div class="faq">
         <details>
           <summary>Can Preflight read every PDF and inspect every photo?</summary>
-          <p>Not yet. PDF review depends on extractable text; protected or image-only PDFs may produce a limited-review finding. Images are inventoried and hashed, and their presence can support package checks, but the current release does not perform OCR or a full visual condition analysis.</p>
+          <p>Preflight extracts available PDF text and uses GPT-5.6 to visually review the rendered report plus a controlled set of appraisal photos. Visual findings cite filenames and report pages when available. Protected files, unsupported formats, poor-quality images, and package size limits can reduce coverage. Visual findings are review prompts—not definitive property-condition assessments.</p>
         </details>
         <details>
           <summary>Who can access my appraisal packages?</summary>
-          <p>Reviews are scoped to your authenticated account, and production files are stored in private object storage. Selected extracted evidence and related metadata may be sent to the configured AI provider to produce a review. Only upload assignments you are authorized to process and remove unnecessary sensitive data.</p>
+          <p>Reviews are scoped to your authenticated account, and production files are stored in private object storage. The rendered report, selected appraisal photos, extracted evidence, and related metadata may be sent to the configured AI provider to produce a review. Only upload assignments you are authorized to process and remove unnecessary sensitive data.</p>
         </details>
         <details>
           <summary>Is my appraisal data used to train GPT-5.6?</summary>

@@ -10,7 +10,7 @@
   </div>
   <div class="auth-card">
     <h2>Sign in</h2>
-    <p>Open your CoAppraiser Preflight workspace.</p>
+    <p>Open your evidence-linked review queue and continue preparing the package for client delivery.</p>
     <form method="post" class="styled-form">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">{{ form.as_p }}<button class="button primary" type="submit">Open Preflight</button></form>
     <p class="form-footer">New to CoAppraiser? <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">First Review Free →</a></p>
   </div>

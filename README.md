@@ -8,7 +8,7 @@ A completed appraisal can repeat the same fact across XML fields, rendered repor
 
 ## Why GPT-5.6
 
-Deterministic rules are best for known package and field checks. GPT-5.6 adds the reasoning needed to compare less uniform commentary and extracted evidence while still returning a strict finding schema. CoAppraiser limits the model to supplied evidence and stores the model, prompt version, input snapshot, response, and resulting findings. The production model alias is `gpt-5.6`; see the [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+Deterministic rules are best for known package and field checks. GPT-5.6 adds the multimodal reasoning needed to compare structured XML, the rendered report, narrative evidence, and selected appraisal photos while still returning a strict finding schema. CoAppraiser uses the Responses API with high-detail visual inputs and configurable reasoning effort, limits the model to supplied evidence, and stores the model, prompt version, source manifest, response, confidence, and resulting findings. The production model alias is `gpt-5.6`; see the [official model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
 
 ## How Codex was used
 
@@ -22,7 +22,7 @@ CoAppraiser and its initial appraisal workflow existed before Build Week. Work c
 
 - Django, server-rendered templates, HTMX, and PostgreSQL/SQLite.
 - `apps/preflight`: private package intake, extraction, versioned findings, decisions, AI execution records, and workfile export.
-- `apps/ai_tools/services/llm_client.py`: explicit mock or OpenAI provider with structured JSON output. GPT-5 requests omit unsupported temperature overrides.
+- `apps/ai_tools/services/llm_client.py`: explicit mock or OpenAI provider with strict structured output. GPT-5.6 multimodal reviews use the Responses API and omit unsupported temperature overrides.
 - XML and PDF observations retain source locations; deterministic rules and GPT interpretations are stored and displayed separately.
 - Cloudflare R2 is required for production uploads. Downloads are authenticated and user-scoped; files are not served from public static paths.
 - Railway runs migrations, WhiteNoise static assets, and Gunicorn.
@@ -62,6 +62,10 @@ COAPPRAISER_LLM_PROVIDER=openai
 COAPPRAISER_LLM_MODEL=gpt-5.6
 OPENAI_API_KEY=<secret>
 COAPPRAISER_OPENAI_TIMEOUT_SECONDS=60
+COAPPRAISER_VISUAL_REVIEW_ENABLED=true
+COAPPRAISER_VISUAL_MAX_IMAGES=6
+COAPPRAISER_REASONING_EFFORT=xhigh
+COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS=180
 COAPPRAISER_STORAGE_BACKEND=r2
 COAPPRAISER_DEMO_RETENTION_HOURS=24
 R2_ACCOUNT_ID=<secret>
@@ -73,13 +77,15 @@ R2_SECRET_ACCESS_KEY=<secret>
 
 Set `COAPPRAISER_BILLING_MODE` and the Stripe variables only if billing is enabled for the deployment. Production mock AI and production local-media uploads are rejected by the application.
 
+`xhigh` is the competition-ready reasoning default for the bounded multimodal pass. GPT-5.6 also accepts `max`; use it only after timing a full production package because it can increase latency and cost.
+
 ## Exact Build Week demo
 
 1. Open `/demo/` in a fresh private browser. No account or payment information is required.
 2. Drag the provided synthetic appraisal ZIP into the Preflight intake area (or tap it on mobile/keyboard).
 3. Confirm the package validation message and choose **Run Preflight**.
-4. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 review.
-5. Compare the prioritized deterministic and GPT-5.6 sections with **Extracted evidence**.
+4. Let the staged page run the real ZIP intake, extraction, deterministic rules, and GPT-5.6 multimodal review.
+5. Compare the prioritized rule-based and GPT-5.6 sections, then inspect the exact report/photo sources, confidence, and **Extracted evidence**.
 6. Mark findings **Resolved**, **Deferred**, or **Not applicable**, add a short decision note, and save it.
 7. Open **View workfile record**, inspect model and evidence metadata, then download the JSON record.
 
@@ -99,11 +105,11 @@ The Preflight suite also covers public demo access, replay prevention, anonymous
 ## Known limitations
 
 - This is readiness support, not official UAD, GSE, lender, or USPAP validation.
-- PDF review depends on extractable text; OCR and visual image analysis are not implemented.
+- GPT-5.6 visually reviews one rendered report PDF and a controlled set of supported JPEG, PNG, WebP, or GIF images. Protected PDFs, unsupported formats, poor image quality, and configured size caps can limit that pass; general OCR is not provided.
 - The initial rule set covers a small, explicit subset of appraisal fields and package checks.
 - Reviews run synchronously and are intended for modest package sizes; the public demo presents truthful stages rather than a fabricated percentage.
 - Production requires private R2 storage and operational privacy/retention controls.
-- GPT findings can vary; the demo's core findings are deterministic so the video remains repeatable.
+- GPT findings can vary; low-confidence items are suppressed and the demo's core findings remain deterministic so the video is repeatable.
 
 ## Short demo script
 

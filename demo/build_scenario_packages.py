@@ -77,12 +77,14 @@ SCENARIOS = [
             "Structured XML condition C4 conflicts with narrative condition C3.",
             "Structured XML quality Q3 conflicts with narrative quality Q4.",
             "Three comparables are identified, but only one has commentary.",
+            "The condition exhibit visibly shows synthetic ceiling staining for visual-to-narrative review.",
         ],
         "expected": [
             "Warning to reconcile condition between XML and PDF.",
             "Warning to reconcile structured and narrative condition.",
             "Warning to reconcile structured and narrative quality.",
             "Warning to review incomplete comparable commentary.",
+            "A GPT-5.6 visual review prompt may connect visible ceiling staining with the C3/well-maintained report narrative.",
         ],
         "include_xml": True,
         "accent": "#D97706",
@@ -138,7 +140,15 @@ def build_exhibit(path: Path, scenario: dict, label: str, variant: int) -> None:
     if variant == 2:
         draw.ellipse((780, 150, 930, 250), fill="#F4B942", outline="#7C2D12", width=6)
     if variant == 3:
-        draw.rectangle((705, 510, 840, 550), fill="#7C3F2B", outline="#7F1D1D", width=6)
+        if scenario["slug"] == "02_reconcile":
+            draw.rectangle((250, 285, 950, 650), fill="#F4F0E8", outline="#334155", width=8)
+            draw.polygon([(250, 285), (950, 285), (870, 455), (330, 455)], fill="#E7E0D4", outline="#64748B")
+            draw.ellipse((455, 320, 750, 440), fill="#A76B45", outline="#713F2B", width=7)
+            draw.ellipse((505, 345, 700, 415), fill="#7C4A33")
+            draw.text((390, 490), "SYNTHETIC CEILING STAINING", fill="#991B1B", font=_font(30))
+            draw.text((410, 535), "Visible condition cue for demo review", fill="#475569", font=_font(22))
+        else:
+            draw.rectangle((705, 510, 840, 550), fill="#7C3F2B", outline="#7F1D1D", width=6)
     draw.rectangle((0, 0, 1200, 64), fill="#111827")
     draw.text((28, 15), "SYNTHETIC EXHIBIT - NOT A REAL PROPERTY", fill="white", font=_font(28))
     draw.rectangle((35, 690, 1165, 775), fill="white", outline="#334155", width=3)
@@ -337,8 +347,8 @@ EXPECTED DETERMINISTIC FINDING TYPES
 
 GPT-5.6 OUTPUT
 GPT-5.6 output may vary slightly in wording, prioritization, or additional
-evidence-grounded interpretive findings. GPT-generated findings appear separately
-from deterministic findings. The deterministic outcome listed above is designed
+evidence-grounded interpretive findings. Preflight evidence-review findings appear
+separately from deterministic findings. The deterministic outcome listed above is designed
 to remain predictable.
 """
     path.write_text(content, encoding="utf-8", newline="\n")
