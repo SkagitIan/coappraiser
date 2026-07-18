@@ -1277,8 +1277,11 @@
 .home-comparison li:before{position:absolute;left:0;top:0;display:grid;place-items:center;width:18px;height:18px;border-radius:999px;content:"×";color:#8f98a7;background:#dfe3e8;font-size:12px;font-weight:900}
 .home-comparison .is-preflight li{color:#344258;font-weight:680}
 .home-comparison .is-preflight li:before{content:"✓";color:#fff;background:#5967c8}
+.workflow-path{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 .18em}
+.workflow-path span,.workflow-path b{display:inline-block}
+.workflow-path b{font-weight:650}
 .home-workflow ol{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:0;padding:0;list-style:none}
-.home-workflow li{display:flex;gap:13px;padding:22px 18px;border:1px solid #dfe5ed;border-radius:13px;background:rgba(255,255,255,.78)}
+.home-workflow li{position:relative;display:flex;gap:13px;padding:22px 18px;border:1px solid #cfd8e5;border-radius:13px;background:rgba(255,255,255,.84)}
 .home-workflow li>b{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:9px;color:#4e5ac1;background:#eceeff;font-size:10px}
 .home-workflow h3{margin:2px 0 7px;color:#25334b;font-size:17px}
 .home-workflow p{margin:0;color:#69778d;font-size:12px;line-height:1.55}
@@ -1298,6 +1301,16 @@
   .home-finding-review{width:max-content}
   .home-review-summary{grid-template-columns:1fr 1fr}
   .home-review-summary div:last-child{grid-column:1/-1;border-top:1px solid #e6eaf0}
-  .home-comparison,.home-workflow ol{grid-template-columns:1fr}
+  .home-comparison{grid-template-columns:1fr}
+  .workflow-path{align-items:flex-start;flex-direction:column;gap:3px;line-height:1.02}
+  .workflow-path .workflow-arrow{font-size:0;line-height:1}
+  .workflow-path .workflow-arrow:after{content:"↓";color:#7c8799;font-size:24px}
+  .workflow-path .workflow-preflight{color:#4f5fc6}
+  .home-workflow ol{position:relative;grid-template-columns:1fr;gap:18px;padding-left:38px}
+  .home-workflow ol:before{content:"";position:absolute;z-index:0;left:14px;top:24px;bottom:24px;width:2px;background:linear-gradient(#5967c8,#98a2da);border-radius:2px}
+  .home-workflow li{display:block;min-height:138px;padding:24px 21px;border-color:#bdc9d9;background:rgba(255,255,255,.94)}
+  .home-workflow li>b{position:absolute;z-index:1;left:-40px;top:24px;width:32px;height:32px;border:2px solid #fff;border-radius:999px;color:#fff;background:#5967c8;box-shadow:0 0 0 1px #5967c8;font-size:10px}
+  .home-workflow h3{margin:0 0 9px;font-size:16px}
+  .home-workflow p{color:#526178;font-size:16px;line-height:1.55}
   .home-difference-copy{text-align:left}
 }
