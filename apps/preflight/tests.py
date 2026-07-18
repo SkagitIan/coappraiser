@@ -44,6 +44,26 @@ class PreflightTests(TestCase):
         self.assertEqual(review.versions.get().status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
 
+    def test_dashboard_uses_first_review_dropzone_then_full_width_queue(self):
+        empty_dashboard = self.client.get(reverse("preflight:dashboard"))
+        self.assertContains(empty_dashboard, "Drop your completed XML and PDF package here to run your first Preflight")
+        self.assertContains(empty_dashboard, 'data-first-review-form')
+        self.assertNotContains(empty_dashboard, "Quick actions")
+        self.assertNotContains(empty_dashboard, "How it works")
+
+        PreflightReview.objects.create(
+            user=self.user,
+            title="Long residential appraisal package filename",
+            subject_identifier="12345 Example Avenue · Client file 2026-001",
+            status="completed",
+        )
+        populated_dashboard = self.client.get(reverse("preflight:dashboard"))
+        self.assertNotContains(populated_dashboard, "Drop your completed XML and PDF package here")
+        self.assertContains(populated_dashboard, "Long residential appraisal package filename")
+        self.assertContains(populated_dashboard, "12345 Example Avenue")
+        create_href = f'href="{reverse("preflight:create")}"'.encode()
+        self.assertEqual(populated_dashboard.content.count(create_href), 1)
+
     def test_zip_upload_extracts_package_members(self):
         fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
         package = SimpleUploadedFile("synthetic-package.zip", fixture.read_bytes(), content_type="application/zip")

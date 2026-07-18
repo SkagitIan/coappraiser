@@ -1,7 +1,131 @@
 {% extends "base.html" %}
 {% block title %}Dashboard | CoAppraiser{% endblock %}
 {% block content %}
-<div class="workspace-heading"><div><span class="workspace-kicker">Review workspace</span><h1>Dashboard</h1><p>Keep report packages, findings, and verification work in one place.</p></div><a class="app-button primary" href="{% url 'preflight:create' %}">＋ New Preflight review</a></div>
-<div class="workspace-stats"><div><span>All reviews</span><strong>{{ review_count }}</strong><small>Across your workspace</small></div><div><span>Completed</span><strong>{{ completed_count }}</strong><small>Ready to review</small></div><div><span>Processing</span><strong>{{ processing_count }}</strong><small>Active work</small></div><div><span>Free scan</span><strong>{% if review_count %}Used{% else %}Ready{% endif %}</strong><small>One scan included</small></div></div>
-<div class="workspace-grid"><section class="workspace-panel review-panel"><div class="panel-heading"><div><span class="panel-eyebrow">Assignment review queue</span><h2>Recent Preflight reviews</h2></div><a href="{% url 'preflight:create' %}">New review →</a></div>{% if reviews %}<div class="review-table"><div class="review-table-head"><span>Review</span><span>Status</span><span>Versions</span><span>Updated</span></div>{% for review in reviews %}<a class="review-row" href="{% url 'preflight:detail' review.pk %}"><div><strong>{{ review.title }}</strong><small>{{ review.subject_identifier|default:"No subject identifier" }}</small></div><span class="status-chip status-{{ review.status }}">{{ review.get_status_display }}</span><span>{{ review.versions.count }}</span><span>{{ review.updated_at|date:"M j, Y" }} <b>→</b></span></a>{% endfor %}</div>{% else %}<div class="workspace-empty"><span class="empty-icon">＋</span><h3>No reviews yet</h3><p>Start with a completed appraisal package. Upload a UAD ZIP or separate XML, PDF, and image files.</p><a class="app-button primary" href="{% url 'preflight:create' %}">Create first review</a></div>{% endif %}</section><aside class="workspace-rail"><section class="workspace-panel quick-panel"><span class="panel-eyebrow">Quick actions</span><h2>Move a package forward.</h2><a class="quick-action" href="{% url 'preflight:create' %}"><span>＋</span><div><strong>Run Preflight</strong><small>Upload a report package for review</small></div><b>→</b></a><a class="quick-action" href="{% url 'billing:account' %}"><span>○</span><div><strong>Plan & billing</strong><small>Manage your $59/month workspace</small></div><b>→</b></a></section><section class="workspace-panel guide-panel"><span class="panel-eyebrow">How it works</span><h3>1. Upload your export</h3><p>Use the package from your existing appraisal software.</p><h3>2. Review findings</h3><p>Confirm package checks and Preflight evidence findings.</p><h3>3. Keep the workfile trail</h3><p>Download a record of the review when ready.</p></section></aside></div><p class="workspace-disclaimer">Preflight is readiness support, not official GSE validation or a guarantee of acceptance. The appraiser remains responsible for the report.</p>
+<div class="workspace-heading">
+  <div>
+    <span class="workspace-kicker">Review workspace</span>
+    <h1>Dashboard</h1>
+    <p>Keep report packages, findings, and verification work in one place.</p>
+  </div>
+</div>
+
+<div class="workspace-stats" aria-label="Preflight review statistics">
+  <div>
+    <span class="workspace-stat-icon stat-all" aria-hidden="true">▤</span>
+    <span>All reviews</span>
+    <strong>{{ review_count }}</strong>
+    <small>Across your workspace</small>
+  </div>
+  <div>
+    <span class="workspace-stat-icon stat-complete" aria-hidden="true">✓</span>
+    <span>Completed</span>
+    <strong>{{ completed_count }}</strong>
+    <small>Ready to review</small>
+  </div>
+  <div>
+    <span class="workspace-stat-icon stat-processing{% if processing_count %} is-active{% endif %}" aria-hidden="true">↻</span>
+    <span>Processing</span>
+    <strong>{{ processing_count }}</strong>
+    <small>Active work</small>
+  </div>
+  <div>
+    <span class="workspace-stat-icon stat-free" aria-hidden="true">◇</span>
+    <span>Free scan</span>
+    <strong>{% if review_count %}Used{% else %}Ready{% endif %}</strong>
+    <small>One scan included</small>
+  </div>
+</div>
+
+{% if reviews %}
+  <section class="workspace-panel review-panel review-panel-wide">
+    <div class="panel-heading">
+      <div>
+        <span class="panel-eyebrow">Assignment review queue</span>
+        <h2>Recent Preflight reviews</h2>
+      </div>
+    </div>
+    <div class="review-table">
+      <div class="review-table-head">
+        <span>Review</span>
+        <span>Status</span>
+        <span>Versions</span>
+        <span>Updated</span>
+      </div>
+      {% for review in reviews %}
+        <a class="review-row" href="{% url 'preflight:detail' review.pk %}">
+          <div>
+            <strong>{{ review.title }}</strong>
+            <small>{{ review.subject_identifier|default:"No subject identifier" }}</small>
+          </div>
+          <span class="status-chip review-status status-{{ review.status }}">{{ review.get_status_display }}</span>
+          <span class="review-versions"><small>Version</small>{{ review.versions.count }}</span>
+          <span class="review-updated">{{ review.updated_at|date:"M j, Y" }} <b>→</b></span>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+{% else %}
+  <section class="workspace-panel dashboard-first-review" aria-labelledby="first-review-title">
+    <form method="post" action="{% url 'preflight:create' %}" enctype="multipart/form-data" data-first-review-form data-processing-form>
+      {% csrf_token %}
+      <input type="hidden" name="title" value="First Preflight review" data-first-review-title>
+      <input type="file" id="dashboard-package" name="files" multiple required data-first-review-input>
+      <label class="dashboard-dropzone" for="dashboard-package" data-first-review-dropzone tabindex="0">
+        <span class="dashboard-drop-icon" aria-hidden="true">↓</span>
+        <span class="panel-eyebrow">Your first review starts here</span>
+        <h2 id="first-review-title">Drop your completed XML and PDF package here to run your first Preflight.</h2>
+        <p data-first-review-message>Use an exported ZIP, or select the XML, PDF, images, and supporting files together.</p>
+        <span class="dashboard-file-button">Choose appraisal package</span>
+        <small>Private upload · Your first review is free</small>
+      </label>
+      <noscript><button class="app-button primary dashboard-upload-fallback" type="submit">Run first Preflight</button></noscript>
+    </form>
+  </section>
+{% endif %}
+
+<p class="workspace-disclaimer">Preflight is readiness support, not official GSE validation or a guarantee of acceptance. The appraiser remains responsible for the report.</p>
+
+{% if not reviews %}
+<script>
+(() => {
+  const form = document.querySelector("[data-first-review-form]");
+  const input = form?.querySelector("[data-first-review-input]");
+  const title = form?.querySelector("[data-first-review-title]");
+  const zone = form?.querySelector("[data-first-review-dropzone]");
+  const message = form?.querySelector("[data-first-review-message]");
+  if (!form || !input || !title || !zone || !message) return;
+
+  function startReview(files) {
+    if (!files?.length) return;
+    const filename = files.length === 1 ? files[0].name.replace(/\.[^.]+$/, "") : "First Preflight review";
+    title.value = filename.slice(0, 200) || "First Preflight review";
+    zone.classList.remove("is-dragging");
+    zone.classList.add("is-uploading");
+    message.textContent = `Package accepted · ${files.length} file${files.length === 1 ? "" : "s"} · Starting Preflight…`;
+    form.requestSubmit();
+  }
+
+  input.addEventListener("change", () => startReview(input.files));
+  zone.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      input.click();
+    }
+  });
+  ["dragenter", "dragover"].forEach(name => zone.addEventListener(name, event => {
+    event.preventDefault();
+    zone.classList.add("is-dragging");
+  }));
+  ["dragleave", "drop"].forEach(name => zone.addEventListener(name, event => {
+    event.preventDefault();
+    zone.classList.remove("is-dragging");
+  }));
+  zone.addEventListener("drop", event => {
+    if (!event.dataTransfer.files.length) return;
+    input.files = event.dataTransfer.files;
+    startReview(input.files);
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}
