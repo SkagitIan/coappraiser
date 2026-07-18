@@ -70,6 +70,10 @@ def terms(request):
     return render(request, "marketing/terms.html", {"public_page": True})
 
 
+def faq(request):
+    return render(request, "marketing/faq.html", {"public_page": True})
+
+
 @csrf_exempt
 def checklist_signup(request):
     # Lead-capture form on the statically served UAD 3.6 checklist page.

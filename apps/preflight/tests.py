@@ -191,6 +191,11 @@ class PreflightTests(TestCase):
         self.assertContains(terms, "AI-assisted technology and output limitations")
         self.assertContains(terms, "Appraiser judgment is required")
         self.assertContains(terms, "Terms &amp; Conditions")
+        faq = self.client.get(reverse("faq"))
+        self.assertEqual(faq.content.count(b"<details>"), 20)
+        self.assertContains(faq, "Before you run your first Preflight")
+        self.assertContains(faq, "Does it replace TOTAL, ACI, ClickFORMS")
+        self.assertContains(faq, "does not perform OCR or a full visual condition analysis")
         self.assertRedirects(self.client.get(reverse("uad_solution_legacy")), reverse("home"))
 
     def test_file_download_is_authorized_and_review_delete_cleans_records(self):

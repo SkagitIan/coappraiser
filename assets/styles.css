@@ -1365,3 +1365,64 @@
   .legal-document section{padding:25px 21px}
   .legal-document p,.legal-document li{font-size:15px}
 }
+
+/* Public appraiser FAQ */
+.faq-hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:64px;align-items:center;padding:82px 0 68px}
+.faq-hero h1{max-width:780px;margin:12px 0 18px;font-size:clamp(48px,6vw,78px);line-height:.96;letter-spacing:-.06em}
+.faq-hero .lead{max-width:700px}
+.faq-hero .actions{margin-top:28px}
+.faq-quick{display:grid;justify-items:start;padding:28px;border:1px solid #d9e0eb;border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 22px 56px rgba(28,42,69,.09)}
+.faq-quick>span{margin-bottom:19px;color:#7d899c;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.faq-quick strong{width:100%;padding:12px 14px;border:1px solid #dfe4ec;border-radius:9px;color:#344159;background:#f8fafc;font-size:13px}
+.faq-quick strong.is-preflight{color:#fff;border-color:#4d5bbc;background:#5362c5;box-shadow:0 9px 20px rgba(64,78,176,.2)}
+.faq-quick b{padding:7px 0 7px 18px;color:#9aa4b3;font-size:17px}
+.faq-quick p{margin:18px 0 0;color:#758197;font-size:12px;line-height:1.5}
+.faq-page-layout{display:grid;grid-template-columns:250px minmax(0,760px);gap:54px;align-items:start;padding-bottom:42px}
+.faq-index{position:sticky;top:24px;padding:23px;border:1px solid #dde3ec;border-radius:14px;background:rgba(255,255,255,.82)}
+.faq-index>span{display:block;margin-bottom:12px;color:#8a95a7;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.faq-index nav{display:grid}
+.faq-index nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;color:#4c5a71;border-bottom:1px solid #e8ecf2;font-size:12px;font-weight:800;text-decoration:none}
+.faq-index nav a:hover{color:#4555b7}
+.faq-index nav b{color:#9aa4b4;font-size:9px}
+.faq-index>p{margin:20px 0 5px;color:#8994a6;font-size:11px}
+.faq-contact-link{color:#4555b7;font-size:12px;font-weight:850}
+.faq-groups{display:grid;gap:58px}
+.faq-group{padding:0;scroll-margin-top:24px}
+.faq-group>header{display:flex;align-items:center;gap:15px;margin-bottom:17px}
+.faq-group>header>span{display:grid;place-items:center;width:39px;height:39px;border-radius:11px;color:#fff;background:#5362c5;font-size:11px;font-weight:900;box-shadow:0 7px 16px rgba(75,89,187,.2)}
+.faq-group>header .eyebrow{margin:0 0 3px;color:#6571c8}
+.faq-group>header h2{margin:0;color:#1c2a42;font-size:26px;letter-spacing:-.035em}
+.faq-page-layout .faq{gap:10px}
+.faq-page-layout .faq details{padding:0;border-color:#dfe4ec;border-radius:12px;box-shadow:0 7px 22px rgba(25,40,67,.045)}
+.faq-page-layout .faq summary{min-height:62px;padding:18px 20px;font-size:14px;line-height:1.35}
+.faq-page-layout .faq summary::after{display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;border-radius:7px;color:#4f5fc1;background:#eef0ff;font-size:15px}
+.faq-page-layout .faq details p{margin:0;padding:0 55px 20px 20px;color:#59677d;font-size:13px;line-height:1.7}
+.faq-page-layout .faq details p a{color:#4555b7;font-weight:800}
+.faq-page-layout .faq details[open]{border-color:#cbd3e5;background:#fff}
+.faq-page-layout .faq details[open] summary{color:#3f4fb1}
+.faq-final{display:flex;align-items:center;justify-content:space-between;gap:38px;margin-top:34px;padding:38px 40px;border:1px solid #dce2ec;border-radius:18px;background:#fff;box-shadow:0 18px 50px rgba(28,42,68,.07)}
+.faq-final .eyebrow{margin:0;color:#5967c4}
+.faq-final h2{margin:8px 0 7px;color:#18263e;font-size:31px;letter-spacing:-.04em}
+.faq-final p:not(.eyebrow){margin:0;color:#728096;font-size:13px}
+.faq-final .actions{flex:0 0 auto;margin:0}
+@media(max-width:900px){
+  .faq-hero{grid-template-columns:1fr;gap:30px}
+  .faq-quick{max-width:520px}
+  .faq-page-layout{grid-template-columns:1fr;gap:30px}
+  .faq-index{position:static}
+  .faq-index nav{grid-template-columns:1fr 1fr;gap:0 24px}
+}
+@media(max-width:680px){
+  .faq-hero{padding:54px 0 46px}
+  .faq-hero h1{font-size:47px}
+  .faq-hero .actions{align-items:stretch;flex-direction:column}
+  .faq-hero .button{width:100%}
+  .faq-index nav{grid-template-columns:1fr}
+  .faq-groups{gap:44px}
+  .faq-group>header h2{font-size:22px}
+  .faq-page-layout .faq summary{min-height:66px;padding:17px;font-size:15px}
+  .faq-page-layout .faq details p{padding:0 17px 19px;font-size:15px}
+  .faq-final{align-items:stretch;flex-direction:column;padding:29px 23px}
+  .faq-final .actions{align-items:stretch;flex-direction:column}
+  .faq-final .button{width:100%}
+}

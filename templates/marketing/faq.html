@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Appraiser FAQ | CoAppraiser Preflight{% endblock %}
+{% block extra_head %}<meta name="description" content="Straight answers for residential appraisers evaluating CoAppraiser Preflight: workflow, evidence review, professional boundaries, security, and pricing."><link rel="canonical" href="https://coappraiser.com/faq/">{% endblock %}
+
+{% block content %}
+<section class="faq-hero">
+  <div>
+    <p class="eyebrow"><span class="dot"></span> Appraiser FAQ</p>
+    <h1>Before you run your first Preflight.</h1>
+    <p class="lead">Straight answers about where CoAppraiser fits, what it reviews, what GPT-5.6 does, and what always stays with the appraiser.</p>
+    <div class="actions">
+      <a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a>
+      <a class="button secondary" href="{% url 'preflight_demo:landing' %}">See the live demo</a>
+    </div>
+  </div>
+  <aside class="faq-quick">
+    <span>At a glance</span>
+    <strong>Appraisal Software</strong>
+    <b>↓</b>
+    <strong class="is-preflight">CoAppraiser Preflight</strong>
+    <b>↓</b>
+    <strong>Client Delivery</strong>
+    <p>Your existing software stays the system of record.</p>
+  </aside>
+</section>
+
+<div class="faq-page-layout">
+  <aside class="faq-index">
+    <span>Jump to</span>
+    <nav aria-label="FAQ categories">
+      <a href="#getting-started">Getting started <b>01</b></a>
+      <a href="#review">The review <b>02</b></a>
+      <a href="#boundaries">Judgment &amp; standards <b>03</b></a>
+      <a href="#workfile">Decisions &amp; workfile <b>04</b></a>
+      <a href="#data-billing">Data &amp; billing <b>05</b></a>
+    </nav>
+    <p>Still deciding?</p>
+    <a class="faq-contact-link" href="{% url 'contact' %}">Ask a question →</a>
+  </aside>
+
+  <div class="faq-groups">
+    <section id="getting-started" class="faq-group">
+      <header><span>01</span><div><p class="eyebrow">Getting started</p><h2>Where Preflight fits</h2></div></header>
+      <div class="faq">
+        <details>
+          <summary>What exactly is CoAppraiser Preflight?</summary>
+          <p>It is a pre-delivery review engine for completed residential appraisal packages. It compares structured report data, rendered narrative, and package evidence to surface contradictions, missing support, and review triggers before the report leaves your desk.</p>
+        </details>
+        <details>
+          <summary>When should I use it in my workflow?</summary>
+          <p>After you have completed the report in your appraisal software and before client delivery. Export the package, run Preflight, review the prioritized queue, record your decisions, then make any warranted changes in your appraisal software.</p>
+        </details>
+        <details>
+          <summary>Does it replace TOTAL, ACI, ClickFORMS, or my current software?</summary>
+          <p>No. CoAppraiser works alongside the software you already use. Your appraisal software remains the place where you develop, edit, sign, and deliver the report; Preflight is the independent evidence review between completion and delivery.</p>
+        </details>
+        <details>
+          <summary>What should I upload?</summary>
+          <p>Upload the completed package you intend to deliver: the UAD XML export, rendered report PDF, and available photos or exhibits. A complete package gives Preflight more sources to cross-check and makes missing-evidence findings more meaningful.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="review" class="faq-group">
+      <header><span>02</span><div><p class="eyebrow">The review</p><h2>What the engine checks</h2></div></header>
+      <div class="faq">
+        <details>
+          <summary>Can I upload a ZIP, or do the files need to be separate?</summary>
+          <p>Either works. You can upload the exported appraisal ZIP or select supported XML, PDF, and image files together. Preflight safely opens the package, inventories the files, and preserves their hashes with the review version.</p>
+        </details>
+        <details>
+          <summary>What kinds of problems can Preflight find?</summary>
+          <p>Examples include condition or quality conflicts between XML and narrative, values that differ between the structured export and rendered PDF, missing core files, unreadable PDF text, incomplete comparable commentary, and reported defects without corresponding package evidence.</p>
+        </details>
+        <details>
+          <summary>How is this different from the validation in my appraisal software?</summary>
+          <p>Traditional validation is strong at required fields and valid formats. Preflight asks a different question: does the package tell one consistent, supportable story across the grid, addendum, rendered report, and available exhibits?</p>
+        </details>
+        <details>
+          <summary>What does GPT-5.6 do in the review?</summary>
+          <p>GPT-5.6 reviews extracted evidence relationships that fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, why the issue matters, and a recommended review action. Deterministic package checks remain separately identified.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="boundaries" class="faq-group">
+      <header><span>03</span><div><p class="eyebrow">Judgment &amp; standards</p><h2>What stays with you</h2></div></header>
+      <div class="faq">
+        <details>
+          <summary>What is the difference between deterministic and Preflight findings?</summary>
+          <p>Deterministic findings come from repeatable application rules, such as a missing XML or a direct cross-source mismatch. Preflight findings use GPT-5.6 to interpret relationships in the extracted evidence. The interface separates the two so you know how each item was produced.</p>
+        </details>
+        <details>
+          <summary>Will CoAppraiser tell me the value or which comparables to use?</summary>
+          <p>No. It does not determine value, select or reject comparables, recommend a final adjustment, or make appraisal conclusions. It identifies evidence for you to verify; you decide what the evidence means.</p>
+        </details>
+        <details>
+          <summary>Does a clean review mean the appraisal is USPAP compliant?</summary>
+          <p>No. Preflight does not declare USPAP compliance and is not a substitute for your own standards analysis, scope-of-work decisions, certification, or professional obligations.</p>
+        </details>
+        <details>
+          <summary>Does Preflight guarantee UAD, lender, AMC, or GSE acceptance?</summary>
+          <p>No. It is readiness support, not an official UAD validator or an acceptance guarantee. Client overlays, automated underwriting systems, and reviewer judgment can still produce requests after delivery.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="workfile" class="faq-group">
+      <header><span>04</span><div><p class="eyebrow">Decisions &amp; workfile</p><h2>From finding to record</h2></div></header>
+      <div class="faq">
+        <details>
+          <summary>What do I do when Preflight flags something?</summary>
+          <p>Open the finding, inspect the observed issue and cited evidence, then verify the source in your appraisal software. If a change is warranted, make it there. Preflight organizes the review; it does not silently alter your report.</p>
+        </details>
+        <details>
+          <summary>Can I resolve, defer, or dismiss a finding?</summary>
+          <p>Yes. You can mark an item resolved, deferred, or not applicable and add a short decision note. Keeping an item open is also valid while you investigate. Your selected status and note become part of the review history.</p>
+        </details>
+        <details>
+          <summary>Can I upload a revised package without losing the first review?</summary>
+          <p>Yes. A revised upload creates a new immutable version inside the same review. The earlier package, findings, and decisions remain in the version history so the work can be traced.</p>
+        </details>
+        <details>
+          <summary>What is included in the workfile review record?</summary>
+          <p>The downloadable record preserves package and version metadata, file hashes, deterministic and model findings, evidence locations, AI execution metadata, decision statuses, and appraiser notes. It supports your workfile; it is not a replacement for the official appraisal workfile you are required to maintain.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="data-billing" class="faq-group">
+      <header><span>05</span><div><p class="eyebrow">Data &amp; billing</p><h2>Practical details</h2></div></header>
+      <div class="faq">
+        <details>
+          <summary>Can Preflight read every PDF and inspect every photo?</summary>
+          <p>Not yet. PDF review depends on extractable text; protected or image-only PDFs may produce a limited-review finding. Images are inventoried and hashed, and their presence can support package checks, but the current release does not perform OCR or a full visual condition analysis.</p>
+        </details>
+        <details>
+          <summary>Who can access my appraisal packages?</summary>
+          <p>Reviews are scoped to your authenticated account, and production files are stored in private object storage. Selected extracted evidence and related metadata may be sent to the configured AI provider to produce a review. Only upload assignments you are authorized to process and remove unnecessary sensitive data.</p>
+        </details>
+        <details>
+          <summary>Is my appraisal data used to train GPT-5.6?</summary>
+          <p>CoAppraiser uses the OpenAI API, not a consumer ChatGPT session. OpenAI states that API inputs and outputs are not used to train its models by default unless the customer explicitly opts in. Provider retention and legal exceptions still apply; see the <a href="https://platform.openai.com/docs/models/default-usage-policies-by-endpoint" rel="noopener" target="_blank">OpenAI API data controls</a> and our <a href="{% url 'terms' %}">Terms &amp; Conditions</a>.</p>
+        </details>
+        <details>
+          <summary>What does it cost, and can I cancel?</summary>
+          <p>Your first completed Preflight review is free. Continued access is $59 per month through Stripe. You can cancel from the billing portal; cancellation stops the next renewal and access generally continues through the end of the current billing period.</p>
+        </details>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="faq-final">
+  <div><p class="eyebrow">Still have a workflow question?</p><h2>Ask before you upload.</h2><p>Tell us what your appraisal package looks like and where you want Preflight to fit.</p></div>
+  <div class="actions"><a class="button secondary" href="{% url 'contact' %}">Contact CoAppraiser</a><a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a></div>
+</section>
+{% endblock %}

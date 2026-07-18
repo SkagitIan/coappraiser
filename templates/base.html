@@ -28,7 +28,7 @@
     <div class="app-main-column"><header class="app-topbar"><div><span class="topbar-kicker">CoAppraiser workspace</span><span class="topbar-context">Secure review environment</span></div><a class="topbar-action" href="{% url 'preflight:create' %}">＋ New review</a></header><main class="app-content">
       {% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
 {% else %}
-  <header class="shell nav"><a class="brand" href="{% url 'home' %}"><span class="logo">CA</span><span>CoAppraiser</span></a><nav class="nav-links"><a href="{% url 'home' %}">Home</a>{% if user.is_authenticated %}<a href="{% url 'preflight:dashboard' %}">Preflight</a><a href="{% url 'billing:account' %}">Account</a>{% if user.is_staff %}<a href="{% url 'admin_dashboard' %}">Admin</a>{% endif %}<a class="pill-link" href="{% url 'preflight:create' %}">New review</a><form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button class="pill-link" type="submit">Sign out</button></form>{% else %}<a href="{% url 'pricing' %}">Pricing</a><a href="{% url 'contact' %}">Help</a><a class="pill-link" href="{% url 'accounts:signup' %}">First Review Free</a><a class="pill-link" href="{% url 'login' %}">Sign in</a>{% endif %}</nav></header><main class="shell app-main">{% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
+  <header class="shell nav"><a class="brand" href="{% url 'home' %}"><span class="logo">CA</span><span>CoAppraiser</span></a><nav class="nav-links"><a href="{% url 'home' %}">Home</a>{% if user.is_authenticated %}<a href="{% url 'preflight:dashboard' %}">Preflight</a><a href="{% url 'billing:account' %}">Account</a>{% if user.is_staff %}<a href="{% url 'admin_dashboard' %}">Admin</a>{% endif %}<a class="pill-link" href="{% url 'preflight:create' %}">New review</a><form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button class="pill-link" type="submit">Sign out</button></form>{% else %}<a href="{% url 'pricing' %}">Pricing</a><a href="{% url 'faq' %}">FAQ</a><a class="pill-link" href="{% url 'accounts:signup' %}">First Review Free</a><a class="pill-link" href="{% url 'login' %}">Sign in</a>{% endif %}</nav></header><main class="shell app-main">{% if messages %}{% for message in messages %}<div class="notice">{{ message }}</div>{% endfor %}{% endif %}
 {% endif %}
 {% block content %}{% endblock %}
 {% if request.resolver_match.namespace == 'preflight_demo' %}</main>{% elif user.is_authenticated and request.path != '/' and not public_page %}</main></div></div>{% else %}</main>{% endif %}
@@ -46,6 +46,7 @@
         <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'preflight_demo:landing' %}">Demo</a>
         {% if request.resolver_match.namespace != 'preflight_demo' %}<a href="{% url 'pricing' %}">Pricing</a>{% endif %}
+        <a href="{% url 'faq' %}">FAQ</a>
         <a href="{% url 'contact' %}">Contact</a>
         <a href="{% url 'terms' %}">Terms &amp; Conditions</a>
       </nav>
