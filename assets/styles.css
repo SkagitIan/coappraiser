@@ -1309,15 +1309,39 @@
 .home-story-visual .story-result path{fill:none;stroke:#4f5fc6;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .home-story-visual .story-result-small{fill:#bdc9e7;font-size:9px;font-weight:850;letter-spacing:1.5px}
 .home-story-visual .story-result-title{fill:#fff;font-size:22px;font-weight:900;letter-spacing:-.5px}
-.home-control .bundle h2{margin:8px 0 12px}
-.home-control .content-card h2{margin-bottom:13px}
-.home-control .content-card p{margin-top:14px;color:#66748b;font-size:13px;line-height:1.55}
+.home-judgment-card{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(430px,.98fr);gap:62px;align-items:center;padding:55px;border:1px solid rgba(255,255,255,.82);border-radius:32px;background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(247,249,255,.82));box-shadow:0 28px 80px rgba(25,39,68,.12);backdrop-filter:blur(20px)}
+.home-judgment-copy{min-width:0}
+.home-judgment-copy .kicker{color:#5261bd}
+.home-judgment-copy h2{max-width:690px;margin:10px 0 20px;color:#17243c;font-size:clamp(40px,5.3vw,68px);line-height:.96;letter-spacing:-.058em}
+.home-judgment-copy>p{max-width:650px;margin:0;color:#536178;font-size:17px;line-height:1.68}
+.home-judgment-promise{display:grid;grid-template-columns:32px minmax(0,1fr);gap:13px;align-items:start;margin-top:27px;padding-top:24px;border-top:1px solid #dfe5ed}
+.home-judgment-promise>span{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;color:#fff;background:#2da873;box-shadow:0 7px 16px rgba(45,168,115,.22);font-size:14px;font-weight:900}
+.home-judgment-promise p{margin:2px 0 0;color:#293850;font-size:14px;font-weight:760;line-height:1.55}
+.home-decision-trail{overflow:hidden;border:1px solid #d8dfeb;border-radius:19px;background:#fff;box-shadow:0 20px 48px rgba(30,43,73,.12)}
+.home-decision-trail header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #e4e9f0;background:#f7f9fc}
+.home-decision-trail header div{display:flex;align-items:center;gap:9px;color:#26354e}
+.home-decision-trail header strong{font-size:13px}
+.home-decision-trail header small{padding:5px 8px;border-radius:999px;color:#28734f;background:#e5f5ec;font-size:9px;font-weight:850}
+.home-decision-trail ol{position:relative;display:grid;gap:0;margin:0;padding:5px 20px;list-style:none}
+.home-decision-trail ol:before{content:"";position:absolute;left:35px;top:38px;bottom:38px;width:2px;background:#d8deec}
+.home-decision-trail li{position:relative;z-index:1;display:grid;grid-template-columns:32px minmax(0,1fr);gap:13px;padding:19px 0;border-bottom:1px solid #edf0f4}
+.home-decision-trail li:last-child{border-bottom:0}
+.home-decision-trail li>b{display:grid;place-items:center;width:30px;height:30px;border:2px solid #fff;border-radius:999px;color:#fff;background:#5967c8;box-shadow:0 0 0 1px #5967c8;font-size:10px}
+.home-decision-trail li>div{min-width:0}
+.home-decision-trail li span,.home-decision-trail li strong{display:block}
+.home-decision-trail li span{margin-bottom:5px;color:#67748a;font-size:9px;font-weight:880;letter-spacing:.07em;text-transform:uppercase}
+.home-decision-trail li strong{color:#25344d;font-size:14px;line-height:1.35}
+.home-decision-trail li p{margin:5px 0 0;color:#6f7c90;font-size:11px;line-height:1.5}
+.home-decision-sources{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px}
+.home-decision-sources small{padding:5px 7px;border:1px solid #dce2eb;border-radius:999px;color:#536178;background:#f8fafc;font-size:9px;font-style:normal;font-weight:750}
+.home-decision-sources em{color:#9aa4b4;font-size:10px;font-style:normal}
 @media(max-width:900px){
   .preflight-home-hero{grid-template-columns:1fr}
   .home-cleared-queue{margin-top:10px}
   .home-workflow ol{grid-template-columns:1fr 1fr}
   .home-story-card{grid-template-columns:1fr;gap:20px;padding:42px}
   .home-story-visual{width:min(100%,500px);margin:0 auto}
+  .home-judgment-card{grid-template-columns:1fr;gap:32px;padding:42px}
 }
 @media(max-width:680px){
   .preflight-home-hero{padding-bottom:30px}
@@ -1344,6 +1368,11 @@
   .home-story-copy>p{font-size:16px;line-height:1.62}
   .home-story-benchmark{margin-top:22px}
   .home-story-visual{width:100%}
+  .home-judgment-card{gap:28px;padding:30px 23px;border-radius:25px}
+  .home-judgment-copy h2{font-size:40px;line-height:.98}
+  .home-judgment-copy>p{font-size:16px;line-height:1.62}
+  .home-judgment-promise{grid-template-columns:30px minmax(0,1fr);gap:11px}
+  .home-decision-trail header{align-items:flex-start;flex-direction:column}
 }
 
 /* Public footer and legal pages */
