@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "scenario_slug": "reconcile",
+  "captured_at": "2026-07-20T15:19:27.572254+00:00",
+  "source": "Paid GPT-5.6 evaluation; replayed only for the exact package hash below.",
+  "package_sha256": "1467ad7b8acf05eef5a9a49c9373ab5f7c55889a13160b5496352182d240345f",
+  "evaluation_report_sha256": "edbe2d9127ce50734ad1bd0e07be36f7cb5d55aeb7ceaed5ef3432a4155df2ee",
+  "case_spec_sha256": "11dcea65797bb67a7278dd62e1fb5faabd41f96dd870d1e7bcf7e74cfc0e2d5d",
+  "system_prompt_sha256": "8c0f9174d10f87571d5c88b23d3c4c469f95ec6421b74305134597c46761860b",
+  "ai_execution": {
+    "provider": "openai",
+    "model_name": "gpt-5.6",
+    "prompt_version": "preflight-ai-1",
+    "completed_at": "2026-07-20T15:18:38.794372+00:00",
+    "input_snapshot": {
+      "visual_review": {
+        "enabled": true,
+        "sources": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "detail": "high",
+            "bytes": 46074,
+            "sha256": "b5bfeec90387bed2703f3669bcd302c42b812a6b49dfe251380348510b67b752"
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 118007,
+            "sha256": "6174ee3ad73f3aa73c1f72f13dd475f623974c4831d6f9b13b728f0138d90738"
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 184127,
+            "sha256": "f8d69bdccaa13a4d22a76b6f9a17635a3c1e825afd7aa1d339eed9f6256037bd"
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 124378,
+            "sha256": "763d646d21f47488f91da7123405ad561d3d9b0c71a0fc7e8f50f6d9419d322d"
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 199148,
+            "sha256": "bb9671022ea0170d8ff4cd3f9f6f1da3446e4e51b59eebaa1e7874c649a8e91b"
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 204741,
+            "sha256": "11f97506e76081e3556dc492f0cc054b59837a1232746a1aa453f1ce56b68a04"
+          }
+        ],
+        "coverage": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          }
+        ],
+        "instruction": "Only these attached files may support visual observations."
+      }
+    },
+    "parsed_response": {
+      "summary": "Three distinct items merit review: reported comparable differences are not reconciled, and two rear-exterior descriptions conflict with the attached photographs.",
+      "missing_information": [],
+      "suppressed_findings": [
+        {
+          "title": "Reported comparable differences are not reconciled",
+          "topic": "comparable_commentary",
+          "reason": "A deterministic finding already covers this issue."
+        },
+        {
+          "title": "Exterior-finish description needs reconciliation",
+          "topic": "condition",
+          "reason": "A stronger GPT finding already covers this evidence topic."
+        }
+      ],
+      "_response_metadata": {
+        "response_id": "resp_0f733d7c13405f40016a5e3c146408819b88c750d007f784ea",
+        "model": "gpt-5.6-sol",
+        "usage": {
+          "input_tokens": 12386,
+          "input_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 12383
+          },
+          "output_tokens": 3387,
+          "output_tokens_details": {
+            "reasoning_tokens": 2588
+          },
+          "total_tokens": 15773
+        },
+        "attempts": 1,
+        "duration_ms": 61375
+      },
+      "_demo_snapshot": true
+    }
+  },
+  "findings": [
+    {
+      "rule_code": "PHOTO_REAR_FEATURE_CONFLICT",
+      "signature": "AI:PHOTO_REAR_FEATURE_CONFLICT:rear features conflict with addendum description",
+      "title": "Rear features conflict with addendum description",
+      "category": "fix_before_delivery",
+      "severity": "warning",
+      "basis": "ai_visual",
+      "observed": "The addendum says no rear deck, covered patio, or accessory enclosure was observed. The rear photographs plainly show a raised deck with an overhead framed cover and a rear enclosure.",
+      "location": "PDF: report.pdf, page 3; rear_deck_exterior.jpg; covered_deck_exterior.jpg; rear_exterior_condition.jpg",
+      "evidence": [
+        "PDF: report.pdf, page 3: \"no rear deck, covered patio, or accessory enclosure was observed\"",
+        "rear_deck_exterior.jpg and covered_deck_exterior.jpg: visible raised deck and overhead framed cover",
+        "rear_exterior_condition.jpg: visible box-like rear enclosure"
+      ],
+      "why_it_matters": "The categorical addendum statement conflicts with visible property features documented in the supplied photographs.",
+      "recommended_action": "Reconcile the rear-feature description with the photographs and revise the report language as appropriate.",
+      "guidance": [
+        "Appraiser judgment is required to identify and describe the photographed features appropriately."
+      ],
+      "confidence": "high",
+      "visual_sources": [
+        "rear_deck_exterior.jpg",
+        "covered_deck_exterior.jpg",
+        "rear_exterior_condition.jpg"
+      ]
+    }
+  ]
+}

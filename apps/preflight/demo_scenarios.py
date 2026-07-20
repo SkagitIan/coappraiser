@@ -3,19 +3,21 @@ from django.conf import settings
 
 DEMO_SCENARIOS = {
     "ready": {
+        "eval_case_id": "aligned-package-no-ai-finding",
         "title": "Same Subject · Aligned Evidence",
         "short_title": "Aligned evidence",
         "filename": "coappraiser-demo-01-ready.zip",
         "subject_identifier": "SYNTHETIC-SUBJECT-001",
         "description": "XML, rendered report, commentary, and five sanitized residential photos tell one consistent story.",
         "evidence_types": ["Structured XML fields", "Rendered report narrative", "Five sanitized residential photos"],
-        "review_focus": "Confirms that disclosed photo evidence reaches a low-priority baseline rather than generating invented conflicts.",
-        "expected_deterministic": ["Package contents are ready for review"],
-        "expected_codes": {"PREFLIGHT_BASELINE"},
-        "expected_gpt_categories": ["Cleanup or advisory review"],
+        "review_focus": "Confirms that aligned evidence produces a clear action queue rather than an invented conflict.",
+        "expected_deterministic": [],
+        "expected_codes": set(),
+        "expected_gpt_categories": ["No additional supported conflict"],
         "tone": "ready",
     },
     "reconcile": {
+        "eval_case_id": "visual-condition-evidence",
         "title": "Same Subject · Reconcile Evidence",
         "short_title": "Reconcile evidence",
         "filename": "coappraiser-demo-02-reconcile.zip",
@@ -39,6 +41,7 @@ DEMO_SCENARIOS = {
         "tone": "review",
     },
     "incomplete": {
+        "eval_case_id": "incomplete-comparable-commentary",
         "title": "Same Subject · Missing XML Export",
         "short_title": "Incomplete package",
         "filename": "coappraiser-demo-03-incomplete.zip",
@@ -56,3 +59,7 @@ DEMO_SCENARIOS = {
 
 def scenario_package_path(scenario):
     return settings.BASE_DIR / "demo" / scenario["filename"]
+
+
+def scenario_snapshot_path(slug):
+    return settings.BASE_DIR / "demo" / "snapshots" / f"{slug}.json"

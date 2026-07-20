@@ -27,23 +27,8 @@ def validate_output(result, required_keys=None):
 
 def mock_preflight_review():
     return {
-        "summary": "Structured evidence was reviewed for possible report consistency concerns. This development response is not a conclusion about compliance or appraisal accuracy.",
-        "findings": [
-            {
-                "rule_code": "AI_COHERENCE_REVIEW",
-                "title": "Review whether the report tells one consistent story",
-                "category": "judgment_review",
-                "severity": "advisory",
-                "observed": "The uploaded XML and PDF evidence were available for a focused consistency review.",
-                "location": "XML/PDF evidence set",
-                "why_it_matters": "A reviewer may question a report when structured fields, commentary, and exhibits do not support the same explanation.",
-                "recommended_action": "Review the relevant report commentary and confirm it accurately explains the extracted evidence.",
-                "evidence": ["Structured XML/PDF observations"],
-                "guidance": ["Appraiser judgment required; this is not official validation."],
-                "confidence": "medium",
-                "visual_sources": [],
-            }
-        ],
+        "summary": "Mock review completed without generating an interpretive finding.",
+        "findings": [],
         "missing_information": [],
     }
 

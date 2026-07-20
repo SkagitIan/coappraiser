@@ -14,6 +14,21 @@ Upload a ZIP through **Preflight > New review**:
 
 GPT-5.6 may add evidence-grounded interpretive findings in its separate UI section. The deterministic outcomes above remain predictable.
 
+## Public demo replay
+
+The public `/demo/` route performs package opening, file inventory, evidence extraction, and deterministic checks for every visitor. It does **not** call the OpenAI API. Instead, `demo/snapshots/` contains one paid, scored GPT-5.6 result for each exact package hash. The progress page identifies the recorded-model stage, and the result page exposes the same evidence, decision, and workfile interface as an authenticated review.
+
+Refresh the snapshots only after the packages or review prompt intentionally change:
+
+```powershell
+$env:COAPPRAISER_LLM_PROVIDER="openai"
+$env:COAPPRAISER_LLM_MODEL="gpt-5.6"
+python manage.py evaluate_gpt56 --repeat 1 --confirm-paid-api --strict
+python manage.py build_demo_snapshots
+```
+
+The first command makes three paid model requests and must pass all evaluation gates. The second command hash-locks those accepted outputs to the three packages. Runtime rejects a package whose hash no longer matches its snapshot.
+
 Rebuild all source files and ZIPs from the repository root:
 
 ```powershell

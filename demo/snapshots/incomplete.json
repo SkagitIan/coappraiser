@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "scenario_slug": "incomplete",
+  "captured_at": "2026-07-20T15:19:27.572254+00:00",
+  "source": "Paid GPT-5.6 evaluation; replayed only for the exact package hash below.",
+  "package_sha256": "ef960a988a43197fc9ce59588e0de0c49861434297da8d7718ce4edee9125174",
+  "evaluation_report_sha256": "edbe2d9127ce50734ad1bd0e07be36f7cb5d55aeb7ceaed5ef3432a4155df2ee",
+  "case_spec_sha256": "11dcea65797bb67a7278dd62e1fb5faabd41f96dd870d1e7bcf7e74cfc0e2d5d",
+  "system_prompt_sha256": "8c0f9174d10f87571d5c88b23d3c4c469f95ec6421b74305134597c46761860b",
+  "ai_execution": {
+    "provider": "openai",
+    "model_name": "gpt-5.6",
+    "prompt_version": "preflight-ai-1",
+    "completed_at": "2026-07-20T15:19:27.037897+00:00",
+    "input_snapshot": {
+      "visual_review": {
+        "enabled": true,
+        "sources": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "detail": "high",
+            "bytes": 46153,
+            "sha256": "26902523d1e39e2cf235e50f708092fc18c05efbc1f948348c85cab1eb8c02ca"
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 118007,
+            "sha256": "6174ee3ad73f3aa73c1f72f13dd475f623974c4831d6f9b13b728f0138d90738"
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 184127,
+            "sha256": "f8d69bdccaa13a4d22a76b6f9a17635a3c1e825afd7aa1d339eed9f6256037bd"
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 124378,
+            "sha256": "763d646d21f47488f91da7123405ad561d3d9b0c71a0fc7e8f50f6d9419d322d"
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 199148,
+            "sha256": "bb9671022ea0170d8ff4cd3f9f6f1da3446e4e51b59eebaa1e7874c649a8e91b"
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 204741,
+            "sha256": "11f97506e76081e3556dc492f0cc054b59837a1232746a1aa453f1ce56b68a04"
+          }
+        ],
+        "coverage": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          }
+        ],
+        "instruction": "Only these attached files may support visual observations."
+      }
+    },
+    "parsed_response": {
+      "summary": "One distinct issue warrants review: the condition and GLA relationships for Comps 2 and 3 are shown in the grid but not reconciled in individual commentary. The supplied photographs do not clearly contradict the report\u2019s descriptions of the covered deck, rear enclosure, or incomplete cladding.",
+      "missing_information": [],
+      "suppressed_findings": [],
+      "_response_metadata": {
+        "response_id": "resp_0a6b623de3b449ba016a5e3c54ead48199ac468cf22a24e0bb",
+        "model": "gpt-5.6-sol",
+        "usage": {
+          "input_tokens": 11878,
+          "input_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 11875
+          },
+          "output_tokens": 2427,
+          "output_tokens_details": {
+            "reasoning_tokens": 2060
+          },
+          "total_tokens": 14305
+        },
+        "attempts": 1,
+        "duration_ms": 45075
+      },
+      "_demo_snapshot": true
+    }
+  },
+  "findings": [
+    {
+      "rule_code": "COMP_COMMENTARY_DIFFERENCES_UNRECONCILED",
+      "signature": "AI:COMP_COMMENTARY_DIFFERENCES_UNRECONCILED:comp 2 and comp 3 differences lack reconciliation",
+      "title": "Comp 2 and Comp 3 differences lack reconciliation",
+      "category": "judgment_review",
+      "severity": "warning",
+      "basis": "ai_interpretation",
+      "observed": "Comp 2 and Comp 3 are each reported as C3 versus the subject\u2019s C4, with GLA differences of 465 and 230 sq ft. The report states that no individual commentary was supplied for those comparables.",
+      "location": "PDF: report.pdf, page 2, Sales comparison overview and Comparable commentary",
+      "evidence": [
+        "The grid reports the subject as C4 with 1,760 sq ft GLA and Comp 2 as C3 with 2,225 sq ft GLA.",
+        "The grid reports the subject as C4 with 1,760 sq ft GLA and Comp 3 as C3 with 1,990 sq ft GLA.",
+        "The commentary states: \u201cNo individual commentary was supplied for the remaining comparable(s).\u201d"
+      ],
+      "why_it_matters": "The report does not show how the reported condition and size relationships for two of the three comparables were considered in the comparison.",
+      "recommended_action": "Review the assignment-specific support and add or revise commentary to reconcile the reported condition and GLA relationships for Comps 2 and 3.",
+      "guidance": [
+        "Appraiser judgment is required to determine the materiality of these differences and the appropriate reconciliation."
+      ],
+      "confidence": "high",
+      "visual_sources": []
+    }
+  ]
+}

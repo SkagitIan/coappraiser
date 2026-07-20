@@ -7,31 +7,26 @@
       <span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight reasoning{% else %}Preflight check{% endif %}</span>
       {% if finding.confidence %}<span class="finding-confidence">{{ finding.confidence|title }} confidence</span>{% endif %}
     </div>
-    {% if finding.visual_sources %}
-      <div class="finding-visual-sources">
-        <strong>Visual sources reviewed</strong>
-        {% for source in finding.visual_sources %}<span>{{ source }}</span>{% endfor %}
-      </div>
-    {% endif %}
     <h3>{{ finding.title }}</h3>
     <div class="finding-observed">
-      <span>What Preflight found</span>
+      <span>Observed issue</span>
       <p>{{ finding.observed }}</p>
     </div>
-    <div class="finding-action">
-      <span>Review next</span>
-      <p>{{ finding.recommended_action }}</p>
+    <div class="finding-proof">
+      <div>
+        <span>Where it was found</span>
+        <strong>{{ finding.location|default:"An exact extracted location was not available." }}</strong>
+        {% if finding.visual_sources %}<div class="finding-visual-sources">{% for source in finding.visual_sources %}<b>{{ source }}</b>{% endfor %}</div>{% endif %}
+      </div>
+      <div>
+        <span>Evidence cited</span>
+        {% if finding.evidence %}<ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p>No additional citation was stored.</p>{% endif %}
+      </div>
     </div>
-    <div class="finding-context">
-      <p><strong>Why it matters</strong><span>{{ finding.why_it_matters }}</span></p>
-      <p><strong>Where to look</strong><span>{{ finding.location|default:"Exact location was not available in the extracted evidence." }}</span></p>
+    <div class="finding-next">
+      <p><span>Why it matters</span><strong>{{ finding.why_it_matters }}</strong></p>
+      <p><span>Review next</span><strong>{{ finding.recommended_action }}</strong></p>
     </div>
-    {% if finding.evidence %}
-      <details class="finding-evidence">
-        <summary>View supporting evidence <span>{{ finding.evidence|length }}</span></summary>
-        <ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
-      </details>
-    {% endif %}
     <div id="finding-{{ finding.pk }}">
       {% include "preflight/partials/finding_status.html" %}
     </div>

@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import Counter
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, IntegerField, When
@@ -45,11 +46,9 @@ def create(request):
     return render(request, "preflight/form.html", {"form": form})
 
 
-@login_required
-def detail(request, pk):
-    review = get_object_or_404(PreflightReview.objects.prefetch_related("versions", "findings__decision"), pk=pk, user=request.user)
+def build_detail_context(review):
     version = review.versions.first()
-    findings = version.findings.annotate(
+    findings = version.findings.exclude(rule_code="PREFLIGHT_BASELINE").annotate(
         severity_rank=Case(
             When(severity="critical", then=0), When(severity="warning", then=1),
             default=2, output_field=IntegerField(),
@@ -59,11 +58,103 @@ def detail(request, pk):
     ai_findings = findings.exclude(basis="deterministic") if version else []
     observations = version.observations.all() if version else []
     ai_execution = version.ai_executions.first() if version else None
+    files = list(version.files.all()) if version else []
+    kind_counts = Counter(item.kind for item in files)
+    inventory = [
+        {
+            "kind": kind,
+            "label": {
+                "pdf": "Rendered PDF",
+                "xml": "XML",
+                "image": "Photograph",
+                "ssr": "SSR",
+                "other": "Supporting file",
+            }.get(kind, kind.title()),
+            "count": kind_counts[kind],
+        }
+        for kind in ("pdf", "xml", "image", "ssr", "other")
+        if kind_counts[kind]
+    ]
+    visual_manifest = []
+    visual_coverage = []
+    parsed_response = {}
+    if ai_execution:
+        visual_manifest = (
+            (ai_execution.input_snapshot or {})
+            .get("visual_review", {})
+            .get("sources", [])
+        )
+        visual_coverage = (
+            (ai_execution.input_snapshot or {})
+            .get("visual_review", {})
+            .get("coverage", [])
+        )
+        parsed_response = ai_execution.parsed_response or {}
+    visual_photo_count = sum(item.get("kind") == "appraisal_photo" for item in visual_manifest)
+    visual_pdf_count = sum(item.get("kind") == "rendered_pdf" for item in visual_manifest)
+    pdf_page_count = sum(
+        (item.extracted_text or "").count("[CoAppraiser PDF page")
+        or bool((item.extracted_text or "").strip())
+        for item in files
+        if item.kind == "pdf"
+    )
+    suppressed_findings = parsed_response.get("suppressed_findings", [])
+    missing_information = parsed_response.get("missing_information", [])
+    ai_summary = parsed_response.get("summary", "")
+    response_metadata = parsed_response.get("_response_metadata", {})
+    duration_ms = response_metadata.get("duration_ms")
+    if ai_execution and ai_execution.status == "completed":
+        if ai_findings.exists():
+            ai_outcome = f"GPT-5.6 returned {ai_findings.count()} supported evidence relationship{'s' if ai_findings.count() != 1 else ''} for review."
+        elif suppressed_findings:
+            ai_outcome = f"GPT-5.6 completed the review. {len(suppressed_findings)} candidate item{'s were' if len(suppressed_findings) != 1 else ' was'} withheld by the evidence and professional-boundary protocol."
+        else:
+            ai_outcome = "GPT-5.6 completed the review and did not return an additional supported conflict."
+    elif ai_execution and ai_execution.status == "failed":
+        ai_outcome = "GPT-5.6 could not complete this pass. Your uploaded package and repeatable checks remain saved."
+    elif ai_execution and ai_execution.status == "skipped":
+        ai_outcome = "GPT-5.6 was not run because the package did not contain readable report evidence."
+    else:
+        ai_outcome = "GPT-5.6 review has not completed."
     previous = review.versions.all()[1] if review.versions.count() > 1 else None
     current_signatures = {f.signature for f in findings}
-    prior_signatures = {f.signature for f in previous.findings.all()} if previous else set()
+    prior_signatures = {
+        f.signature
+        for f in previous.findings.exclude(rule_code="PREFLIGHT_BASELINE")
+    } if previous else set()
     comparison = {"fixed": len(prior_signatures - current_signatures), "still_present": len(prior_signatures & current_signatures), "new": len(current_signatures - prior_signatures)} if previous else None
-    return render(request, "preflight/detail.html", {"review": review, "version": version, "findings": findings, "deterministic_findings": deterministic_findings, "ai_findings": ai_findings, "observations": observations, "ai_execution": ai_execution, "comparison": comparison, "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier})})
+    return {
+        "review": review,
+        "version": version,
+        "findings": findings,
+        "deterministic_findings": deterministic_findings,
+        "ai_findings": ai_findings,
+        "observations": observations,
+        "ai_execution": ai_execution,
+        "comparison": comparison,
+        "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier}),
+        "package_files": files,
+        "inventory": inventory,
+        "pdf_page_count": pdf_page_count,
+        "visual_manifest": visual_manifest,
+        "visual_coverage": visual_coverage,
+        "visual_photo_count": visual_photo_count,
+        "visual_pdf_count": visual_pdf_count,
+        "package_image_count": kind_counts["image"],
+        "all_photos_reviewed": bool(kind_counts["image"]) and visual_photo_count == kind_counts["image"],
+        "visual_skipped": [item for item in visual_coverage if item.get("status") == "skipped"],
+        "duration_ms": duration_ms,
+        "suppressed_findings": suppressed_findings,
+        "missing_information": missing_information,
+        "ai_summary": ai_summary,
+        "ai_outcome": ai_outcome,
+    }
+
+
+@login_required
+def detail(request, pk):
+    review = get_object_or_404(PreflightReview.objects.prefetch_related("versions", "findings__decision"), pk=pk, user=request.user)
+    return render(request, "preflight/detail.html", build_detail_context(review))
 
 
 @login_required
@@ -118,7 +209,28 @@ def stream_review(request, pk):
             if execution.status == "failed":
                 yield event("warning", "Model review unavailable", "Your uploaded package, normalized evidence, and rule-based findings are preserved.")
             else:
-                yield event("complete_step", "Evidence review complete", f"{len(ai_findings)} evidence-backed Preflight item{'s' if len(ai_findings) != 1 else ''} accepted.")
+                visual_coverage = (
+                    (execution.input_snapshot or {})
+                    .get("visual_review", {})
+                    .get("coverage", [])
+                )
+                reviewed_photos = sum(
+                    item.get("kind") == "appraisal_photo" and item.get("status") == "reviewed"
+                    for item in visual_coverage
+                )
+                package_photos = sum(item.kind == "image" for item in version.files.all())
+                coverage_detail = (
+                    f" {reviewed_photos} of {package_photos} package photo"
+                    f"{'s' if package_photos != 1 else ''} supplied for visual review."
+                    if visual_coverage
+                    else ""
+                )
+                yield event(
+                    "complete_step",
+                    "Evidence review complete",
+                    f"{len(ai_findings)} evidence-backed Preflight item{'s' if len(ai_findings) != 1 else ''} accepted."
+                    + coverage_detail,
+                )
                 for finding in ai_findings:
                     yield event("finding", "Preflight evidence finding", finding.title)
 

@@ -116,10 +116,11 @@ def _build_multimodal_inputs(version):
         settings.COAPPRAISER_LLM_PROVIDER != "openai"
         or not settings.COAPPRAISER_VISUAL_REVIEW_ENABLED
     ):
-        return [], []
+        return [], [], []
 
     inputs = []
     manifest = []
+    coverage = []
     total_bytes = 0
     files = list(version.files.all())
     pdfs = sorted(
@@ -155,21 +156,64 @@ def _build_multimodal_inputs(version):
                     "sha256": review_file.sha256,
                 }
             )
+            coverage.append(
+                {
+                    "file": review_file.original_name,
+                    "kind": "rendered_pdf",
+                    "status": "reviewed",
+                    "reason": "",
+                }
+            )
+        else:
+            coverage.append(
+                {
+                    "file": review_file.original_name,
+                    "kind": "rendered_pdf",
+                    "status": "skipped",
+                    "reason": "The PDF exceeded the visual-review size limit or could not be read.",
+                }
+            )
 
     images = sorted(
         (review_file for review_file in files if review_file.kind == "image"),
         key=_visual_priority,
     )
-    for review_file in images[: settings.COAPPRAISER_VISUAL_MAX_IMAGES]:
+    for index, review_file in enumerate(images):
+        if index >= settings.COAPPRAISER_VISUAL_MAX_IMAGES:
+            coverage.append(
+                {
+                    "file": review_file.original_name,
+                    "kind": "appraisal_photo",
+                    "status": "skipped",
+                    "reason": f"The configured visual-review limit is {settings.COAPPRAISER_VISUAL_MAX_IMAGES} photos.",
+                }
+            )
+            continue
+        media_type = mimetypes.guess_type(review_file.original_name)[0]
+        if media_type not in {"image/jpeg", "image/png", "image/webp", "image/gif"}:
+            coverage.append(
+                {
+                    "file": review_file.original_name,
+                    "kind": "appraisal_photo",
+                    "status": "skipped",
+                    "reason": "This image format is not supported for visual review.",
+                }
+            )
+            continue
         data = _read_visual_file(
             review_file,
             settings.COAPPRAISER_VISUAL_MAX_IMAGE_BYTES,
             settings.COAPPRAISER_VISUAL_MAX_TOTAL_BYTES - total_bytes,
         )
         if not data:
-            continue
-        media_type = mimetypes.guess_type(review_file.original_name)[0]
-        if media_type not in {"image/jpeg", "image/png", "image/webp", "image/gif"}:
+            coverage.append(
+                {
+                    "file": review_file.original_name,
+                    "kind": "appraisal_photo",
+                    "status": "skipped",
+                    "reason": "The image exceeded a visual-review size limit or could not be read.",
+                }
+            )
             continue
         inputs.extend(
             [
@@ -197,7 +241,15 @@ def _build_multimodal_inputs(version):
                 "sha256": review_file.sha256,
             }
         )
-    return inputs, manifest
+        coverage.append(
+            {
+                "file": review_file.original_name,
+                "kind": "appraisal_photo",
+                "status": "reviewed",
+                "reason": "",
+            }
+        )
+    return inputs, manifest, coverage
 
 
 def _finding_topic(*parts):
@@ -257,10 +309,11 @@ def run_preflight_ai_review(version):
     context = _review_context(version)
     if not context["observations"] and not context["pdf_excerpts"]:
         return AIExecution.objects.create(version=version, operation="preflight_consistency_review", provider=settings.COAPPRAISER_LLM_PROVIDER, model_name=settings.COAPPRAISER_LLM_MODEL, system_prompt=SYSTEM_PROMPT, input_snapshot=context, status="skipped", completed_at=timezone.now())
-    multimodal_inputs, visual_sources = _build_multimodal_inputs(version)
+    multimodal_inputs, visual_sources, visual_coverage = _build_multimodal_inputs(version)
     context["visual_review"] = {
         "enabled": bool(multimodal_inputs),
         "sources": visual_sources,
+        "coverage": visual_coverage,
         "instruction": "Only these attached files may support visual observations.",
     }
     execution = AIExecution.objects.create(version=version, operation="preflight_consistency_review", provider=settings.COAPPRAISER_LLM_PROVIDER, model_name=settings.COAPPRAISER_LLM_MODEL, system_prompt=SYSTEM_PROMPT, input_snapshot=context, status="running")

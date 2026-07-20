@@ -60,16 +60,16 @@ class PublicDemoTests(TestCase):
     def test_public_landing_has_three_clear_scenarios_and_no_pricing_prompt(self):
         response = self.client.get(reverse("preflight_demo:landing"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Find what the reviewer will find")
-        self.assertContains(response, "Drop package to start the demo")
-        self.assertContains(response, "Start the evidence review", count=1)
-        self.assertContains(response, "See outcome", count=2)
+        self.assertContains(response, "Put a complete appraisal package through Preflight")
+        self.assertContains(response, "Drop a package here")
+        self.assertContains(response, "Run this Preflight", count=1)
+        self.assertContains(response, 'data-scenario="', count=3)
         for slug in DEMO_SCENARIOS:
             self.assertContains(response, reverse("preflight_demo:start", args=[slug]))
-        self.assertContains(response, "Synthetic report data")
-        self.assertContains(response, "Appraiser judgment is required")
-        self.assertContains(response, "normalizes supported UAD 3.6 XML fields")
-        for stage in ["Inventory", "Cross-check", "Decide", "Document"]:
+        self.assertContains(response, "synthetic, derived evaluation packages")
+        self.assertContains(response, "One saved GPT-5.6 result for the exact package hash")
+        self.assertContains(response, "No API cost")
+        for stage in ["Open", "Trace", "Cross-check", "Decide"]:
             self.assertContains(response, stage)
         self.assertNotContains(response, "Generate clear support")
         self.assertNotContains(response, "use the engine to interpret and respond")
@@ -104,8 +104,10 @@ class PublicDemoTests(TestCase):
             self.assertEqual(version.package_hash.__len__(), 64)
             self.assertTrue(version.files.exists())
             execution = AIExecution.objects.get(version=version)
-            self.assertEqual(execution.provider, "mock")
+            self.assertEqual(execution.provider, "openai")
+            self.assertEqual(execution.model_name, "gpt-5.6")
             self.assertEqual(execution.status, "completed")
+            self.assertTrue(execution.parsed_response["_demo_snapshot"])
 
     def test_demo_calls_normal_intake_service(self):
         with patch("apps.preflight.demo_services.ingest_files", wraps=ingest_files) as intake:
@@ -124,6 +126,22 @@ class PublicDemoTests(TestCase):
             (version.files.count(), version.findings.count(), version.ai_executions.count()),
             counts,
         )
+
+    def test_stream_reports_live_intake_and_recorded_model_stage(self):
+        start = self._start(self.client, "reconcile")
+        self.assertEqual(start.status_code, 200)
+        review = PreflightReview.objects.latest("pk")
+        with patch("apps.preflight.demo_views.time.sleep"):
+            response = self.client.post(reverse("preflight_demo:stream", args=[review.pk]))
+            body = b"".join(response.streaming_content).decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Package inventory complete", body)
+        self.assertIn("Evidence normalized", body)
+        self.assertIn("Loading the recorded GPT-5.6 review", body)
+        self.assertIn("no live API call", body)
+        self.assertIn(reverse("preflight_demo:detail", args=[review.pk]), body)
+        review.refresh_from_db()
+        self.assertEqual(review.status, "completed")
 
     def test_anonymous_reviews_are_isolated_between_sessions(self):
         owner = Client()
@@ -177,30 +195,17 @@ class PublicDemoTests(TestCase):
         self.assertRedirects(response, f"{reverse('login')}?next={reverse('preflight:create')}")
         self.assertFalse(self.client.session.get("_auth_user_id"))
 
-    @override_settings(
-        DEBUG=False,
-        COAPPRAISER_LLM_PROVIDER="mock",
-        COAPPRAISER_ALLOW_MOCK_AI=False,
-    )
-    def test_public_demo_never_silently_uses_production_mock(self):
-        review = self._run(self.client, "ready")
+    @override_settings(DEBUG=False, COAPPRAISER_LLM_PROVIDER="openai", COAPPRAISER_ALLOW_MOCK_AI=False)
+    def test_public_demo_never_calls_live_model(self):
+        with patch("apps.preflight.llm_client.run_llm_json", side_effect=AssertionError("live model called")) as model:
+            review = self._run(self.client, "reconcile")
+        model.assert_not_called()
         execution = review.versions.get().ai_executions.get()
-        self.assertEqual(execution.provider, "mock")
-        self.assertEqual(execution.status, "failed")
-        self.assertFalse(review.findings.filter(basis="ai_interpretation").exists())
+        self.assertEqual(execution.provider, "openai")
+        self.assertTrue(execution.parsed_response["_demo_snapshot"])
         detail = self.client.get(reverse("preflight_demo:detail", args=[review.pk]))
-        self.assertContains(detail, "No mock or canned results were substituted")
-        self.assertContains(detail, "Retry GPT-5.6 review")
-
-        with self.settings(
-            DEBUG=True,
-            COAPPRAISER_LLM_PROVIDER="mock",
-            COAPPRAISER_ALLOW_MOCK_AI=True,
-        ):
-            retry = self.client.post(reverse("preflight_demo:retry", args=[review.pk]))
-        self.assertRedirects(retry, reverse("preflight_demo:detail", args=[review.pk]))
-        execution = review.versions.get().ai_executions.get()
-        self.assertEqual(execution.status, "completed")
+        self.assertContains(detail, "No live API call")
+        self.assertContains(detail, "What Preflight actually reviewed")
 
     def test_cleanup_command_removes_expired_demo_records_and_files(self):
         review = self._run(self.client, "ready")

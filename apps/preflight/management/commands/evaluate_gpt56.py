@@ -176,7 +176,11 @@ class Command(BaseCommand):
             findings = [
                 {
                     "rule_code": finding.rule_code,
+                    "signature": finding.signature,
                     "title": finding.title,
+                    "category": finding.category,
+                    "severity": finding.severity,
+                    "basis": finding.basis,
                     "observed": finding.observed,
                     "location": finding.location,
                     "evidence": finding.evidence,
@@ -201,6 +205,22 @@ class Command(BaseCommand):
                 "findings": findings,
                 "suppressed_findings": execution.parsed_response.get("suppressed_findings", []),
                 "response_metadata": response_metadata,
+                "execution_snapshot": {
+                    "provider": execution.provider,
+                    "model_name": execution.model_name,
+                    "prompt_version": execution.prompt_version,
+                    "completed_at": execution.completed_at.isoformat(),
+                    "input_snapshot": {
+                        "visual_review": execution.input_snapshot.get("visual_review", {}),
+                    },
+                    "parsed_response": {
+                        "summary": execution.parsed_response.get("summary", ""),
+                        "missing_information": execution.parsed_response.get("missing_information", []),
+                        "suppressed_findings": execution.parsed_response.get("suppressed_findings", []),
+                        "_response_metadata": response_metadata,
+                        "_demo_snapshot": True,
+                    },
+                },
             }
         finally:
             if review.pk:

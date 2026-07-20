@@ -395,8 +395,6 @@ def run_deterministic_review(version, include_ai=True):
     for pdf in pdfs:
         if not pdf.extracted_text.strip():
             add("PDF_TEXT_UNAVAILABLE", "PDF text could not be read", "cleanup", "advisory", f"No extractable text was found in {pdf.original_name}.", "PDF file", "Some cross-source checks may be unavailable when the report is image-only or protected.", "Review the PDF visually and confirm the export is readable.", [pdf.original_name])
-    if not findings:
-        add("PREFLIGHT_BASELINE", "Package contents are ready for review", "cleanup", "advisory", "XML, PDF, and image files were identified and hashed.", "Package contents", "The package passed basic intake checks; this is not official validation.", "Review the prioritized findings and confirm the report in your existing software.", list(kinds))
     version.status = "reviewed"
     version.save(update_fields=["status"])
     if not include_ai:
@@ -418,7 +416,7 @@ def complete_review(version):
 def build_workfile_record(review):
     latest = review.versions.first()
     findings = list(
-        review.findings.filter(version=latest)
+        review.findings.filter(version=latest).exclude(rule_code="PREFLIGHT_BASELINE")
         .select_related("decision")
         .annotate(
             severity_rank=Case(

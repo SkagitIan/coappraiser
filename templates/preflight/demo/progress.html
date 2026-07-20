@@ -1,55 +1,131 @@
 {% extends "base.html" %}
-{% block title %}Running {{ scenario.title }} | CoAppraiser{% endblock %}
+{% block title %}Running {{ scenario.short_title }} | CoAppraiser{% endblock %}
 {% block content %}
-<section class="demo-progress-shell" aria-labelledby="progress-title">
-  <span class="demo-kicker">Live Preflight review</span>
-  <h1 id="progress-title">Reviewing Residential_Report_Package.zip</h1>
-  <p>CoAppraiser Preflight is inventorying the package, normalizing supported UAD 3.6 XML evidence, applying versioned cross-source checks, and running a bounded GPT-5.6 review of the rendered report and selected photos.</p>
-  <div class="demo-progress-card">
-    <div class="demo-spinner" aria-hidden="true"></div>
-    <div>
-      <strong>Review in progress</strong>
-      <span id="processing-announcement" role="status" aria-live="polite">Opening the ZIP and validating package members…</span>
-    </div>
+<section class="live-review-shell demo-live-review" data-stream-url="{% url 'preflight_demo:stream' review.pk %}" data-csrf="{{ csrf_token }}">
+  <div class="live-review-heading">
+    <span class="panel-eyebrow">Interactive Preflight demo</span>
+    <h1>Reviewing {{ scenario.short_title }}</h1>
+    <p>The package is being opened and checked now. The GPT-5.6 stage replays the saved result captured for this exact package hash.</p>
   </div>
-  <ol class="demo-stage-list">
-    <li class="is-active" data-processing-stage><span>1</span><div><strong>Opening appraisal package</strong><small>Validating the ZIP and package members.</small></div></li>
-    <li data-processing-stage><span>2</span><div><strong>Extracting structured and narrative evidence</strong><small>Reading XML fields and extractable PDF text.</small></div></li>
-    <li data-processing-stage><span>3</span><div><strong>Running Preflight checks</strong><small>Applying versioned package and cross-source rules.</small></div></li>
-    <li data-processing-stage><span>4</span><div><strong>Running the Preflight evidence review</strong><small>GPT-5.6 is cross-checking the rendered report, selected photos, and extracted evidence.</small></div></li>
-    <li data-processing-stage><span>5</span><div><strong>Preparing evidence-backed findings</strong><small>Persisting findings, locations, evidence, and model metadata.</small></div></li>
-  </ol>
-  <div id="processing-status">
-    <form class="demo-progress-form" method="post" action="{% url 'preflight_demo:process' review.pk %}" hx-post="{% url 'preflight_demo:process' review.pk %}" hx-trigger="load delay:500ms" hx-target="#processing-status" hx-swap="outerHTML">
-      {% csrf_token %}
-      <button class="app-button secondary" type="submit">Continue processing</button>
-      <small>The button is a fallback if automatic processing is blocked by the browser.</small>
-    </form>
+
+  <div class="live-review-layout">
+    <section class="workspace-panel live-review-current" aria-live="polite">
+      <div class="live-review-current-status">
+        <span class="live-review-spinner" aria-hidden="true"></span>
+        <span>Review in progress</span>
+      </div>
+      <div class="live-review-current-copy">
+        <small>Working now</small>
+        <h2 data-current-title>Opening the appraisal package</h2>
+        <p data-current-detail>Validating the controlled ZIP and preparing its package members.</p>
+      </div>
+      <div class="live-review-track" aria-hidden="true"><span></span></div>
+      <dl class="live-review-metrics">
+        <div><dt>Expected package members</dt><dd>{{ package_member_count }}</dd></div>
+        <div><dt>Milestones recorded</dt><dd data-event-count>1</dd></div>
+        <div><dt>Elapsed</dt><dd data-elapsed>0:00</dd></div>
+      </dl>
+    </section>
+
+    <section class="workspace-panel live-review-feed">
+      <div class="panel-heading">
+        <div><span class="panel-eyebrow">Live activity</span><h2>What Preflight has completed</h2></div>
+        <span class="status-chip status-processing" data-stream-status>In progress</span>
+      </div>
+      <ol data-activity-feed>
+        <li class="is-complete"><span></span><div><strong>Scenario selected</strong><p>{{ scenario.title }} loaded into a fresh, session-isolated review.</p></div></li>
+      </ol>
+      <p class="live-review-stay-open"><span aria-hidden="true">●</span> Results will open automatically when the evidence queue is ready.</p>
+      <div class="live-review-error" data-stream-error hidden>
+        <strong>Demo review paused</strong>
+        <p data-error-message></p>
+        <a class="app-button primary" href="{% url 'preflight_demo:landing' %}">Return to demo packages</a>
+      </div>
+      <form class="demo-stream-fallback" method="post" action="{% url 'preflight_demo:process' review.pk %}">
+        {% csrf_token %}
+        <button class="text-action" type="submit">Continue without live activity</button>
+      </form>
+    </section>
   </div>
 </section>
+
 <script>
 (() => {
-  const stages = [...document.querySelectorAll("[data-processing-stage]")];
-  const announcement = document.getElementById("processing-announcement");
-  if (!stages.length || !announcement) return;
-  const messages = [
-    "Opening the ZIP and validating package members…",
-    "Extracting XML fields and narrative evidence…",
-    "Applying Preflight package and cross-source checks…",
-    "Running the GPT-5.6 Preflight evidence review…",
-    "Persisting traceable findings and preparing the review workspace…"
-  ];
-  let current = 0;
-  const timer = window.setInterval(() => {
-    if (current >= stages.length - 1) {
-      window.clearInterval(timer);
-      return;
+  const shell = document.querySelector(".live-review-shell");
+  const feed = shell.querySelector("[data-activity-feed]");
+  const currentTitle = shell.querySelector("[data-current-title]");
+  const currentDetail = shell.querySelector("[data-current-detail]");
+  const status = shell.querySelector("[data-stream-status]");
+  const errorBox = shell.querySelector("[data-stream-error]");
+  const errorMessage = shell.querySelector("[data-error-message]");
+  const eventCount = shell.querySelector("[data-event-count]");
+  const elapsed = shell.querySelector("[data-elapsed]");
+  const startedAt = Date.now();
+  let recordedEvents = 1;
+
+  window.setInterval(() => {
+    const seconds = Math.floor((Date.now() - startedAt) / 1000);
+    elapsed.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  }, 1000);
+
+  function addItem(item) {
+    const li = document.createElement("li");
+    li.className = item.kind === "warning" ? "is-warning" : item.kind === "finding" ? "is-finding" : "is-complete";
+    const marker = document.createElement("span");
+    const body = document.createElement("div");
+    const title = document.createElement("strong");
+    const detail = document.createElement("p");
+    title.textContent = item.title;
+    detail.textContent = item.detail || "";
+    body.append(title, detail);
+    li.append(marker, body);
+    feed.append(li);
+    eventCount.textContent = ++recordedEvents;
+    li.scrollIntoView({behavior: "smooth", block: "nearest"});
+  }
+
+  async function start() {
+    try {
+      const response = await fetch(shell.dataset.streamUrl, {
+        method: "POST",
+        headers: {"X-CSRFToken": shell.dataset.csrf, "Accept": "application/x-ndjson"},
+        credentials: "same-origin"
+      });
+      if (!response.ok || !response.body) throw new Error("The demo activity stream could not be opened.");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const {value, done} = await reader.read();
+        buffer += decoder.decode(value || new Uint8Array(), {stream: !done});
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const item = JSON.parse(line);
+          currentTitle.textContent = item.title;
+          currentDetail.textContent = item.detail || "";
+          if (item.kind === "active") continue;
+          if (item.kind === "error") throw new Error(item.detail);
+          addItem(item);
+          if (item.kind === "complete") {
+            status.textContent = "Complete";
+            window.setTimeout(() => window.location.replace(item.redirect), 700);
+            return;
+          }
+        }
+        if (done) break;
+      }
+      throw new Error("The demo stream ended before the review completed.");
+    } catch (error) {
+      status.textContent = "Paused";
+      currentTitle.textContent = "Demo review paused";
+      currentDetail.textContent = error.message;
+      errorMessage.textContent = error.message;
+      errorBox.hidden = false;
     }
-    stages[current].classList.remove("is-active");
-    current += 1;
-    stages[current].classList.add("is-active");
-    announcement.textContent = messages[current];
-  }, 1800);
+  }
+  start();
 })();
 </script>
 {% endblock %}

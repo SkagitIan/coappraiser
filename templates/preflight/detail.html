@@ -1,72 +1,152 @@
 {% extends "base.html" %}
 {% block title %}{{ review.title }} | CoAppraiser{% endblock %}
 {% block content %}
-<div class="workspace-breadcrumb"><a href="{% url 'preflight:dashboard' %}">Dashboard</a><span>/</span><span>Preflight review</span></div>
+<div class="workspace-breadcrumb">
+  {% if demo_mode %}<a href="{% url 'preflight_demo:landing' %}">Demo packages</a>{% else %}<a href="{% url 'preflight:dashboard' %}">Dashboard</a>{% endif %}
+  <span>/</span><span>Preflight review</span>
+</div>
 
 <div class="workspace-heading review-heading">
   <div>
     <div class="review-title-line"><span class="status-chip status-{{ review.status }}">{{ review.get_status_display }}</span><span class="version-label">Version {{ version.number|default:"-" }}</span></div>
     <h1>{{ review.title }}</h1>
-    <p>{{ review.subject_identifier|default:"No subject identifier" }}</p>
+    {% if review.subject_identifier %}<p>{{ review.subject_identifier }}</p>{% endif %}
   </div>
   <div class="heading-actions">
-    <form method="post" action="{% url 'preflight:workfile_record' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Download workfile</button></form>
-    <form method="post" action="{% url 'preflight:delete_review' review.pk %}" onsubmit="return confirm('Delete this review and all uploaded files?');">{% csrf_token %}<button class="text-action danger" type="submit">Delete</button></form>
+    {% if demo_mode %}
+      <a class="app-button secondary" href="{% url 'preflight_demo:workfile' review.pk %}">Open workfile record</a>
+      <a class="app-button secondary" href="{% url 'preflight_demo:landing' %}">Try another package</a>
+    {% else %}
+      <form method="post" action="{% url 'preflight:workfile_record' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Download workfile record</button></form>
+      <a class="app-button secondary" href="#revision">Upload a revision</a>
+    {% endif %}
   </div>
 </div>
 
-<section class="review-focus" aria-label="Review status">
-  <div class="review-focus-primary">
-    <span>Preflight result</span>
-    <strong>{% if review.open_findings == 1 %}1 item needs a decision{% else %}{{ review.open_findings }} items need a decision{% endif %}</strong>
+<section class="review-result-hero {% if review.open_findings %}has-findings{% else %}is-clear{% endif %}" aria-label="Preflight result">
+  <div class="review-result-copy">
+    <span class="panel-eyebrow">Preflight complete</span>
+    {% if review.open_findings %}
+      <h2>{{ review.open_findings }} item{{ review.open_findings|pluralize }} {% if review.open_findings == 1 %}needs{% else %}need{% endif %} your review.</h2>
+      <p>Start with the evidence relationships below. Each finding shows what was observed, where it came from, and the decision you can preserve in the workfile.</p>
+    {% elif findings %}
+      <h2>Every finding has a recorded decision.</h2>
+      <p>The evidence, decision status, and your notes remain attached to this version for the workfile record.</p>
+    {% else %}
+      <h2>No supported conflicts were found.</h2>
+      <p>Preflight completed the available package checks and GPT-5.6 evidence review without producing an actionable finding.</p>
+    {% endif %}
   </div>
-  <div><strong>{{ findings|length }}</strong><span>total findings</span></div>
-  <div><strong>{{ version.files.count|default:"0" }}</strong><span>files reviewed</span></div>
-  <div><strong>{% if ai_execution.status == "completed" %}Ready{% elif ai_execution %}{{ ai_execution.status|title }}{% else %}Pending{% endif %}</strong><span>Preflight reasoning</span></div>
+  <div class="review-result-signal" aria-hidden="true">{% if review.open_findings %}!{% else %}✓{% endif %}</div>
 </section>
 
-{% if ai_execution.status == "failed" %}<div class="notice">Preflight reasoning could not be completed. Your files and rule-based checks were saved; upload a revised package or retry later.</div>{% endif %}
-<p class="review-boundary">Preflight surfaces evidence relationships. You make and document every final appraisal decision.</p>
+{% if ai_execution.status == "failed" %}
+  <div class="notice">GPT-5.6 could not complete this pass. Your package inventory, extracted evidence, and repeatable checks remain saved.</div>
+{% endif %}
 
-<div id="overview" class="workspace-grid detail-grid review-detail-grid">
-  <main>
-    <section id="findings" class="workspace-panel findings-workspace">
-      <div class="panel-heading">
-        <div><span class="panel-eyebrow">Action queue</span><h2>Review these items</h2></div>
-        <span class="finding-count">{{ review.open_findings }} open</span>
+<section class="workspace-panel review-coverage-panel">
+  <div class="panel-heading">
+    <div><span class="panel-eyebrow">Review coverage</span><h2>What Preflight actually reviewed</h2></div>
+    <span class="coverage-version">Version {{ version.number }}</span>
+  </div>
+  <div class="review-coverage-stats">
+    <div><strong>{{ package_files|length }}</strong><span>package members opened</span></div>
+    <div><strong>{{ observations|length }}</strong><span>report fields traced</span></div>
+    <div><strong>{{ pdf_page_count }}</strong><span>PDF page{{ pdf_page_count|pluralize }} read</span></div>
+    <div><strong>{{ visual_photo_count }}</strong><span>photo{{ visual_photo_count|pluralize }} visually reviewed</span></div>
+  </div>
+  <div class="review-coverage-body">
+    <div class="package-kind-summary">
+      <span class="coverage-label">Package inventory</span>
+      <div>{% for item in inventory %}<span><b>{{ item.count }}</b> {{ item.label }}{{ item.count|pluralize }}</span>{% endfor %}</div>
+    </div>
+    <div class="model-review-summary">
+      <div class="model-review-heading">
+        <span class="status-dot status-dot-{{ ai_execution.status|default:'running' }}"></span>
+        <strong>{{ ai_execution.model_name|default:"Preflight evidence review" }}</strong>
+        <small>{% if demo_mode %}Recorded result{% else %}{{ ai_execution.status|default:"pending"|title }}{% endif %}</small>
       </div>
-
-      {% if deterministic_findings %}
-        <div class="finding-section-label"><strong>Preflight checks</strong><span>Direct package and cross-source conflicts</span></div>
-        <div class="finding-list">{% for finding in deterministic_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
+      <p>{{ ai_outcome }}</p>
+      {% if demo_mode %}<p class="demo-snapshot-note"><strong>No live API call.</strong> This GPT-5.6 result was captured once for the exact package hash and is replayed for a predictable public demo.</p>{% endif %}
+      {% if ai_summary %}<blockquote><span>Model summary</span>{{ ai_summary }}</blockquote>{% endif %}
+      {% if all_photos_reviewed %}<p class="visual-coverage-confirmed"><span aria-hidden="true">✓</span> {% if demo_mode %}The recorded GPT-5.6 run reviewed all{% else %}All{% endif %} {{ package_image_count }} package photo{{ package_image_count|pluralize }}{% if not demo_mode %} {% if package_image_count == 1 %}was{% else %}were{% endif %} supplied to GPT-5.6{% endif %}.</p>{% endif %}
+      {% if duration_ms %}<small class="model-duration">{% if demo_mode %}Recorded model response time{% else %}Model response received{% endif %}: {{ duration_ms }} ms.</small>{% endif %}
+      {% if visual_manifest %}
+        <div class="reviewed-source-list"><span>Visual sources supplied to GPT-5.6</span>{% for source in visual_manifest %}<b>{{ source.file }}</b>{% endfor %}</div>
       {% endif %}
-
-      {% if ai_findings %}
-        <div class="finding-section-label preflight-reasoning-label"><strong>Preflight evidence review</strong><span>Cross-document and visual relationships found by GPT-5.6</span></div>
-        <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
-      {% elif ai_execution.status != "failed" %}
-        <p class="panel-empty">Preflight did not find an additional evidence relationship beyond the package checks.</p>
+      {% if visual_skipped %}
+        <div class="skipped-source-list"><span>Not visually reviewed</span>{% for source in visual_skipped %}<p><b>{{ source.file }}</b> {{ source.reason }}</p>{% endfor %}</div>
       {% endif %}
+    </div>
+  </div>
+</section>
+
+<section id="findings" class="workspace-panel findings-workspace">
+  <div class="panel-heading">
+    <div><span class="panel-eyebrow">Your action queue</span><h2>{% if review.open_findings %}Review the evidence and make the call{% elif findings %}Recorded decisions{% else %}Nothing requires a decision{% endif %}</h2></div>
+    {% if findings %}<span class="finding-count">{{ review.open_findings }} open</span>{% endif %}
+  </div>
+
+  {% if findings %}
+    {% if deterministic_findings %}
+      <div class="finding-section-label"><strong>Repeatable package checks</strong><span>Direct file, field, and cross-source conflicts</span></div>
+      <div class="finding-list">{% for finding in deterministic_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
+    {% endif %}
+
+    {% if ai_findings %}
+      <div class="finding-section-label preflight-reasoning-label"><strong>GPT-5.6 evidence review</strong><span>Cross-document and visual relationships grounded in the supplied package</span></div>
+      <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
+    {% endif %}
+  {% else %}
+    <div class="review-clear-state">
+      <span aria-hidden="true">✓</span>
+      <div>
+        <h3>This package has a clear action queue.</h3>
+        <p>No repeatable package conflict or supported GPT-5.6 evidence relationship was saved as a finding. Review the coverage above before delivery.</p>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<details class="workspace-panel package-inventory-disclosure">
+  <summary>
+    <span><b>Package inventory</b><small>{{ package_files|length }} extracted package member{{ package_files|length|pluralize }} with exact filenames</small></span>
+    <strong>View files</strong>
+  </summary>
+  <div class="package-file-list">
+    {% for file in package_files %}
+      <div><span class="badge">{{ file.kind|upper }}</span><strong>{{ file.original_name }}</strong><small>{{ file.sha256|slice:":12" }}…</small></div>
+    {% endfor %}
+  </div>
+  <details class="normalized-evidence-disclosure">
+    <summary>{{ observations|length }} normalized XML/PDF field observation{{ observations|length|pluralize }}</summary>
+    {% if observations %}
+      <div class="evidence-list">{% for observation in observations %}<div><span class="badge">{{ observation.source_kind|upper }}</span><strong>{{ observation.field_code }}</strong><span>{{ observation.value }}</span><small>{{ observation.source_location }}</small></div>{% endfor %}</div>
+    {% else %}
+      <p class="panel-empty">No normalized fields were extracted. The PDF may be image-only or protected, or the XML format may not yet be supported.</p>
+    {% endif %}
+  </details>
+</details>
+
+<div class="review-utilities">
+  {% if demo_mode %}
+    <section class="workspace-panel next-action-panel demo-next-package">
+      <span class="panel-eyebrow">See another outcome</span>
+      <h2>Run a different package through the same flow</h2>
+      <p>Compare aligned evidence, a cross-source conflict, and an incomplete export. Each starts with a fresh, session-isolated review.</p>
+      <a class="app-button primary" href="{% url 'preflight_demo:landing' %}">Choose another package</a>
     </section>
-
-    <details id="evidence" class="workspace-panel evidence-disclosure">
-      <summary>
-        <span><b>Source evidence</b><small>{{ observations|length }} extracted observations</small></span>
-        <strong>View evidence</strong>
-      </summary>
-      {% if observations %}
-        <div class="evidence-list">{% for observation in observations %}<div><span class="badge">{{ observation.source_kind|upper }}</span><strong>{{ observation.field_code }}</strong><span>{{ observation.value }}</span><small>{{ observation.source_location }}</small></div>{% endfor %}</div>
-      {% else %}
-        <p class="panel-empty">No normalized observations were extracted. The PDF may be image-only or protected.</p>
-      {% endif %}
-    </details>
-  </main>
-
-  <aside class="workspace-rail review-actions-rail">
-    <section class="workspace-panel next-action-panel">
+    <section class="workspace-panel versions-panel">
+      <span class="panel-eyebrow">Auditable result</span>
+      <h2>Preserve the review record</h2>
+      <p>The demo workfile includes package hashes, findings, cited evidence, model metadata, and the decisions you record above.</p>
+      <a class="app-button secondary" href="{% url 'preflight_demo:workfile' review.pk %}">Open workfile record</a>
+    </section>
+  {% else %}
+    <section id="revision" class="workspace-panel next-action-panel">
       <span class="panel-eyebrow">Run another pass</span>
-      <h2>Upload a revision</h2>
-      <p>After correcting the report, upload the revised export to compare what changed.</p>
+      <h2>Upload a revised package</h2>
+      <p>After correcting the report in your appraisal software, upload the revised export to compare what changed.</p>
       <form method="post" enctype="multipart/form-data" action="{% url 'preflight:revise' review.pk %}" data-processing-form>
         {% csrf_token %}
         <label class="revision-file-label" for="id_files">Choose revised files</label>
@@ -75,20 +155,13 @@
       </form>
     </section>
 
-    <section class="workspace-panel execution-panel">
-      <span class="panel-eyebrow">Preflight engine</span>
-      <h2>{% if ai_execution.status == "completed" %}Review complete{% else %}{{ ai_execution.status|default:"Pending"|title }}{% endif %}</h2>
-      {% if ai_execution %}
-        <div class="execution-status"><span class="status-dot status-dot-{{ ai_execution.status }}"></span><strong>{{ ai_execution.model_name|default:"Rule-based review" }}</strong><small>{{ ai_execution.provider|default:"Local" }}</small></div>
-      {% endif %}
-    </section>
-
-    <section id="versions" class="workspace-panel versions-panel">
-      <span class="panel-eyebrow">History</span>
-      <h2>Versions</h2>
+    <section class="workspace-panel versions-panel">
+      <span class="panel-eyebrow">Workfile history</span>
+      <h2>Review versions</h2>
       <div class="version-list">{% for item in review.versions.all %}<div><span>v{{ item.number }}</span><strong>{{ item.status|title }}</strong><small>{{ item.created_at|date:"M j, Y g:i A" }}</small></div>{% endfor %}</div>
+      <form class="review-delete-form" method="post" action="{% url 'preflight:delete_review' review.pk %}" onsubmit="return confirm('Delete this review and all uploaded files?');">{% csrf_token %}<button class="text-action danger" type="submit">Delete this review</button></form>
     </section>
-  </aside>
+  {% endif %}
 </div>
 
 {% if comparison %}<section class="workspace-panel comparison-panel"><strong>Compared with version {{ version.number|add:"-1" }}</strong><span>Fixed {{ comparison.fixed }} · Still present {{ comparison.still_present }} · New {{ comparison.new }}</span></section>{% endif %}

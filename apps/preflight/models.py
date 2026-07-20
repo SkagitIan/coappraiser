@@ -19,7 +19,11 @@ class PreflightReview(models.Model):
 
     @property
     def open_findings(self):
-        return self.findings.exclude(decision__status__in=["resolved", "not_applicable"]).count()
+        return (
+            self.findings.exclude(rule_code="PREFLIGHT_BASELINE")
+            .exclude(decision__status__in=["resolved", "not_applicable"])
+            .count()
+        )
 
 
 class ReviewVersion(models.Model):

@@ -295,6 +295,25 @@ class PreflightTests(TestCase):
         self.assertEqual(review.versions.get().status, "completed")
         self.assertTrue(review.findings.filter(rule_code="PACKAGE_PDF_MISSING").exists())
 
+    def test_progress_page_shows_active_full_width_status_without_explainer(self):
+        review = PreflightReview.objects.create(
+            user=self.user,
+            title="Visible progress",
+            status="processing",
+        )
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+        )
+        response = self.client.get(reverse("preflight:progress", args=[review.pk]))
+        self.assertContains(response, "Review in progress")
+        self.assertContains(response, "Milestones recorded")
+        self.assertContains(response, "Results will open automatically")
+        self.assertNotContains(response, "What you are seeing")
+
     def test_dashboard_uses_first_review_dropzone_then_full_width_queue(self):
         empty_dashboard = self.client.get(reverse("preflight:dashboard"))
         self.assertContains(empty_dashboard, "Drop your completed appraisal package here to run your first Preflight")
@@ -325,10 +344,10 @@ class PreflightTests(TestCase):
         self.complete_stream(review)
         detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
         self.assertEqual(detail.status_code, 200)
-        self.assertContains(detail, "Source evidence")
-        self.assertContains(detail, "Review complete")
+        self.assertContains(detail, "Package inventory")
+        self.assertContains(detail, "What Preflight actually reviewed")
 
-    def test_ai_review_is_saved_and_adds_interpretation_finding(self):
+    def test_mock_ai_review_is_saved_without_inventing_a_finding(self):
         fixture = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "preflight" / "01_complete_package.zip"
         package = SimpleUploadedFile("synthetic-ai-package.zip", fixture.read_bytes(), content_type="application/zip")
         response = self.client.post(reverse("preflight:create"), {"title": "AI package", "files": [package]})
@@ -338,8 +357,8 @@ class PreflightTests(TestCase):
         execution = AIExecution.objects.get(version=review.versions.first())
         self.assertEqual(execution.status, "completed")
         self.assertEqual(execution.provider, "mock")
-        self.assertTrue(review.findings.filter(basis="ai_interpretation").exists())
-        self.assertTrue(any(item["title"] == "Preflight evidence finding" for item in events))
+        self.assertFalse(review.findings.filter(basis="ai_interpretation").exists())
+        self.assertTrue(any(item["title"] == "Evidence review complete" for item in events))
 
     def test_ai_failure_does_not_discard_deterministic_findings(self):
         review = PreflightReview.objects.create(user=self.user, title="AI failure")
@@ -592,8 +611,99 @@ class PreflightTests(TestCase):
             {source["file"] for source in context["visual_review"]["sources"]},
             {"report.pdf", "condition_exhibit.jpg"},
         )
+        self.assertEqual(
+            context["visual_review"]["coverage"],
+            [
+                {
+                    "file": "report.pdf",
+                    "kind": "rendered_pdf",
+                    "status": "reviewed",
+                    "reason": "",
+                },
+                {
+                    "file": "condition_exhibit.jpg",
+                    "kind": "appraisal_photo",
+                    "status": "reviewed",
+                    "reason": "",
+                },
+            ],
+        )
         self.assertTrue(mocked_llm.call_args.kwargs["multimodal_inputs"])
         self.assertNotIn("base64", json.dumps(execution.input_snapshot))
+        detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
+        self.assertContains(detail, "All 1 package photo was supplied to GPT-5.6")
+        self.assertContains(detail, "condition_exhibit.jpg")
+
+    @override_settings(
+        COAPPRAISER_LLM_PROVIDER="openai",
+        OPENAI_API_KEY="test-key",
+        COAPPRAISER_VISUAL_REVIEW_ENABLED=True,
+        COAPPRAISER_VISUAL_MAX_IMAGES=1,
+    )
+    def test_visual_coverage_records_photos_reviewed_and_skipped(self):
+        review = PreflightReview.objects.create(user=self.user, title="Coverage package")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+            extracted_text="Readable report narrative.",
+        )
+        for name in ("condition-one.jpg", "condition-two.jpg"):
+            ReviewFile.objects.create(
+                version=version,
+                file=SimpleUploadedFile(name, b"\xff\xd8\xff\xd9", content_type="image/jpeg"),
+                original_name=name,
+                kind="image",
+                sha256=name,
+            )
+        response = {"summary": "No supported conflict.", "findings": [], "missing_information": []}
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response):
+            execution = run_preflight_ai_review(version)
+        coverage = [
+            item
+            for item in execution.input_snapshot["visual_review"]["coverage"]
+            if item["kind"] == "appraisal_photo"
+        ]
+        self.assertEqual([item["status"] for item in coverage], ["reviewed", "skipped"])
+        self.assertIn("configured visual-review limit", coverage[1]["reason"])
+        detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
+        self.assertContains(detail, "Not visually reviewed")
+        self.assertContains(detail, "condition-two.jpg")
+        self.assertContains(detail, "configured visual-review limit")
+
+    def test_clean_package_does_not_create_or_count_a_baseline_finding(self):
+        review = PreflightReview.objects.create(user=self.user, title="Clean package", status="processing")
+        version = review.versions.create(number=1, status="uploaded")
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.xml",
+            kind="xml",
+            sha256="xml",
+            extracted_text="<?xml version='1.0'?><report />",
+        )
+        ReviewFile.objects.create(
+            version=version,
+            original_name="report.pdf",
+            kind="pdf",
+            sha256="pdf",
+            extracted_text="Readable report narrative.",
+        )
+        ReviewFile.objects.create(
+            version=version,
+            original_name="front.jpg",
+            kind="image",
+            sha256="image",
+        )
+        response = {"summary": "No supported conflict.", "findings": [], "missing_information": []}
+        with patch("apps.preflight.ai_review.run_llm_json", return_value=response):
+            run_deterministic_review(version)
+        self.assertFalse(review.findings.filter(rule_code="PREFLIGHT_BASELINE").exists())
+        self.assertEqual(review.open_findings, 0)
+        detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
+        self.assertContains(detail, "No supported conflicts were found")
+        self.assertContains(detail, "Nothing requires a decision")
 
     def test_cross_source_gla_conflict_creates_evidence_rich_finding(self):
         review = PreflightReview.objects.create(user=self.user, title="Conflict package")
@@ -662,7 +772,7 @@ class PreflightTests(TestCase):
     def test_demo_scenarios_have_predictable_deterministic_outcomes(self):
         demo_dir = Path(__file__).resolve().parents[2] / "demo"
         scenarios = {
-            "coappraiser-demo-01-ready.zip": {"PREFLIGHT_BASELINE"},
+            "coappraiser-demo-01-ready.zip": set(),
             "coappraiser-demo-02-reconcile.zip": {
                 "CROSS_SOURCE_SUBJECT_CONDITION",
                 "XML_NARRATIVE_CONDITION",
@@ -680,9 +790,11 @@ class PreflightTests(TestCase):
             codes = set(review.findings.filter(basis="deterministic").values_list("rule_code", flat=True))
             self.assertEqual(codes, expected_codes)
             detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
-            self.assertContains(detail, "Preflight checks")
-            self.assertContains(detail, "Preflight evidence review")
-            self.assertContains(detail, "You make and document every final appraisal decision")
+            self.assertContains(detail, "What Preflight actually reviewed")
+            if expected_codes:
+                self.assertContains(detail, "Repeatable package checks")
+            else:
+                self.assertContains(detail, "No supported conflicts were found")
 
     def test_decision_note_is_saved_in_workfile_record(self):
         fixture = Path(__file__).resolve().parents[2] / "demo" / "coappraiser-demo-02-reconcile.zip"
@@ -814,4 +926,5 @@ class PreflightTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(any(item["kind"] == "warning" and item["title"] == "Model review unavailable" for item in events))
         self.assertTrue(review.versions.first().files.exists())
-        self.assertTrue(review.findings.filter(basis="deterministic").exists())
+        self.assertTrue(review.versions.first().observations.exists())
+        self.assertFalse(review.findings.filter(rule_code="PREFLIGHT_BASELINE").exists())

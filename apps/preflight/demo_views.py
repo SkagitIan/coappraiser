@@ -1,26 +1,29 @@
 import json
 import logging
 import secrets
+import time
+import zipfile
 from pathlib import Path
 
-from django.conf import settings
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.crypto import constant_time_compare
 from django.views.decorators.http import require_GET, require_POST
 
-from .ai_review import run_preflight_ai_review
-from .demo_scenarios import DEMO_SCENARIOS, scenario_package_path
+from .demo_scenarios import DEMO_SCENARIOS, scenario_package_path, scenario_snapshot_path
+from .demo_snapshots import load_demo_snapshot
 from .demo_services import (
     cleanup_expired_demo_users,
     create_demo_review,
+    demo_review_steps,
     get_session_demo_user,
     process_demo_review,
     reset_failed_demo_review,
 )
 from .models import FindingDecision, PreflightReview, ReviewFile, ReviewFinding
 from .services import build_workfile_record
+from .views import build_detail_context
 
 
 logger = logging.getLogger(__name__)
@@ -49,27 +52,20 @@ def _scenario_for_review(review):
 
 
 def _findings_context(review, scenario, slug):
-    version = review.versions.first()
-    findings = list(version.findings.select_related("decision").all()) if version else []
-    severity_rank = {"critical": 0, "warning": 1, "advisory": 2}
-    findings.sort(key=lambda item: (severity_rank.get(item.severity, 3), 0 if item.basis == "deterministic" else 1, item.created_at))
-    deterministic_findings = [item for item in findings if item.basis == "deterministic"]
-    ai_findings = [item for item in findings if item.basis != "deterministic"]
-    ai_execution = version.ai_executions.order_by("-created_at").first() if version else None
-    highest_severity = findings[0].get_severity_display() if findings else "None"
-    return {
-        "review": review,
-        "version": version,
-        "findings": findings,
-        "deterministic_findings": deterministic_findings,
-        "ai_findings": ai_findings,
-        "observations": version.observations.all() if version else [],
-        "ai_execution": ai_execution,
+    context = build_detail_context(review)
+    snapshot = load_demo_snapshot(slug)
+    context.update({
         "scenario": scenario,
         "scenario_slug": slug,
-        "highest_severity": highest_severity,
         "demo_mode": True,
-    }
+        "demo_snapshot": snapshot,
+    })
+    return context
+
+
+def _package_member_count(scenario):
+    with zipfile.ZipFile(scenario_package_path(scenario)) as archive:
+        return len([name for name in archive.namelist() if not name.endswith("/")])
 
 
 @require_GET
@@ -81,23 +77,16 @@ def landing(request):
     for slug, scenario in DEMO_SCENARIOS.items():
         item = dict(scenario)
         item["slug"] = slug
-        item["available"] = scenario_package_path(scenario).is_file()
+        item["available"] = scenario_package_path(scenario).is_file() and scenario_snapshot_path(slug).is_file()
+        item["member_count"] = _package_member_count(scenario) if scenario_package_path(scenario).is_file() else 0
+        item["start_url"] = reverse("preflight_demo:start", args=[slug])
         scenarios.append(item)
-    featured_scenario = next(item for item in scenarios if item["slug"] == "reconcile")
-    alternate_scenarios = [item for item in scenarios if item["slug"] != "reconcile"]
-    uses_live_gpt = (
-        settings.COAPPRAISER_LLM_PROVIDER == "openai"
-        and settings.COAPPRAISER_LLM_MODEL == "gpt-5.6"
-    )
     return render(
         request,
         "preflight/demo/landing.html",
         {
             "scenarios": scenarios,
-            "featured_scenario": featured_scenario,
-            "alternate_scenarios": alternate_scenarios,
             "launch_token": launch_token,
-            "uses_live_gpt": uses_live_gpt,
         },
     )
 
@@ -111,7 +100,12 @@ def start(request, slug):
         return HttpResponseBadRequest("This demo launch link was already used or expired. Return to the demo page and try again.")
     review = create_demo_review(request, scenario)
     request.session["coappraiser_demo_review_id"] = review.pk
-    return render(request, "preflight/demo/progress.html", {"review": review, "scenario": scenario, "scenario_slug": slug})
+    return render(request, "preflight/demo/progress.html", {
+        "review": review,
+        "scenario": scenario,
+        "scenario_slug": slug,
+        "package_member_count": _package_member_count(scenario),
+    })
 
 
 @require_POST
@@ -119,7 +113,7 @@ def process(request, pk):
     review = _demo_review_or_404(request, pk)
     slug, scenario = _scenario_for_review(review)
     try:
-        state, review, _ = process_demo_review(review, scenario)
+        state, review, _ = process_demo_review(review, scenario, slug)
     except Exception:
         logger.exception("Public demo processing failed for review %s", review.pk)
         state = "failed"
@@ -133,11 +127,54 @@ def process(request, pk):
     return redirect(destination)
 
 
+@require_POST
+def stream(request, pk):
+    review = _demo_review_or_404(request, pk)
+    slug, scenario = _scenario_for_review(review)
+
+    def generate():
+        try:
+            for step in demo_review_steps(review, scenario, slug):
+                if step["kind"] == "state":
+                    if step["state"] == "completed":
+                        yield json.dumps({
+                            "kind": "complete",
+                            "title": "Preflight ready",
+                            "detail": "Opening the recorded review.",
+                            "redirect": reverse("preflight_demo:detail", args=[review.pk]),
+                        }) + "\n"
+                    elif step["state"] == "busy":
+                        yield json.dumps({
+                            "kind": "active",
+                            "title": "Review already in progress",
+                            "detail": "Waiting for the existing demo run to finish.",
+                        }) + "\n"
+                    return
+                payload = {key: value for key, value in step.items() if key not in {"review", "version", "execution", "state"}}
+                if step["kind"] == "complete":
+                    payload["redirect"] = reverse("preflight_demo:detail", args=[review.pk])
+                yield json.dumps(payload) + "\n"
+                if step["kind"] != "complete":
+                    time.sleep(0.55)
+        except Exception:
+            logger.exception("Public demo stream failed for review %s", review.pk)
+            yield json.dumps({
+                "kind": "error",
+                "title": "Demo review could not finish",
+                "detail": "The selected package remains isolated to this session. Return to the demo and try again.",
+            }) + "\n"
+
+    response = StreamingHttpResponse(generate(), content_type="application/x-ndjson")
+    response["Cache-Control"] = "no-cache, no-store"
+    response["X-Accel-Buffering"] = "no"
+    return response
+
+
 @require_GET
 def detail(request, pk):
     review = _demo_review_or_404(request, pk)
     slug, scenario = _scenario_for_review(review)
-    return render(request, "preflight/demo/detail.html", _findings_context(review, scenario, slug))
+    return render(request, "preflight/detail.html", _findings_context(review, scenario, slug))
 
 
 @require_POST
@@ -146,14 +183,12 @@ def retry(request, pk):
     slug, scenario = _scenario_for_review(review)
     if review.status == "failed":
         reset_failed_demo_review(review)
-        return render(request, "preflight/demo/progress.html", {"review": review, "scenario": scenario, "scenario_slug": slug})
-
-    version = review.versions.first()
-    ai_execution = version.ai_executions.order_by("-created_at").first() if version else None
-    if version and ai_execution and ai_execution.status == "failed":
-        version.findings.exclude(basis="deterministic").delete()
-        version.ai_executions.all().delete()
-        run_preflight_ai_review(version)
+        return render(request, "preflight/demo/progress.html", {
+            "review": review,
+            "scenario": scenario,
+            "scenario_slug": slug,
+            "package_member_count": _package_member_count(scenario),
+        })
 
     return redirect("preflight_demo:detail", pk=review.pk)
 

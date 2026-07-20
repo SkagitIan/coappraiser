@@ -9,9 +9,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 from django.utils import timezone
 
+from .demo_snapshots import hydrate_demo_snapshot, load_demo_snapshot
 from .demo_scenarios import scenario_package_path
 from .models import PreflightReview
-from .services import delete_review_with_files, ingest_files, run_deterministic_review
+from .services import complete_review, delete_review_with_files, ingest_files, run_deterministic_review
 
 
 DEMO_USERNAME_PREFIX = "__coappraiser_demo__"
@@ -104,30 +105,94 @@ def _claim_demo_processing(review):
         return "claimed", locked, version
 
 
-def process_demo_review(review, scenario):
+def demo_review_steps(review, scenario, slug):
     state, review, version = _claim_demo_processing(review)
     if state != "claimed":
-        return state, review, version
+        yield {"kind": "state", "state": state, "review": review, "version": version}
+        return
     package_path = scenario_package_path(scenario)
     try:
         package_bytes = package_path.read_bytes()
         package_hash = hashlib.sha256(package_bytes).hexdigest()
+        snapshot = load_demo_snapshot(slug)
+        if snapshot["package_sha256"] != package_hash:
+            raise ValueError("The demo package no longer matches its reviewed GPT-5.6 snapshot.")
+        yield {
+            "kind": "active",
+            "title": "Opening the appraisal package",
+            "detail": "Validating the ZIP and opening each supported package member.",
+        }
         upload = SimpleUploadedFile(
             scenario["filename"],
             package_bytes,
             content_type="application/zip",
         )
         ingest_files(version, [upload])
-        run_deterministic_review(version)
+        file_count = version.files.count()
+        yield {
+            "kind": "complete_step",
+            "title": "Package inventory complete",
+            "detail": f"{file_count} package members opened, classified, and hashed.",
+        }
+        yield {
+            "kind": "active",
+            "title": "Tracing report evidence",
+            "detail": "Normalizing supported XML fields and extractable rendered-report text.",
+        }
+        deterministic = run_deterministic_review(version, include_ai=False)
+        observation_count = version.observations.count()
+        yield {
+            "kind": "complete_step",
+            "title": "Evidence normalized",
+            "detail": f"{observation_count} source-linked report observations retained.",
+        }
+        yield {
+            "kind": "complete_step",
+            "title": "Repeatable checks complete",
+            "detail": f"{len(deterministic)} direct package or cross-source item{'s' if len(deterministic) != 1 else ''} recorded.",
+        }
+        for finding in deterministic:
+            yield {"kind": "finding", "title": "Preflight check recorded", "detail": finding.title}
+        yield {
+            "kind": "active",
+            "title": "Loading the recorded GPT-5.6 review",
+            "detail": "Using the paid model result captured for this exact package hash—no live API call.",
+        }
+        execution = hydrate_demo_snapshot(version, slug)
+        ai_findings = list(version.findings.exclude(basis="deterministic"))
+        yield {
+            "kind": "complete_step",
+            "title": "GPT-5.6 evidence review loaded",
+            "detail": f"{len(ai_findings)} evidence-backed item{'s' if len(ai_findings) != 1 else ''} restored with citations and model metadata.",
+        }
+        for finding in ai_findings:
+            yield {"kind": "finding", "title": "GPT-5.6 evidence finding", "detail": finding.title}
         version.package_hash = package_hash
         version.save(update_fields=["package_hash"])
-        return "completed", review, version
+        complete_review(version)
+        yield {
+            "kind": "complete",
+            "title": "Preflight ready",
+            "detail": "Opening the same evidence and decision workspace used by the signed-in product.",
+            "state": "completed",
+            "review": review,
+            "version": version,
+            "execution": execution,
+        }
     except Exception:
         review.status = "failed"
         review.save(update_fields=["status", "updated_at"])
         version.status = "failed"
         version.save(update_fields=["status"])
         raise
+
+
+def process_demo_review(review, scenario, slug):
+    final = None
+    for step in demo_review_steps(review, scenario, slug):
+        final = step
+    state = final.get("state", "completed") if final else "failed"
+    return state, review, review.versions.get(number=1)
 
 
 def reset_failed_demo_review(review):

@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "scenario_slug": "ready",
+  "captured_at": "2026-07-20T15:19:27.572254+00:00",
+  "source": "Paid GPT-5.6 evaluation; replayed only for the exact package hash below.",
+  "package_sha256": "b70b9c23883f93be8c4dada8a0c128aad4bc473c43a26b042013fd1c45f4bbd7",
+  "evaluation_report_sha256": "edbe2d9127ce50734ad1bd0e07be36f7cb5d55aeb7ceaed5ef3432a4155df2ee",
+  "case_spec_sha256": "11dcea65797bb67a7278dd62e1fb5faabd41f96dd870d1e7bcf7e74cfc0e2d5d",
+  "system_prompt_sha256": "8c0f9174d10f87571d5c88b23d3c4c469f95ec6421b74305134597c46761860b",
+  "ai_execution": {
+    "provider": "openai",
+    "model_name": "gpt-5.6",
+    "prompt_version": "preflight-ai-1",
+    "completed_at": "2026-07-20T15:17:32.305468+00:00",
+    "input_snapshot": {
+      "visual_review": {
+        "enabled": true,
+        "sources": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "detail": "high",
+            "bytes": 46188,
+            "sha256": "4aaedce300587941df4f8acacabc5fabfb989bdf4742a17cd03d985f0b552342"
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 118007,
+            "sha256": "6174ee3ad73f3aa73c1f72f13dd475f623974c4831d6f9b13b728f0138d90738"
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 184127,
+            "sha256": "f8d69bdccaa13a4d22a76b6f9a17635a3c1e825afd7aa1d339eed9f6256037bd"
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 124378,
+            "sha256": "763d646d21f47488f91da7123405ad561d3d9b0c71a0fc7e8f50f6d9419d322d"
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 199148,
+            "sha256": "bb9671022ea0170d8ff4cd3f9f6f1da3446e4e51b59eebaa1e7874c649a8e91b"
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "detail": "high",
+            "bytes": 204741,
+            "sha256": "11f97506e76081e3556dc492f0cc054b59837a1232746a1aa453f1ce56b68a04"
+          }
+        ],
+        "coverage": [
+          {
+            "file": "report.pdf",
+            "kind": "rendered_pdf",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "bathroom_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "covered_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "kitchen_interior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_deck_exterior.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          },
+          {
+            "file": "rear_exterior_condition.jpg",
+            "kind": "appraisal_photo",
+            "status": "reviewed",
+            "reason": ""
+          }
+        ],
+        "instruction": "Only these attached files may support visual observations."
+      }
+    },
+    "parsed_response": {
+      "summary": "No distinct preflight findings. Structured subject facts match the rendered report, the comparable commentary addresses the reported condition differences, and the attached photographs do not clearly contradict the report\u2019s descriptions of the covered deck, storage enclosure, or incomplete cladding.",
+      "missing_information": [],
+      "suppressed_findings": [],
+      "_response_metadata": {
+        "response_id": "resp_03064bf0aa76c0d6016a5e3c0399408198a79494e14314ba43",
+        "model": "gpt-5.6-sol",
+        "usage": {
+          "input_tokens": 12265,
+          "input_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 12262
+          },
+          "output_tokens": 406,
+          "output_tokens_details": {
+            "reasoning_tokens": 336
+          },
+          "total_tokens": 12671
+        },
+        "attempts": 1,
+        "duration_ms": 40753
+      },
+      "_demo_snapshot": true
+    }
+  },
+  "findings": []
+}

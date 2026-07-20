@@ -3,44 +3,45 @@
 {% block content %}
 <section class="live-review-shell" data-stream-url="{% url 'preflight:stream' review.pk %}" data-csrf="{{ csrf_token }}">
   <div class="live-review-heading">
-    <span class="panel-eyebrow">Live Preflight activity</span>
+    <span class="panel-eyebrow">Preflight is running</span>
     <h1>Reviewing {{ review.title }}</h1>
-    <p>Watch the package move through the measured protocol: inventory, normalization, deterministic checks, and bounded GPT-5.6 evidence review.</p>
+    <p>Keep this page open. Your results will appear automatically when the package review finishes.</p>
   </div>
 
   <div class="live-review-layout">
     <section class="workspace-panel live-review-current" aria-live="polite">
-      <span class="live-review-pulse" aria-hidden="true"></span>
-      <div>
-        <small>Working now</small>
-        <h2 data-current-title>Starting Preflight</h2>
-        <p data-current-detail>Your package is stored. Preparing the evidence review.</p>
+      <div class="live-review-current-status">
+        <span class="live-review-spinner" aria-hidden="true"></span>
+        <span>Review in progress</span>
       </div>
+      <div class="live-review-current-copy">
+        <small>Working now</small>
+        <h2 data-current-title>Opening the appraisal package</h2>
+        <p data-current-detail>Your files are secured. Preparing the evidence review.</p>
+      </div>
+      <div class="live-review-track" aria-hidden="true"><span></span></div>
+      <dl class="live-review-metrics">
+        <div><dt>Package members</dt><dd>{{ version.files.count }}</dd></div>
+        <div><dt>Milestones recorded</dt><dd data-event-count>1</dd></div>
+        <div><dt>Elapsed</dt><dd data-elapsed>0:00</dd></div>
+      </dl>
     </section>
 
     <section class="workspace-panel live-review-feed">
       <div class="panel-heading">
-        <div><span class="panel-eyebrow">Traceable progress</span><h2>Review activity</h2></div>
+        <div><span class="panel-eyebrow">Live activity</span><h2>What Preflight has completed</h2></div>
         <span class="status-chip status-processing" data-stream-status>In progress</span>
       </div>
       <ol data-activity-feed>
-        <li class="is-complete"><span></span><div><strong>Upload received</strong><p>{{ version.files.count }} file{{ version.files.count|pluralize }} ready for review.</p></div></li>
+        <li class="is-complete"><span></span><div><strong>Upload received</strong><p>{{ version.files.count }} file{{ version.files.count|pluralize }} opened from the package.</p></div></li>
       </ol>
+      <p class="live-review-stay-open"><span aria-hidden="true">●</span> Preflight is actively processing this package. Results will open automatically.</p>
       <div class="live-review-error" data-stream-error hidden>
         <strong>Preflight paused</strong>
         <p data-error-message></p>
         <button class="app-button primary" type="button" data-retry>Retry review</button>
       </div>
     </section>
-
-    <aside class="workspace-panel live-review-explainer">
-      <span class="panel-eyebrow">What you are seeing</span>
-      <h2>Results, not hidden reasoning</h2>
-      <p>CoAppraiser streams verifiable processing milestones and saved findings. It does not expose private model reasoning or present an activity animation as proof of a finding.</p>
-      <div><span>1</span><p><strong>Normalize</strong> Trace supported fields back to XML and report locations.</p></div>
-      <div><span>2</span><p><strong>Cross-check</strong> Separate exact package rules from GPT-5.6 evidence review.</p></div>
-      <div><span>3</span><p><strong>Record</strong> Save only evidence-complete findings for appraiser action.</p></div>
-    </aside>
   </div>
 </section>
 
@@ -54,6 +55,15 @@
   const errorBox = shell.querySelector("[data-stream-error]");
   const errorMessage = shell.querySelector("[data-error-message]");
   const retry = shell.querySelector("[data-retry]");
+  const eventCount = shell.querySelector("[data-event-count]");
+  const elapsed = shell.querySelector("[data-elapsed]");
+  const startedAt = Date.now();
+  let recordedEvents = 1;
+
+  window.setInterval(() => {
+    const seconds = Math.floor((Date.now() - startedAt) / 1000);
+    elapsed.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  }, 1000);
 
   function addItem(item) {
     const li = document.createElement("li");
@@ -67,6 +77,8 @@
     body.append(title, detail);
     li.append(marker, body);
     feed.append(li);
+    recordedEvents += 1;
+    eventCount.textContent = recordedEvents;
     li.scrollIntoView({behavior: "smooth", block: "nearest"});
   }
 

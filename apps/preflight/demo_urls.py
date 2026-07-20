@@ -9,6 +9,7 @@ urlpatterns = [
     path("", demo_views.landing, name="landing"),
     path("run/<slug:slug>/", demo_views.start, name="start"),
     path("reviews/<int:pk>/process/", demo_views.process, name="process"),
+    path("reviews/<int:pk>/stream/", demo_views.stream, name="stream"),
     path("reviews/<int:pk>/", demo_views.detail, name="detail"),
     path("reviews/<int:pk>/retry/", demo_views.retry, name="retry"),
     path("reviews/<int:pk>/workfile/", demo_views.workfile, name="workfile"),
