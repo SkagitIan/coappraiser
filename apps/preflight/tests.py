@@ -344,7 +344,8 @@ class PreflightTests(TestCase):
         self.complete_stream(review)
         detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
         self.assertEqual(detail.status_code, 200)
-        self.assertContains(detail, "Package inventory")
+        self.assertContains(detail, "Package members reviewed")
+        self.assertContains(detail, "Exact source files")
         self.assertContains(detail, "What Preflight actually reviewed")
 
     def test_mock_ai_review_is_saved_without_inventing_a_finding(self):
@@ -631,7 +632,8 @@ class PreflightTests(TestCase):
         self.assertTrue(mocked_llm.call_args.kwargs["multimodal_inputs"])
         self.assertNotIn("base64", json.dumps(execution.input_snapshot))
         detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
-        self.assertContains(detail, "All 1 package photo was supplied to GPT-5.6")
+        self.assertContains(detail, "The Preflight agent reviewed all 1 package photo")
+        self.assertContains(detail, "Model: gpt-5.6")
         self.assertContains(detail, "condition_exhibit.jpg")
 
     @override_settings(

@@ -34,14 +34,14 @@
       <p>The evidence, decision status, and your notes remain attached to this version for the workfile record.</p>
     {% else %}
       <h2>No supported conflicts were found.</h2>
-      <p>Preflight completed the available package checks and GPT-5.6 evidence review without producing an actionable finding.</p>
+      <p>Preflight completed its package checks and evidence review without producing an actionable finding.</p>
     {% endif %}
   </div>
   <div class="review-result-signal" aria-hidden="true">{% if review.open_findings %}!{% else %}✓{% endif %}</div>
 </section>
 
 {% if ai_execution.status == "failed" %}
-  <div class="notice">GPT-5.6 could not complete this pass. Your package inventory, extracted evidence, and repeatable checks remain saved.</div>
+  <div class="notice">The Preflight agent could not complete this pass. Your package inventory, extracted evidence, and repeatable checks remain saved.</div>
 {% endif %}
 
 <section class="workspace-panel review-coverage-panel">
@@ -56,27 +56,27 @@
     <div><strong>{{ visual_photo_count }}</strong><span>photo{{ visual_photo_count|pluralize }} visually reviewed</span></div>
   </div>
   <div class="review-coverage-body">
-    <div class="package-kind-summary">
-      <span class="coverage-label">Package inventory</span>
-      <div>{% for item in inventory %}<span><b>{{ item.count }}</b> {{ item.label }}{{ item.count|pluralize }}</span>{% endfor %}</div>
-    </div>
     <div class="model-review-summary">
       <div class="model-review-heading">
         <span class="status-dot status-dot-{{ ai_execution.status|default:'running' }}"></span>
-        <strong>{{ ai_execution.model_name|default:"Preflight evidence review" }}</strong>
+        <strong>Preflight agent</strong>
         <small>{% if demo_mode %}Recorded result{% else %}{{ ai_execution.status|default:"pending"|title }}{% endif %}</small>
       </div>
       <p>{{ ai_outcome }}</p>
-      {% if demo_mode %}<p class="demo-snapshot-note"><strong>No live API call.</strong> This GPT-5.6 result was captured once for the exact package hash and is replayed for a predictable public demo.</p>{% endif %}
-      {% if ai_summary %}<blockquote><span>Model summary</span>{{ ai_summary }}</blockquote>{% endif %}
-      {% if all_photos_reviewed %}<p class="visual-coverage-confirmed"><span aria-hidden="true">✓</span> {% if demo_mode %}The recorded GPT-5.6 run reviewed all{% else %}All{% endif %} {{ package_image_count }} package photo{{ package_image_count|pluralize }}{% if not demo_mode %} {% if package_image_count == 1 %}was{% else %}were{% endif %} supplied to GPT-5.6{% endif %}.</p>{% endif %}
-      {% if duration_ms %}<small class="model-duration">{% if demo_mode %}Recorded model response time{% else %}Model response received{% endif %}: {{ duration_ms }} ms.</small>{% endif %}
+      {% if demo_mode %}<p class="demo-snapshot-note"><strong>No live API call.</strong> This agent result was captured once for the exact package hash and is replayed for a predictable public demo.</p>{% endif %}
+      {% if ai_summary %}<blockquote><span>Agent summary</span>{{ ai_summary }}</blockquote>{% endif %}
+      {% if all_photos_reviewed %}<p class="visual-coverage-confirmed"><span aria-hidden="true">✓</span> The Preflight agent reviewed all {{ package_image_count }} package photo{{ package_image_count|pluralize }}.</p>{% endif %}
+      <small class="model-duration">Model: {{ ai_execution.model_name|default:"Not recorded" }}{% if duration_ms %} · Response received in {{ duration_ms }} ms{% endif %}</small>
       {% if visual_manifest %}
-        <div class="reviewed-source-list"><span>Visual sources supplied to GPT-5.6</span>{% for source in visual_manifest %}<b>{{ source.file }}</b>{% endfor %}</div>
+        <div class="reviewed-source-list"><span>Visual sources reviewed by the Preflight agent</span>{% for source in visual_manifest %}<b>{{ source.file }}</b>{% endfor %}</div>
       {% endif %}
       {% if visual_skipped %}
         <div class="skipped-source-list"><span>Not visually reviewed</span>{% for source in visual_skipped %}<p><b>{{ source.file }}</b> {{ source.reason }}</p>{% endfor %}</div>
       {% endif %}
+      <div class="reviewed-source-list package-kind-summary">
+        <span>Package members reviewed</span>
+        {% for item in inventory %}<b>{{ item.count }} {{ item.label }}{{ item.count|pluralize }}</b>{% endfor %}
+      </div>
     </div>
   </div>
 </section>
@@ -94,7 +94,7 @@
     {% endif %}
 
     {% if ai_findings %}
-      <div class="finding-section-label preflight-reasoning-label"><strong>GPT-5.6 evidence review</strong><span>Cross-document and visual relationships grounded in the supplied package</span></div>
+      <div class="finding-section-label preflight-reasoning-label"><strong>Preflight agent findings</strong><span>Cross-document and visual relationships grounded in the supplied package</span></div>
       <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
     {% endif %}
   {% else %}
@@ -102,7 +102,7 @@
       <span aria-hidden="true">✓</span>
       <div>
         <h3>This package has a clear action queue.</h3>
-        <p>No repeatable package conflict or supported GPT-5.6 evidence relationship was saved as a finding. Review the coverage above before delivery.</p>
+        <p>No repeatable package conflict or supported cross-source relationship was saved as a finding. Review the coverage above before delivery.</p>
       </div>
     </div>
   {% endif %}
@@ -110,7 +110,7 @@
 
 <details class="workspace-panel package-inventory-disclosure">
   <summary>
-    <span><b>Package inventory</b><small>{{ package_files|length }} extracted package member{{ package_files|length|pluralize }} with exact filenames</small></span>
+    <span><b>Exact source files</b><small>{{ package_files|length }} extracted package member{{ package_files|length|pluralize }} with filenames and hashes</small></span>
     <strong>View files</strong>
   </summary>
   <div class="package-file-list">

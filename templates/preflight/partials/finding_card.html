@@ -8,25 +8,30 @@
       {% if finding.confidence %}<span class="finding-confidence">{{ finding.confidence|title }} confidence</span>{% endif %}
     </div>
     <h3>{{ finding.title }}</h3>
-    <div class="finding-observed">
-      <span>Observed issue</span>
-      <p>{{ finding.observed }}</p>
+    <div class="finding-resolution">
+      <div class="finding-problem">
+        <span>Problem</span>
+        <p>{{ finding.observed }}</p>
+      </div>
+      <div class="finding-review-action">
+        <span>What to review</span>
+        <p>{{ finding.recommended_action }}</p>
+      </div>
     </div>
-    <div class="finding-proof">
-      <div>
-        <span>Where it was found</span>
-        <strong>{{ finding.location|default:"An exact extracted location was not available." }}</strong>
+    <div class="finding-evidence-line">
+      <div class="finding-location">
+        <span>Source</span>
+        <strong>{{ finding.location|default:"Exact extracted location unavailable" }}</strong>
         {% if finding.visual_sources %}<div class="finding-visual-sources">{% for source in finding.visual_sources %}<b>{{ source }}</b>{% endfor %}</div>{% endif %}
       </div>
-      <div>
-        <span>Evidence cited</span>
-        {% if finding.evidence %}<ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p>No additional citation was stored.</p>{% endif %}
-      </div>
+      {% if finding.evidence %}
+        <div class="finding-citations">
+          <span>Evidence</span>
+          <ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+      {% endif %}
     </div>
-    <div class="finding-next">
-      <p><span>Why it matters</span><strong>{{ finding.why_it_matters }}</strong></p>
-      <p><span>Review next</span><strong>{{ finding.recommended_action }}</strong></p>
-    </div>
+    <p class="finding-impact"><span>Why it matters</span>{{ finding.why_it_matters }}</p>
     <div id="finding-{{ finding.pk }}">
       {% include "preflight/partials/finding_status.html" %}
     </div>

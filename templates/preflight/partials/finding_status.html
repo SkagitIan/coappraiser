@@ -2,23 +2,26 @@
 <form method="post" action="{{ decision_url }}" hx-post="{{ decision_url }}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) window.location.reload()" class="styled-form finding-decision-form">
   {% csrf_token %}
   <div class="finding-decision-heading">
-    <strong>Your decision</strong>
-    <small>Current: {{ finding.decision.get_status_display }}{% if finding.decision.note %} · note saved{% endif %}</small>
+    <div>
+      <strong>Record your workfile decision</strong>
+      <small>This records how you handled the item. It does not change the appraisal.</small>
+    </div>
+    <b>Current: {% if finding.decision.status == "open" %}Needs review{% else %}{{ finding.decision.get_status_display }}{% endif %}{% if finding.decision.note %} · note saved{% endif %}</b>
   </div>
   <div class="finding-decision-fields">
     <p class="finding-decision-status">
-      <label for="status-{{ finding.pk }}">Status</label>
+      <label for="status-{{ finding.pk }}">Workfile outcome</label>
       <select id="status-{{ finding.pk }}" name="status">
-        <option value="open" {% if finding.decision.status == "open" %}selected{% endif %}>Keep open</option>
-        <option value="resolved" {% if finding.decision.status == "resolved" %}selected{% endif %}>Resolved</option>
-        <option value="deferred" {% if finding.decision.status == "deferred" %}selected{% endif %}>Deferred</option>
-        <option value="not_applicable" {% if finding.decision.status == "not_applicable" %}selected{% endif %}>Not applicable</option>
+        <option value="open" {% if finding.decision.status == "open" %}selected{% endif %}>Needs review</option>
+        <option value="resolved" {% if finding.decision.status == "resolved" %}selected{% endif %}>Resolved — checked or corrected</option>
+        <option value="deferred" {% if finding.decision.status == "deferred" %}selected{% endif %}>Deferred — decide later</option>
+        <option value="not_applicable" {% if finding.decision.status == "not_applicable" %}selected{% endif %}>Not applicable — no action needed</option>
       </select>
     </p>
     <p>
-      <label for="note-{{ finding.pk }}">Note</label>
-      <textarea id="note-{{ finding.pk }}" name="note" rows="1" maxlength="2000" placeholder="Why did you make this decision?">{{ finding.decision.note }}</textarea>
+      <label for="note-{{ finding.pk }}">Decision note <small>optional</small></label>
+      <textarea id="note-{{ finding.pk }}" name="note" rows="1" maxlength="2000" placeholder="What did you verify or change?">{{ finding.decision.note }}</textarea>
     </p>
-    <button class="button secondary" type="submit">Save</button>
+    <button class="app-button primary finding-record-button" type="submit">Record</button>
   </div>
 </form>

@@ -105,17 +105,17 @@ def build_detail_context(review):
     duration_ms = response_metadata.get("duration_ms")
     if ai_execution and ai_execution.status == "completed":
         if ai_findings.exists():
-            ai_outcome = f"GPT-5.6 returned {ai_findings.count()} supported evidence relationship{'s' if ai_findings.count() != 1 else ''} for review."
+            ai_outcome = f"The Preflight agent returned {ai_findings.count()} supported evidence relationship{'s' if ai_findings.count() != 1 else ''} for review."
         elif suppressed_findings:
-            ai_outcome = f"GPT-5.6 completed the review. {len(suppressed_findings)} candidate item{'s were' if len(suppressed_findings) != 1 else ' was'} withheld by the evidence and professional-boundary protocol."
+            ai_outcome = f"The Preflight agent completed the review. {len(suppressed_findings)} candidate item{'s were' if len(suppressed_findings) != 1 else ' was'} withheld because the available evidence did not support an appraiser action."
         else:
-            ai_outcome = "GPT-5.6 completed the review and did not return an additional supported conflict."
+            ai_outcome = "The Preflight agent completed the review and did not return an additional supported conflict."
     elif ai_execution and ai_execution.status == "failed":
-        ai_outcome = "GPT-5.6 could not complete this pass. Your uploaded package and repeatable checks remain saved."
+        ai_outcome = "The Preflight agent could not complete this pass. Your uploaded package and repeatable checks remain saved."
     elif ai_execution and ai_execution.status == "skipped":
-        ai_outcome = "GPT-5.6 was not run because the package did not contain readable report evidence."
+        ai_outcome = "The Preflight agent was not run because the package did not contain readable report evidence."
     else:
-        ai_outcome = "GPT-5.6 review has not completed."
+        ai_outcome = "The Preflight agent review has not completed."
     previous = review.versions.all()[1] if review.versions.count() > 1 else None
     current_signatures = {f.signature for f in findings}
     prior_signatures = {
@@ -202,7 +202,7 @@ def stream_review(request, pk):
                 from django.conf import settings
                 from .ai_review import run_preflight_ai_review
                 model = getattr(settings, "COAPPRAISER_LLM_MODEL", "gpt-5.6")
-                yield event("active", f"{model} evidence review", "Cross-checking the rendered report, selected photos, and normalized evidence under the structured finding protocol.")
+                yield event("active", "Preflight agent evidence review", f"Cross-checking the rendered report, selected photos, and normalized evidence with {model}.")
                 execution = run_preflight_ai_review(version)
 
             ai_findings = list(version.findings.exclude(basis="deterministic"))
