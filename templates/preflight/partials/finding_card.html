@@ -1,39 +1,49 @@
-<article class="finding-row finding-{{ finding.severity }}">
-  <div class="finding-marker"></div>
-  <div class="finding-content">
-    <div class="finding-meta">
-      <span class="badge">{{ finding.get_category_display }}</span>
-      <span class="severity-{{ finding.severity }}">{{ finding.get_severity_display }}</span>
-      <span class="finding-basis">{% if finding.basis == "ai_visual" %}Visual evidence{% elif finding.basis == "ai_interpretation" %}Preflight reasoning{% else %}Preflight check{% endif %}</span>
-      {% if finding.confidence %}<span class="finding-confidence">{{ finding.confidence|title }} confidence</span>{% endif %}
+<details
+  class="finding-queue-row finding-{{ finding.severity }}"
+  data-queue-item
+  data-priority="{% if finding.severity == 'critical' %}high{% elif finding.severity == 'warning' %}medium{% else %}low{% endif %}"
+  data-priority-rank="{% if finding.severity == 'critical' %}0{% elif finding.severity == 'warning' %}1{% else %}2{% endif %}"
+  data-title="{{ finding.title|lower }}"
+  data-source="{{ finding.location|lower }}"
+>
+  <summary>
+    <div class="queue-issue">
+      <div class="queue-issue-tags">
+        <span class="queue-priority">{% if finding.severity == "critical" %}High{% elif finding.severity == "warning" %}Medium{% else %}Low{% endif %}</span>
+        <span class="queue-origin">{% if finding.basis == "ai_visual" or finding.basis == "ai_interpretation" %}Preflight agent{% else %}Package check{% endif %}</span>
+      </div>
+      <strong>{{ finding.title }}</strong>
+      <p>{{ finding.observed }}</p>
     </div>
-    <h3>{{ finding.title }}</h3>
-    <div class="finding-resolution">
-      <div class="finding-problem">
-        <span>Problem</span>
-        <p>{{ finding.observed }}</p>
-      </div>
-      <div class="finding-review-action">
-        <span>What to review</span>
-        <p>{{ finding.recommended_action }}</p>
-      </div>
+    <div class="queue-source">
+      <span>Where</span>
+      <p>{{ finding.location|default:"Exact location unavailable" }}</p>
     </div>
-    <div class="finding-evidence-line">
-      <div class="finding-location">
-        <span>Source</span>
-        <strong>{{ finding.location|default:"Exact extracted location unavailable" }}</strong>
-        {% if finding.visual_sources %}<div class="finding-visual-sources">{% for source in finding.visual_sources %}<b>{{ source }}</b>{% endfor %}</div>{% endif %}
-      </div>
+    <div class="queue-evidence">
+      <span>Evidence</span>
       {% if finding.evidence %}
-        <div class="finding-citations">
-          <span>Evidence</span>
-          <ul>{% for item in finding.evidence %}<li>{{ item }}</li>{% endfor %}</ul>
-        </div>
+        <ul>{% for item in finding.evidence|slice:":2" %}<li>{{ item }}</li>{% endfor %}</ul>
+      {% elif finding.visual_sources %}
+        <ul>{% for source in finding.visual_sources|slice:":2" %}<li>{{ source }}</li>{% endfor %}</ul>
+      {% else %}
+        <p>Review the cited source location.</p>
       {% endif %}
     </div>
-    <p class="finding-impact"><span>Why it matters</span>{{ finding.why_it_matters }}</p>
+    <div class="queue-next">
+      <span>What to do</span>
+      <p>{{ finding.recommended_action }}</p>
+    </div>
+    <span class="queue-open" aria-hidden="true">→</span>
+  </summary>
+  <div class="queue-expanded">
+    <div class="queue-expanded-context">
+      <p><span>Why it matters</span>{{ finding.why_it_matters }}</p>
+      {% if finding.visual_sources %}<p><span>Visual sources</span>{% for source in finding.visual_sources %}<b>{{ source }}</b>{% endfor %}</p>{% endif %}
+      {% if finding.evidence|length > 2 %}<div><span>Additional evidence</span><ul>{% for item in finding.evidence|slice:"2:" %}<li>{{ item }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if finding.confidence %}<small>{{ finding.confidence|title }} confidence · Appraiser judgment required</small>{% else %}<small>Appraiser judgment required</small>{% endif %}
+    </div>
     <div id="finding-{{ finding.pk }}">
       {% include "preflight/partials/finding_status.html" %}
     </div>
   </div>
-</article>
+</details>

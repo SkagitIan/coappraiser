@@ -14,49 +14,67 @@
   </div>
   <div class="heading-actions">
     {% if demo_mode %}
-      <a class="app-button secondary" href="{% url 'preflight_demo:workfile' review.pk %}">Open workfile record</a>
       <a class="app-button secondary" href="{% url 'preflight_demo:landing' %}">Try another package</a>
     {% else %}
-      <form method="post" action="{% url 'preflight:workfile_record' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Download workfile record</button></form>
       <a class="app-button secondary" href="#revision">Upload a revision</a>
     {% endif %}
   </div>
 </div>
 
-<section class="review-result-hero {% if review.open_findings %}has-findings{% else %}is-clear{% endif %}" aria-label="Preflight result">
-  <div class="review-result-copy">
-    <span class="panel-eyebrow">Preflight complete</span>
-    {% if review.open_findings %}
-      <h2>{{ review.open_findings }} item{{ review.open_findings|pluralize }} {% if review.open_findings == 1 %}needs{% else %}need{% endif %} your review.</h2>
-      <p>Start with the evidence relationships below. Each finding shows what was observed, where it came from, and the decision you can preserve in the workfile.</p>
-    {% elif findings %}
-      <h2>Every finding has a recorded decision.</h2>
-      <p>The evidence, decision status, and your notes remain attached to this version for the workfile record.</p>
-    {% else %}
-      <h2>No supported conflicts were found.</h2>
-      <p>Preflight completed its package checks and evidence review without producing an actionable finding.</p>
-    {% endif %}
-  </div>
-  <div class="review-result-signal" aria-hidden="true">{% if review.open_findings %}!{% else %}✓{% endif %}</div>
-</section>
-
 {% if ai_execution.status == "failed" %}
   <div class="notice">The Preflight agent could not complete this pass. Your package inventory, extracted evidence, and repeatable checks remain saved.</div>
 {% endif %}
 
-<section class="workspace-panel review-coverage-panel">
-  <div class="panel-heading">
-    <div><span class="panel-eyebrow">Review coverage</span><h2>What Preflight actually reviewed</h2></div>
-    <span class="coverage-version">Version {{ version.number }}</span>
+<section class="workspace-panel review-summary-card" aria-label="Preflight review summary">
+  <header class="review-summary-heading">
+    <div>
+      <h2>Review Summary</h2>
+      <p>What Preflight found in your package</p>
+    </div>
+    {% if demo_mode %}
+      <a class="app-button secondary review-download" href="{% url 'preflight_demo:workfile' review.pk %}"><span aria-hidden="true">↓</span> Open workfile record</a>
+    {% else %}
+      <form method="post" action="{% url 'preflight:workfile_record' review.pk %}">{% csrf_token %}<button class="app-button secondary review-download" type="submit"><span aria-hidden="true">↓</span> Download workfile record</button></form>
+    {% endif %}
+  </header>
+
+  <div class="review-summary-overview">
+    <div class="review-attention {% if not review.open_findings %}is-clear{% endif %}">
+      <span class="review-attention-icon" aria-hidden="true">{% if review.open_findings %}!{% else %}✓{% endif %}</span>
+      <div>
+        {% if review.open_findings %}
+          <strong>{{ review.open_findings }} issue{{ review.open_findings|pluralize }} {% if review.open_findings == 1 %}needs{% else %}need{% endif %} your attention</strong>
+          <p class="review-priority-breakdown">
+            {% if priority_counts.high %}<b>{{ priority_counts.high }} high</b>{% endif %}
+            {% if priority_counts.medium %}<b>{{ priority_counts.medium }} medium</b>{% endif %}
+            {% if priority_counts.low %}<b>{{ priority_counts.low }} low</b>{% endif %}
+          </p>
+          <small>Review these before delivery to reduce avoidable revision risk.</small>
+        {% elif findings %}
+          <strong>Every issue has a recorded decision</strong>
+          <small>Your decisions and notes are preserved in the workfile record.</small>
+        {% else %}
+          <strong>No supported conflicts were found</strong>
+          <small>The available package checks and evidence review produced a clear queue.</small>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="review-summary-metrics">
+      <div><strong>{{ observations|length }}</strong><span>Fields traced</span><small>XML and report evidence</small></div>
+      <div class="{% if findings %}has-issues{% endif %}"><strong>{{ findings|length }}</strong><span>Issues found</span><small>{% if findings %}Require review{% else %}Clear queue{% endif %}</small></div>
+      <div><strong>{{ package_files|length }}</strong><span>Files reviewed</span><small>PDF, XML, and photos</small></div>
+      <div class="{% if package_complete %}is-complete{% else %}is-incomplete{% endif %}"><strong>{% if package_complete %}✓{% else %}!{% endif %}</strong><span>Package {% if package_complete %}complete{% else %}incomplete{% endif %}</span><small>{% if package_complete %}PDF and XML present{% else %}Core export missing{% endif %}</small></div>
+    </div>
   </div>
-  <div class="review-coverage-stats">
-    <div><strong>{{ package_files|length }}</strong><span>package members opened</span></div>
-    <div><strong>{{ observations|length }}</strong><span>report fields traced</span></div>
-    <div><strong>{{ pdf_page_count }}</strong><span>PDF page{{ pdf_page_count|pluralize }} read</span></div>
-    <div><strong>{{ visual_photo_count }}</strong><span>photo{{ visual_photo_count|pluralize }} visually reviewed</span></div>
-  </div>
-  <div class="review-coverage-body">
-    <div class="model-review-summary">
+
+  <details id="review-details" class="agent-review-disclosure">
+    <summary>
+      <span class="agent-review-icon" aria-hidden="true">◇</span>
+      <span><strong>Preflight agent reviewed your package</strong><small>What Preflight actually reviewed across the XML, rendered report, and selected photos.</small></span>
+      <b>View review details <i aria-hidden="true">→</i></b>
+    </summary>
+    <div class="agent-review-details">
       <div class="model-review-heading">
         <span class="status-dot status-dot-{{ ai_execution.status|default:'running' }}"></span>
         <strong>Preflight agent</strong>
@@ -78,25 +96,30 @@
         {% for item in inventory %}<b>{{ item.count }} {{ item.label }}{{ item.count|pluralize }}</b>{% endfor %}
       </div>
     </div>
-  </div>
+  </details>
 </section>
 
-<section id="findings" class="workspace-panel findings-workspace">
-  <div class="panel-heading">
-    <div><span class="panel-eyebrow">Your action queue</span><h2>{% if review.open_findings %}Review the evidence and make the call{% elif findings %}Recorded decisions{% else %}Nothing requires a decision{% endif %}</h2></div>
-    {% if findings %}<span class="finding-count">{{ review.open_findings }} open</span>{% endif %}
-  </div>
+<section id="findings" class="workspace-panel findings-workspace action-queue">
+  <header class="action-queue-heading">
+    <div><h2>Action Queue</h2><p>{% if review.open_findings %}Address these issues to finalize your report{% elif findings %}Review the decisions preserved for this report{% else %}Nothing requires a decision{% endif %}</p>{% if deterministic_findings %}<small class="queue-method-note">Repeatable package checks and agent evidence, prioritized together</small>{% endif %}</div>
+    {% if findings %}
+      <div class="action-queue-controls">
+        <div class="queue-filters" role="group" aria-label="Filter findings by priority">
+          <button class="is-active" type="button" data-queue-filter="all">All issues <b>{{ findings|length }}</b></button>
+          <button type="button" data-queue-filter="high">High <b>{{ priority_counts.high }}</b></button>
+          <button type="button" data-queue-filter="medium">Medium <b>{{ priority_counts.medium }}</b></button>
+          <button type="button" data-queue-filter="low">Low <b>{{ priority_counts.low }}</b></button>
+        </div>
+        <label class="queue-sort"><span class="sr-only">Sort findings</span><select data-queue-sort><option value="priority">Sort by: Priority</option><option value="title">Sort by: Title</option><option value="source">Sort by: Source</option></select></label>
+      </div>
+    {% endif %}
+  </header>
 
   {% if findings %}
-    {% if deterministic_findings %}
-      <div class="finding-section-label"><strong>Repeatable package checks</strong><span>Direct file, field, and cross-source conflicts</span></div>
-      <div class="finding-list">{% for finding in deterministic_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
-    {% endif %}
-
-    {% if ai_findings %}
-      <div class="finding-section-label preflight-reasoning-label"><strong>Preflight agent findings</strong><span>Cross-document and visual relationships grounded in the supplied package</span></div>
-      <div class="finding-list">{% for finding in ai_findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}</div>
-    {% endif %}
+    <div class="finding-list queue-list" data-queue-list>
+      {% for finding in findings %}{% include "preflight/partials/finding_card.html" %}{% endfor %}
+    </div>
+    <p class="queue-filter-empty" data-queue-empty hidden>No issues match this priority filter.</p>
   {% else %}
     <div class="review-clear-state">
       <span aria-hidden="true">✓</span>
@@ -106,9 +129,15 @@
       </div>
     </div>
   {% endif %}
+  <footer class="action-queue-footer">
+    <span>✓ {{ visual_photo_count }} package photo{{ visual_photo_count|pluralize }} reviewed</span>
+    <span>▣ {{ package_files|length }} supporting file{{ package_files|length|pluralize }}</span>
+    <a href="#source-files">View all files</a>
+    <small>Review completed: {{ review.updated_at|date:"M j, Y g:i A" }}</small>
+  </footer>
 </section>
 
-<details class="workspace-panel package-inventory-disclosure">
+<details id="source-files" class="workspace-panel package-inventory-disclosure">
   <summary>
     <span><b>Exact source files</b><small>{{ package_files|length }} extracted package member{{ package_files|length|pluralize }} with filenames and hashes</small></span>
     <strong>View files</strong>
@@ -165,4 +194,38 @@
 </div>
 
 {% if comparison %}<section class="workspace-panel comparison-panel"><strong>Compared with version {{ version.number|add:"-1" }}</strong><span>Fixed {{ comparison.fixed }} · Still present {{ comparison.still_present }} · New {{ comparison.new }}</span></section>{% endif %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const list = document.querySelector("[data-queue-list]");
+  if (!list) return;
+  const items = Array.from(list.querySelectorAll("[data-queue-item]"));
+  const filters = Array.from(document.querySelectorAll("[data-queue-filter]"));
+  const sort = document.querySelector("[data-queue-sort]");
+  const empty = document.querySelector("[data-queue-empty]");
+  let activeFilter = "all";
+
+  function renderQueue() {
+    const visible = items.filter((item) => activeFilter === "all" || item.dataset.priority === activeFilter);
+    const hidden = items.filter((item) => !visible.includes(item));
+    hidden.forEach((item) => { item.hidden = true; });
+
+    const mode = sort ? sort.value : "priority";
+    visible.sort((a, b) => {
+      if (mode === "title") return a.dataset.title.localeCompare(b.dataset.title);
+      if (mode === "source") return a.dataset.source.localeCompare(b.dataset.source);
+      return Number(a.dataset.priorityRank) - Number(b.dataset.priorityRank);
+    });
+    visible.forEach((item) => { item.hidden = false; list.appendChild(item); });
+    if (empty) empty.hidden = visible.length !== 0;
+  }
+
+  filters.forEach((button) => button.addEventListener("click", function () {
+    activeFilter = button.dataset.queueFilter;
+    filters.forEach((item) => item.classList.toggle("is-active", item === button));
+    renderQueue();
+  }));
+  if (sort) sort.addEventListener("change", renderQueue);
+  renderQueue();
+});
+</script>
 {% endblock %}

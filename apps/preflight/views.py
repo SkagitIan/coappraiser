@@ -60,6 +60,11 @@ def build_detail_context(review):
     ai_execution = version.ai_executions.first() if version else None
     files = list(version.files.all()) if version else []
     kind_counts = Counter(item.kind for item in files)
+    priority_counts = {
+        "high": findings.filter(severity="critical").count() if version else 0,
+        "medium": findings.filter(severity="warning").count() if version else 0,
+        "low": findings.filter(severity="advisory").count() if version else 0,
+    }
     inventory = [
         {
             "kind": kind,
@@ -135,6 +140,8 @@ def build_detail_context(review):
         "form": PreflightReviewForm(initial={"title": review.title, "subject_identifier": review.subject_identifier}),
         "package_files": files,
         "inventory": inventory,
+        "priority_counts": priority_counts,
+        "package_complete": bool(kind_counts["pdf"] and kind_counts["xml"]),
         "pdf_page_count": pdf_page_count,
         "visual_manifest": visual_manifest,
         "visual_coverage": visual_coverage,
