@@ -27,79 +27,123 @@
 </section>
 
 <section class="section home-finding-showcase">
+  <div class="section-heading home-findings-heading">
+    <div>
+      <span class="kicker">Before it leaves your desk</span>
+      <h2>See the issue while you still control the next step.</h2>
+      <p>Preflight turns a completed package into a short, prioritized queue. Important conflicts rise to the top with the evidence shown side by side.</p>
+    </div>
+  </div>
   <div class="home-review-window">
     <header>
-      <div><span class="status-dot status-dot-completed"></span><strong>Pre-delivery review: 6 items found</strong></div>
+      <div><span class="status-dot status-dot-completed"></span><strong>Prioritized review queue</strong></div>
+      <span>3 items surfaced</span>
     </header>
-    <div class="home-finding-list">
+    <div class="home-primary-finding">
+      <div class="home-primary-finding-title">
+        <span class="home-finding-category">Material inconsistency</span>
+        <h3><span class="home-finding-icon" aria-hidden="true">!</span> The written report and rear photos tell different stories.</h3>
+      </div>
+      <div class="home-evidence-pair">
+        <article>
+          <span>Report says</span>
+          <blockquote>“No rear deck or accessory enclosure was observed.”</blockquote>
+          <small>Rendered report</small>
+        </article>
+        <b aria-hidden="true">↔</b>
+        <article class="is-visual">
+          <span>Rear photos show</span>
+          <blockquote>A deck and attached enclosure are visible.</blockquote>
+          <small>Selected rear photographs</small>
+        </article>
+      </div>
+      <div class="home-primary-finding-action">
+        <p><strong>Why it matters:</strong> The description and the visible evidence do not agree.</p>
+        <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review cited evidence <span>→</span></a>
+      </div>
+    </div>
+    <div class="home-secondary-findings">
       <article class="is-material">
-        <div class="home-finding-copy">
+        <div>
           <span class="home-finding-category">Material</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Rear Description Conflicts With Photos</h3>
-          <p>The report says no rear deck or accessory enclosure was observed, while selected rear photographs visibly show both.</p>
-          <div class="home-source-pills"><span>Rendered Report</span><b>↔</b><span>Rear Photos</span></div>
-        </div>
-        <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
-      </article>
-      <article class="is-material">
-        <div class="home-finding-copy">
-          <span class="home-finding-category">Material</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition Rating Mismatch</h3>
-          <p>The structured XML reports C4 while the rendered report reports C3.</p>
-          <div class="home-source-pills"><span>UAD XML</span><b>↔</b><span>Rendered Report</span></div>
+          <h3><span class="home-finding-icon" aria-hidden="true">!</span> Condition rating mismatch</h3>
+          <p><strong>UAD XML: C4</strong><b aria-hidden="true">↔</b><strong>Rendered report: C3</strong></p>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
       <article class="is-support">
-        <div class="home-finding-copy">
-          <span class="home-finding-category">Support Item</span>
-          <h3><span class="home-finding-icon" aria-hidden="true">i</span> Comparable Commentary Incomplete</h3>
-          <p>Three comparables are identified, but the supplied commentary addresses only one.</p>
-          <div class="home-source-pills"><span>Sales Comparison</span><b>↔</b><span>Commentary</span></div>
+        <div>
+          <span class="home-finding-category">Support item</span>
+          <h3><span class="home-finding-icon" aria-hidden="true">i</span> Comparable commentary incomplete</h3>
+          <p><strong>3 comparables listed</strong><b aria-hidden="true">↔</b><strong>1 discussed</strong></p>
         </div>
         <a class="home-finding-review" href="{% url 'accounts:signup' %}">Review <span>→</span></a>
       </article>
     </div>
-    <footer><span><b>Status:</b> 4 cleared · 2 require appraiser judgment</span></footer>
+    <footer><span class="home-cleared-status"><b>✓ 4 checks cleared</b></span><span>2 items need your judgment</span></footer>
   </div>
 </section>
 
 <section class="section home-difference">
   <div class="section-heading">
-    <div><h2>Your software checks empty fields. CoAppraiser checks the story.</h2></div>
+    <div>
+      <span class="kicker">A different kind of check</span>
+      <h2>Your software checks the form. CoAppraiser checks the story.</h2>
+      <p>You need both. Your appraisal software catches missing fields and format errors. Preflight looks across the completed package for details that do not agree or need more support.</p>
+    </div>
   </div>
-  <div class="home-comparison">
-    <article class="is-legacy">
-      <header>
-        <span>Legacy Appraisal Software</span>
-        <h3>Hard-Stop Validation</h3>
-      </header>
-      <div class="comparison-ui legacy-error">
-        <span aria-hidden="true">!</span>
-        <p><strong>ERROR:</strong> UAD Condition Rating field cannot be blank.</p>
-      </div>
-      <ul>
-        <li>Flags missing data and invalid formats.</li>
-        <li>Ignores the narrative addendum entirely.</li>
-        <li>Blind to internal report contradictions.</li>
-      </ul>
-    </article>
-    <article class="is-preflight">
-      <header>
-        <span>CoAppraiser Preflight</span>
-        <h3>Contextual Cross-Checking</h3>
-      </header>
-      <div class="comparison-ui preflight-conflict">
-        <span aria-hidden="true">!</span>
-        <p><strong>CONFLICT:</strong> Grid rates subject C3 and the narrative says well maintained, but a selected condition photo shows visible ceiling staining.</p>
-      </div>
-      <ul>
-        <li>Cross-references structured XML, rendered report pages, narrative, and selected photos.</li>
-        <li>Cites the exact visual source and confidence behind each visual review prompt.</li>
-        <li>Surfaces missing or incomplete support for appraiser review.</li>
-        <li>Organizes findings into a prioritized, pre-delivery resolution queue.</li>
-      </ul>
-    </article>
+  <div class="home-same-report">
+    <figure class="home-check-flow" aria-label="The same completed appraisal package receives a form check and a Preflight story check">
+      <svg viewBox="0 0 900 145" role="img" aria-hidden="true">
+        <g class="check-flow-report">
+          <rect x="36" y="25" width="100" height="96" rx="17"/>
+          <path d="M62 51h36M62 66h50M62 81h43"/>
+          <circle cx="111" cy="100" r="10"/>
+          <path d="m106 100 4 4 7-9"/>
+          <text x="158" y="67">ONE COMPLETED</text>
+          <text class="check-flow-title" x="158" y="91">REPORT PACKAGE</text>
+        </g>
+        <path class="check-flow-line" d="M340 73h74c25 0 25-38 54-38h32"/>
+        <path class="check-flow-line" d="M414 73c25 0 25 38 54 38h32"/>
+        <g class="check-flow-node">
+          <circle cx="528" cy="35" r="22"/>
+          <path d="m518 35 7 7 13-16"/>
+          <text x="566" y="31">FORM CHECK</text>
+          <text class="check-flow-label" x="566" y="48">Is it complete?</text>
+        </g>
+        <g class="check-flow-node is-story">
+          <circle cx="528" cy="111" r="22"/>
+          <circle cx="525" cy="108" r="8"/>
+          <path d="m531 114 7 7"/>
+          <text x="566" y="107">PREFLIGHT CHECK</text>
+          <text class="check-flow-label" x="566" y="124">Does it agree?</text>
+        </g>
+      </svg>
+    </figure>
+
+    <div class="home-check-questions">
+      <article class="home-form-check">
+        <span class="home-check-number">Question 1</span>
+        <h3>Is every required field complete?</h3>
+        <div class="home-field-pass">
+          <div><small>Condition rating</small><strong>C3</strong></div>
+          <span aria-hidden="true">✓</span>
+        </div>
+        <p><strong>Form validation passed.</strong> The field contains a valid answer.</p>
+      </article>
+
+      <article class="home-story-check">
+        <span class="home-check-number">Question 2</span>
+        <h3>Does the evidence support that answer?</h3>
+        <div class="home-evidence-review">
+          <span aria-hidden="true">!</span>
+          <div><small>Condition needs review</small><p>The grid reports C3, while the commentary and condition photo point to a possible conflict.</p></div>
+        </div>
+        <div class="home-check-sources"><span>Grid</span><b>↔</b><span>Commentary</span><b>↔</b><span>Condition photo</span></div>
+      </article>
+    </div>
+
+    <p class="home-comparison-close"><strong>One checks whether the field is filled in.</strong> The other checks whether the package agrees.</p>
   </div>
 </section>
 
