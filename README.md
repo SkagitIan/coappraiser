@@ -1,3 +1,10 @@
+#Intro
+I’m Ian Larsen, a residential appraiser and self-taught developer. I built CoAppraiser because I kept seeing the same problem from inside the profession: appraisal software could confirm that a report was complete, but not whether the XML, narrative, photographs, and supporting evidence all told the same story.
+
+I had the domain knowledge to recognize the gap, but not a traditional engineering team to solve it. GPT-5.6 and Codex changed that. I used GPT-5.6 to reason across complex appraisal evidence and Codex throughout development to turn my professional judgment into a working product—building the intake pipeline, evidence review, audit trail, tests, and deployment.
+
+CoAppraiser is what became possible when someone living the problem could also build the fix.
+
 # CoAppraiser Preflight
 
 A pre-delivery evidence-review system for residential appraisers. Preflight opens an appraisal package, checks whether the XML, the rendered report, the commentary, and the selected photos agree with each other, and turns supported inconsistencies into a short action queue. The appraiser reviews the cited evidence, records a decision, and exports an auditable workfile record.
@@ -18,7 +25,7 @@ Appraisers need a final pre-delivery review layer that can identify evidence con
 
 Deterministic checks and agent findings are stored separately. Exact omissions and field mismatches stay predictable and rule-based; the model is reserved for bounded cross-document relationships that fixed rules cannot describe well.
 ## How we used Codex.
-
+(Session ID: 019f71f9-7cd6-7de1-ab59-253d7f9989fb)
 Codex helped reposition the product around one clear workflow: upload a completed appraisal package, cross-check its evidence before delivery, resolve prioritized findings, and preserve the appraiser’s decisions in the workfile.
 
 We then hardened the Django foundation together. Codex improved ZIP and file intake, user-scoped access, private R2 storage, deployment behavior, static assets, authentication screens, and failure handling so uploaded packages would remain intact even when an AI review failed.
