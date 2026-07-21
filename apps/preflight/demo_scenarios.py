@@ -24,7 +24,7 @@ DEMO_SCENARIOS = {
         "subject_identifier": "SYNTHETIC-SUBJECT-001",
         "description": "The same subject, now with cross-source conflicts, thin comparable support, and a narrative that contradicts the rear photos.",
         "evidence_types": ["XML condition and quality", "PDF narrative", "Comparable support", "Five residential photos"],
-        "review_focus": "Shows GPT-5.6 cross-checking the visible deck and enclosure against report language while rules catch exact data conflicts.",
+        "review_focus": "Shows the multimodal Preflight agent cross-checking the visible deck and enclosure against report language while rules catch exact data conflicts.",
         "expected_deterministic": [
             "XML/PDF condition conflict",
             "Structured/narrative condition conflict",
@@ -48,7 +48,7 @@ DEMO_SCENARIOS = {
         "subject_identifier": "SYNTHETIC-SUBJECT-001",
         "description": "The same subject's rendered report and five photos are present, but the structured XML export is deliberately missing and only one of three comparables has individual commentary.",
         "evidence_types": ["Rendered report PDF", "Condition narrative", "Five sanitized residential photos"],
-        "review_focus": "Shows the missing-export limitation while GPT-5.6 separately checks the rendered comparable grid against its commentary.",
+        "review_focus": "Shows the missing-export limitation while the Preflight agent separately checks the rendered comparable grid against its commentary.",
         "expected_deterministic": ["No UAD XML was found"],
         "expected_codes": {"PACKAGE_XML_MISSING"},
         "expected_gpt_categories": ["Comparable commentary review"],

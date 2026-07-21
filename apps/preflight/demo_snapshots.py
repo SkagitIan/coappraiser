@@ -23,7 +23,7 @@ def load_demo_snapshot(slug):
 
 
 def hydrate_demo_snapshot(version, slug):
-    """Attach a previously captured GPT-5.6 result to a freshly ingested demo review."""
+    """Attach a previously captured Preflight agent result to a freshly ingested demo review."""
     snapshot = load_demo_snapshot(slug)
     if version.ai_executions.exists() or version.findings.exclude(basis="deterministic").exists():
         return version.ai_executions.order_by("-created_at").first()
@@ -36,7 +36,7 @@ def hydrate_demo_snapshot(version, slug):
         provider=execution_data["provider"],
         model_name=execution_data["model_name"],
         prompt_version=execution_data["prompt_version"],
-        system_prompt="Recorded GPT-5.6 demo snapshot; see snapshot hashes for capture provenance.",
+        system_prompt="Recorded Preflight agent demo snapshot; see snapshot hashes for capture provenance.",
         input_snapshot=execution_data["input_snapshot"],
         raw_response=json.dumps(execution_data["parsed_response"], ensure_ascii=False),
         parsed_response=execution_data["parsed_response"],

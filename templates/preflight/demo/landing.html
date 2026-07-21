@@ -1,113 +1,86 @@
 {% extends "base.html" %}
-{% block title %}Run the CoAppraiser Preflight Demo{% endblock %}
+{% block title %}CoAppraiser Preflight Demo{% endblock %}
 {% block content %}
-<section class="demo-replay-hero">
-  <div>
-    <p class="eyebrow"><span class="dot"></span> Interactive Preflight demo</p>
-    <h1>Put a complete appraisal package through Preflight.</h1>
-    <p class="lead">Choose one of three controlled residential scenarios, drag it into the intake, and watch CoAppraiser open the package, trace the report evidence, cross-check the sources, and build the same action queue used in the signed-in product.</p>
-  </div>
-  <aside>
-    <span>What runs live</span>
-    <strong>ZIP intake · File inventory · XML/PDF extraction · Repeatable checks</strong>
-    <span>What is replayed</span>
-    <strong>One saved GPT-5.6 result for the exact package hash</strong>
-    <p>No API cost. No result roulette. No borrower data.</p>
-  </aside>
-</section>
+<main class="demo-intake-page">
+  <header class="demo-intake-header">
+    <h1>Demo</h1>
+  </header>
 
-<section class="demo-replay-workbench" aria-labelledby="demo-package-heading">
-  <div class="demo-replay-heading">
-    <div>
-      <span class="demo-kicker">1 · Choose the evidence</span>
-      <h2 id="demo-package-heading">Three packages. Three useful outcomes.</h2>
-      <p>These are synthetic, derived evaluation packages for one fictional subject, built in the same paired PDF/XML format measured against the Fannie Mae Appendix D-1 corpus.</p>
-    </div>
-    <div class="demo-replay-legend"><span><i class="ready"></i>Aligned</span><span><i class="review"></i>Needs review</span><span><i class="critical"></i>Incomplete</span></div>
-  </div>
+  <p class="demo-privacy-note"><span aria-hidden="true">&#9671;</span> This simulation uses synthetic residential appraisal packages. No private borrower or homeowner data is included.</p>
 
-  <div class="demo-replay-grid">
-    <div class="demo-package-shelf" role="list" aria-label="Available demonstration packages">
-      {% for scenario in scenarios %}
-        <button
-          class="demo-sample-package scenario-{{ scenario.tone }}"
-          type="button"
-          role="listitem"
-          draggable="true"
-          data-demo-package
-          data-scenario="{{ scenario.slug }}"
-          data-start-url="{{ scenario.start_url }}"
-          data-title="{{ scenario.short_title }}"
-          data-files="{{ scenario.member_count }}"
-          {% if not scenario.available %}disabled{% endif %}
-        >
-          <span class="demo-sample-filemark">ZIP</span>
-          <span class="demo-sample-copy">
-            <small>{% if scenario.tone == "ready" %}ALIGNED EVIDENCE{% elif scenario.tone == "review" %}CROSS-SOURCE CONFLICT{% else %}MISSING CORE EXPORT{% endif %}</small>
-            <strong>{{ scenario.short_title }}</strong>
-            <p>{{ scenario.description }}</p>
-            <span class="demo-sample-meta">{{ scenario.member_count }} files · PDF{% if scenario.slug != "incomplete" %} + XML{% endif %} + 5 photos</span>
-          </span>
-          <span class="demo-sample-grip" aria-hidden="true">⠿</span>
-        </button>
-      {% endfor %}
+  <section class="workspace-panel demo-intake-panel" aria-labelledby="demo-intake-title">
+    <div class="demo-intake-panel-heading">
+      <div>
+        <span class="panel-eyebrow">Preflight intake</span>
+        <h2 id="demo-intake-title">Review a sample appraisal package</h2>
+      </div>
+      <div class="demo-intake-steps" aria-label="Demo instructions">
+        <span><b>1</b> Drag or tap a sample ZIP</span>
+        <span><b>2</b> Run Preflight</span>
+      </div>
     </div>
 
-    <form class="demo-replay-intake" method="post" action="{% url 'preflight_demo:start' 'reconcile' %}" data-demo-form>
+    <form class="demo-intake-form" method="post" action="{% url 'preflight_demo:start' 'reconcile' %}" data-demo-form>
       {% csrf_token %}
       <input type="hidden" name="launch_token" value="{{ launch_token }}">
-      <div class="demo-replay-intake-bar"><span class="demo-live-dot"></span><strong>Preflight intake</strong><small data-intake-state>Waiting for a package</small></div>
-      <div class="demo-replay-dropzone" data-demo-dropzone role="button" tabindex="0" aria-label="Select or drop a demonstration package">
-        <div data-drop-idle>
-          <span class="demo-drop-icon" aria-hidden="true">↓</span>
-          <strong>Drop a package here</strong>
-          <p>Or tap any package on the left to load it.</p>
+      <div class="demo-intake-status"><span class="demo-live-dot"></span><strong>Appraisal package</strong><small data-intake-state>No package selected</small></div>
+      <div class="intake-dropzone demo-intake-dropzone" data-demo-dropzone role="button" tabindex="0" aria-label="Select or drop a demonstration appraisal package">
+        <div class="demo-drop-idle" data-drop-idle>
+          <span class="intake-drop-icon" aria-hidden="true">&darr;</span>
+          <strong>Drop an appraisal package here</strong>
+          <span>Drag a sample ZIP from below, or tap this box to load one.</span>
+          <b>ZIP containing PDF, XML, photos, and supporting files</b>
         </div>
-        <div data-drop-ready hidden>
-          <span class="demo-ready-check" aria-hidden="true">✓</span>
-          <small>PACKAGE READY</small>
-          <strong data-selected-title></strong>
-          <p data-selected-files></p>
-          <div class="demo-validation-list">
-            <span><b>✓</b> Controlled package identified</span>
-            <span><b>✓</b> Matching GPT-5.6 snapshot verified</span>
-            <span><b>✓</b> Fresh session review ready</span>
-          </div>
+        <div class="demo-drop-selected" data-drop-ready hidden>
+          <span class="demo-selected-filemark">ZIP</span>
+          <span>
+            <small>PACKAGE READY</small>
+            <strong data-selected-title></strong>
+            <b data-selected-files></b>
+          </span>
+          <i aria-hidden="true">&#10003;</i>
         </div>
       </div>
-      <div class="demo-replay-trust">
-        <span><b>Live</b> intake and rules</span>
-        <span><b>Recorded</b> GPT-5.6 result</span>
-        <span><b>Private</b> session</span>
+
+      <div class="demo-intake-submit">
+        <p><strong data-submit-title>Choose a package to continue</strong><span data-submit-detail>The review will open with live intake and processing updates.</span></p>
+        <button class="app-button primary" type="submit" data-run-button disabled>Run Preflight <span aria-hidden="true">&rarr;</span></button>
       </div>
-      <button class="app-button primary demo-replay-run" type="submit" data-run-button disabled>Run this Preflight <span aria-hidden="true">→</span></button>
       <noscript><p>Select a package with JavaScript enabled to run the interactive demo.</p></noscript>
     </form>
-  </div>
-</section>
 
-<section class="demo-replay-proof">
-  <div>
-    <span class="demo-kicker">2 · Watch the review happen</span>
-    <h2>Not a loading spinner. A visible evidence trail.</h2>
-    <p>The activity stream reports the package inventory, normalized evidence, direct cross-source checks, recorded GPT-5.6 review, and every finding added to the queue.</p>
-  </div>
-  <ol>
-    <li><b>01</b><span><strong>Open</strong>Inventory every supplied file.</span></li>
-    <li><b>02</b><span><strong>Trace</strong>Connect fields and narrative to sources.</span></li>
-    <li><b>03</b><span><strong>Cross-check</strong>Surface supported inconsistencies.</span></li>
-    <li><b>04</b><span><strong>Decide</strong>Record the appraiser’s call.</span></li>
-  </ol>
-</section>
-
-<section class="demo-final-cta">
-  <div>
-    <span>Appraiser in control</span>
-    <strong>The model finds the evidence. You make the appraisal decision.</strong>
-    <p>Preflight does not determine value, select comparables, declare USPAP compliance, or guarantee client acceptance.</p>
-  </div>
-  <a class="app-button secondary" href="{% url 'accounts:signup' %}">Run your first review free →</a>
-</section>
+    <div class="demo-sample-files">
+      <div class="demo-sample-files-heading">
+        <div><span class="panel-eyebrow">Sample files</span><h2>Drag a package into Preflight</h2></div>
+        <small>Tip: tap a package on mobile</small>
+      </div>
+      <div class="demo-file-list" role="list" aria-label="Available demonstration appraisal packages">
+        {% for scenario in scenarios %}
+          <button
+            class="demo-package-file scenario-{{ scenario.tone }}"
+            type="button"
+            role="listitem"
+            draggable="true"
+            data-demo-package
+            data-scenario="{{ scenario.slug }}"
+            data-start-url="{{ scenario.start_url }}"
+            data-title="{{ scenario.filename }}"
+            data-files="{{ scenario.member_count }}"
+            {% if not scenario.available %}disabled{% endif %}
+          >
+            <span class="demo-package-filemark">ZIP</span>
+            <span class="demo-package-file-copy">
+              <strong>{{ scenario.filename }}</strong>
+              <small>{{ scenario.short_title }} &middot; {{ scenario.member_count }} package files</small>
+            </span>
+            <span class="demo-package-file-state">{% if scenario.tone == "ready" %}Aligned{% elif scenario.tone == "review" %}Review{% else %}Incomplete{% endif %}</span>
+            <span class="demo-package-file-grip" aria-hidden="true">&#8942;&#8942;</span>
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
 
 <script>
 (() => {
@@ -121,17 +94,21 @@
   const title = form.querySelector("[data-selected-title]");
   const files = form.querySelector("[data-selected-files]");
   const intakeState = form.querySelector("[data-intake-state]");
+  const submitTitle = form.querySelector("[data-submit-title]");
+  const submitDetail = form.querySelector("[data-submit-detail]");
 
   function selectPackage(packageButton) {
     if (!packageButton || packageButton.disabled) return;
     packages.forEach(item => item.classList.toggle("is-selected", item === packageButton));
     form.action = packageButton.dataset.startUrl;
     title.textContent = packageButton.dataset.title;
-    files.textContent = `${packageButton.dataset.files} package members ready for review`;
+    files.textContent = `${packageButton.dataset.files} files ready for review`;
     idle.hidden = true;
     ready.hidden = false;
     dropzone.classList.add("is-ready");
-    intakeState.textContent = "Package accepted";
+    intakeState.textContent = "Ready";
+    submitTitle.textContent = "Package attached";
+    submitDetail.textContent = "Run Preflight to open, inventory, and review the evidence.";
     runButton.disabled = false;
   }
 
@@ -141,7 +118,7 @@
       event.dataTransfer.setData("text/plain", packageButton.dataset.scenario);
       event.dataTransfer.effectAllowed = "copy";
       dropzone.classList.add("is-awaiting");
-      intakeState.textContent = "Release to load package";
+      intakeState.textContent = "Release to attach";
     });
     packageButton.addEventListener("dragend", () => dropzone.classList.remove("is-awaiting", "is-dragging"));
   });
@@ -167,8 +144,8 @@
   });
   form.addEventListener("submit", () => {
     runButton.disabled = true;
-    runButton.textContent = "Opening package…";
-    intakeState.textContent = "Creating isolated review";
+    runButton.textContent = "Opening package...";
+    intakeState.textContent = "Starting review";
   });
 })();
 </script>

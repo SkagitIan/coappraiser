@@ -37,8 +37,8 @@
 
   {% if ai_execution.status == "failed" %}
     <div class="notice demo-ai-notice">
-      <strong>GPT-5.6 review unavailable.</strong> The package and completed Preflight checks were preserved. No mock or canned results were substituted.
-      <form method="post" action="{% url 'preflight_demo:retry' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Retry GPT-5.6 review</button></form>
+      <strong>Preflight agent review unavailable.</strong> The package and completed Preflight checks were preserved. No mock or canned results were substituted.
+      <form method="post" action="{% url 'preflight_demo:retry' review.pk %}">{% csrf_token %}<button class="app-button secondary" type="submit">Retry agent review</button></form>
     </div>
   {% endif %}
 
@@ -61,7 +61,7 @@
     <aside class="workspace-rail">
       <section class="workspace-panel ai-panel">
         <span class="panel-eyebrow">Preflight engine</span><h2>Model record</h2>
-        {% if ai_execution %}<div class="execution-status"><span class="status-dot status-dot-{{ ai_execution.status }}"></span><strong>{{ ai_execution.status|title }}</strong><small>{{ ai_execution.model_name }}</small></div><p class="panel-note">Provider: {{ ai_execution.provider }}. GPT receives the rendered report, selected photos, and extracted evidence. Appraiser judgment is required.</p>{% else %}<p class="panel-empty">No AI execution record is available.</p>{% endif %}
+        {% if ai_execution %}<div class="execution-status"><span class="status-dot status-dot-{{ ai_execution.status }}"></span><strong>{{ ai_execution.status|title }}</strong><small>Preflight agent</small></div><p class="panel-note">The agent receives the rendered report, selected photos, and extracted evidence. Appraiser judgment is required.</p>{% else %}<p class="panel-empty">No agent execution record is available.</p>{% endif %}
       </section>
       <section class="workspace-panel demo-files-panel">
         <span class="panel-eyebrow">Files reviewed</span><h2>Package contents</h2>

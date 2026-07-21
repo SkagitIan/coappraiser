@@ -24,7 +24,7 @@
   </main>
   <aside class="workspace-rail">
     <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Review metadata</span><h2>Traceability</h2><dl><dt>Scenario</dt><dd>{{ scenario.title }}</dd><dt>Review version</dt><dd>{{ snapshot.version }}</dd><dt>Parser</dt><dd>{{ snapshot.parser_version }}</dd><dt>Rules</dt><dd>{{ snapshot.rule_version }}</dd><dt>Generated</dt><dd>{{ snapshot.generated_at }}</dd></dl></section>
-    <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Model execution</span><h2>GPT-5.6 record</h2>{% for execution in snapshot.ai_executions %}<dl><dt>Provider</dt><dd>{{ execution.provider }}</dd><dt>Model</dt><dd>{{ execution.model }}</dd><dt>Status</dt><dd>{{ execution.status }}</dd><dt>Prompt version</dt><dd>{{ execution.prompt_version }}</dd></dl>{% empty %}<p>No model execution was recorded.</p>{% endfor %}</section>
+    <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Agent execution</span><h2>Preflight agent record</h2>{% for execution in snapshot.ai_executions %}<dl><dt>Status</dt><dd>{{ execution.status }}</dd><dt>Review protocol</dt><dd>{{ execution.prompt_version }}</dd></dl>{% empty %}<p>No agent execution was recorded.</p>{% endfor %}</section>
     <section class="workspace-panel demo-record-meta"><span class="panel-eyebrow">Files reviewed</span><h2>Evidence hashes</h2><ul class="demo-hash-list">{% for file in snapshot.file_hashes %}<li><strong>{{ file.name }}</strong><code>{{ file.sha256 }}</code></li>{% endfor %}</ul></section>
   </aside>
 </div>

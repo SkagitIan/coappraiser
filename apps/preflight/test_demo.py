@@ -57,22 +57,21 @@ class PublicDemoTests(TestCase):
         self.assertEqual(review.status, "completed")
         return review
 
-    def test_public_landing_has_three_clear_scenarios_and_no_pricing_prompt(self):
+    def test_public_landing_has_product_like_intake_and_three_sample_packages(self):
         response = self.client.get(reverse("preflight_demo:landing"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Put a complete appraisal package through Preflight")
-        self.assertContains(response, "Drop a package here")
-        self.assertContains(response, "Run this Preflight", count=1)
+        self.assertContains(response, "<h1>Demo</h1>", html=True)
+        self.assertContains(response, "Drop an appraisal package here")
+        self.assertContains(response, "Run Preflight")
+        self.assertContains(response, "data-run-button disabled", count=1)
         self.assertContains(response, 'data-scenario="', count=3)
-        for slug in DEMO_SCENARIOS:
+        for slug, scenario in DEMO_SCENARIOS.items():
             self.assertContains(response, reverse("preflight_demo:start", args=[slug]))
-        self.assertContains(response, "synthetic, derived evaluation packages")
-        self.assertContains(response, "One saved GPT-5.6 result for the exact package hash")
-        self.assertContains(response, "No API cost")
-        for stage in ["Open", "Trace", "Cross-check", "Decide"]:
-            self.assertContains(response, stage)
-        self.assertNotContains(response, "Generate clear support")
-        self.assertNotContains(response, "use the engine to interpret and respond")
+            self.assertContains(response, scenario["filename"])
+        self.assertContains(response, "No private borrower or homeowner data is included")
+        self.assertNotContains(response, "Watch the review happen")
+        self.assertNotContains(response, "Appraiser in control")
+        self.assertNotContains(response, "What runs live")
         self.assertNotContains(response, "Pricing")
         self.assertNotContains(response, "Stripe")
 
@@ -137,7 +136,7 @@ class PublicDemoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Package inventory complete", body)
         self.assertIn("Evidence normalized", body)
-        self.assertIn("Loading the recorded GPT-5.6 review", body)
+        self.assertIn("Loading the recorded Preflight agent review", body)
         self.assertIn("no live API call", body)
         self.assertIn(reverse("preflight_demo:detail", args=[review.pk]), body)
         review.refresh_from_db()

@@ -116,7 +116,7 @@ def demo_review_steps(review, scenario, slug):
         package_hash = hashlib.sha256(package_bytes).hexdigest()
         snapshot = load_demo_snapshot(slug)
         if snapshot["package_sha256"] != package_hash:
-            raise ValueError("The demo package no longer matches its reviewed GPT-5.6 snapshot.")
+            raise ValueError("The demo package no longer matches its reviewed Preflight agent snapshot.")
         yield {
             "kind": "active",
             "title": "Opening the appraisal package",
@@ -155,18 +155,18 @@ def demo_review_steps(review, scenario, slug):
             yield {"kind": "finding", "title": "Preflight check recorded", "detail": finding.title}
         yield {
             "kind": "active",
-            "title": "Loading the recorded GPT-5.6 review",
+            "title": "Loading the recorded Preflight agent review",
             "detail": "Using the paid model result captured for this exact package hash—no live API call.",
         }
         execution = hydrate_demo_snapshot(version, slug)
         ai_findings = list(version.findings.exclude(basis="deterministic"))
         yield {
             "kind": "complete_step",
-            "title": "GPT-5.6 evidence review loaded",
+            "title": "Preflight agent evidence review loaded",
             "detail": f"{len(ai_findings)} evidence-backed item{'s' if len(ai_findings) != 1 else ''} restored with citations and model metadata.",
         }
         for finding in ai_findings:
-            yield {"kind": "finding", "title": "GPT-5.6 evidence finding", "detail": finding.title}
+            yield {"kind": "finding", "title": "Preflight agent evidence finding", "detail": finding.title}
         version.package_hash = package_hash
         version.save(update_fields=["package_hash"])
         complete_review(version)

@@ -206,15 +206,13 @@ def stream_review(request, pk):
 
             execution = version.ai_executions.first()
             if execution is None:
-                from django.conf import settings
                 from .ai_review import run_preflight_ai_review
-                model = getattr(settings, "COAPPRAISER_LLM_MODEL", "gpt-5.6")
-                yield event("active", "Preflight agent evidence review", f"Cross-checking the rendered report, selected photos, and normalized evidence with {model}.")
+                yield event("active", "Preflight agent evidence review", "Cross-checking the rendered report, selected photos, and normalized evidence.")
                 execution = run_preflight_ai_review(version)
 
             ai_findings = list(version.findings.exclude(basis="deterministic"))
             if execution.status == "failed":
-                yield event("warning", "Model review unavailable", "Your uploaded package, normalized evidence, and rule-based findings are preserved.")
+                yield event("warning", "Agent review unavailable", "Your uploaded package, normalized evidence, and rule-based findings are preserved.")
             else:
                 visual_coverage = (
                     (execution.input_snapshot or {})

@@ -84,7 +84,7 @@
       {% if demo_mode %}<p class="demo-snapshot-note"><strong>No live API call.</strong> This agent result was captured once for the exact package hash and is replayed for a predictable public demo.</p>{% endif %}
       {% if ai_summary %}<blockquote><span>Agent summary</span>{{ ai_summary }}</blockquote>{% endif %}
       {% if all_photos_reviewed %}<p class="visual-coverage-confirmed"><span aria-hidden="true">✓</span> The Preflight agent reviewed all {{ package_image_count }} package photo{{ package_image_count|pluralize }}.</p>{% endif %}
-      <small class="model-duration">Model: {{ ai_execution.model_name|default:"Not recorded" }}{% if duration_ms %} · Response received in {{ duration_ms }} ms{% endif %}</small>
+      {% if duration_ms %}<small class="agent-duration">Agent response received in {{ duration_ms }} ms</small>{% endif %}
       {% if visual_manifest %}
         <div class="reviewed-source-list"><span>Visual sources reviewed by the Preflight agent</span>{% for source in visual_manifest %}<b>{{ source.file }}</b>{% endfor %}</div>
       {% endif %}

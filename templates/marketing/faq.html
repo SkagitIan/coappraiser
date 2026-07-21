@@ -8,7 +8,7 @@
   <div>
     <p class="eyebrow"><span class="dot"></span> Appraiser FAQ</p>
     <h1>Before you run your first Preflight.</h1>
-    <p class="lead">Straight answers about where CoAppraiser fits, what it reviews, what GPT-5.6 does, and what always stays with the appraiser.</p>
+    <p class="lead">Straight answers about where CoAppraiser fits, what it reviews, what the Preflight agent does, and what always stays with the appraiser.</p>
     <div class="actions">
       <a class="button primary" href="{% url 'accounts:signup' %}">First Review Free →</a>
       <a class="button secondary" href="{% url 'preflight_demo:landing' %}">See the live demo</a>
@@ -54,7 +54,7 @@
       <div class="faq">
         <details>
           <summary>How do you measure whether Preflight works?</summary>
-          <p>CoAppraiser uses three separate gates. The UAD normalizer must extract supported fields from all 12 paired PDF/XML scenarios in Fannie Mae Appendix D-1. Controlled mutations must produce exactly the expected condition, quality, and above-grade area findings. Paid GPT-5.6 cases separately score expected topics, source citations, professional boundaries, latency, and token use. These are reproducible engineering tests, not official UAD certification.</p>
+          <p>CoAppraiser uses three separate gates. The UAD normalizer must extract supported fields from all 12 paired PDF/XML scenarios in Fannie Mae Appendix D-1. Controlled mutations must produce exactly the expected condition, quality, and above-grade area findings. Paid agent evaluations separately score expected topics, source citations, professional boundaries, latency, and token use. These are reproducible engineering tests, not official UAD certification.</p>
         </details>
         <details>
           <summary>What kinds of problems can Preflight find?</summary>
@@ -65,8 +65,8 @@
           <p>Traditional validation is strong at required fields and valid formats. Preflight asks a different question: does the package tell one consistent, supportable story across the grid, addendum, rendered report, and available exhibits?</p>
         </details>
         <details>
-          <summary>What does GPT-5.6 do in the review?</summary>
-          <p>GPT-5.6 cross-checks structured XML, the rendered report, narrative evidence, and selected appraisal photos for relationships fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, confidence, why the issue matters, and a recommended review action. Application code then verifies visual filenames, suppresses low-confidence or incomplete output, and keeps deterministic package checks separately identified.</p>
+          <summary>What does the Preflight agent do?</summary>
+          <p>The multimodal Preflight agent cross-checks structured XML, the rendered report, narrative evidence, and selected appraisal photos for relationships fixed rules alone may miss. It produces structured findings with an observed issue, source location, supporting evidence, confidence, why the issue matters, and a recommended review action. Application code then verifies visual filenames, suppresses low-confidence or incomplete output, and keeps deterministic package checks separately identified.</p>
         </details>
       </div>
     </section>
@@ -76,7 +76,7 @@
       <div class="faq">
         <details>
           <summary>What is the difference between deterministic and Preflight findings?</summary>
-          <p>Deterministic findings come from repeatable application rules, such as a missing XML or a direct cross-source mismatch. Preflight evidence findings use GPT-5.6 to interpret relationships across extracted and visual evidence. The interface separates the two so you know how each item was produced.</p>
+          <p>Deterministic findings come from repeatable application rules, such as a missing XML or a direct cross-source mismatch. Preflight agent findings interpret relationships across extracted and visual evidence. The interface separates the two so you know how each item was produced.</p>
         </details>
         <details>
           <summary>Will CoAppraiser tell me the value or which comparables to use?</summary>
@@ -120,14 +120,14 @@
       <div class="faq">
         <details>
           <summary>Can Preflight read every PDF and inspect every photo?</summary>
-          <p>Preflight extracts available PDF text and uses GPT-5.6 to visually review the rendered report plus a controlled set of appraisal photos. Visual findings cite filenames and report pages when available. Protected files, unsupported formats, poor-quality images, and package size limits can reduce coverage. Visual findings are review prompts—not definitive property-condition assessments.</p>
+          <p>Preflight extracts available PDF text and uses its multimodal agent to visually review the rendered report plus a controlled set of appraisal photos. Visual findings cite filenames and report pages when available. Protected files, unsupported formats, poor-quality images, and package size limits can reduce coverage. Visual findings are review prompts—not definitive property-condition assessments.</p>
         </details>
         <details>
           <summary>Who can access my appraisal packages?</summary>
           <p>Reviews are scoped to your authenticated account, and production files are stored in private object storage. The rendered report, selected appraisal photos, extracted evidence, and related metadata may be sent to the configured AI provider to produce a review. Only upload assignments you are authorized to process and remove unnecessary sensitive data.</p>
         </details>
         <details>
-          <summary>Is my appraisal data used to train GPT-5.6?</summary>
+          <summary>Is my appraisal data used to train AI models?</summary>
           <p>CoAppraiser uses the OpenAI API, not a consumer ChatGPT session. OpenAI states that API inputs and outputs are not used to train its models by default unless the customer explicitly opts in. Provider retention and legal exceptions still apply; see the <a href="https://platform.openai.com/docs/models/default-usage-policies-by-endpoint" rel="noopener" target="_blank">OpenAI API data controls</a> and our <a href="{% url 'terms' %}">Terms &amp; Conditions</a>.</p>
         </details>
         <details>

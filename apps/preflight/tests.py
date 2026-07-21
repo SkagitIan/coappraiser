@@ -633,7 +633,7 @@ class PreflightTests(TestCase):
         self.assertNotIn("base64", json.dumps(execution.input_snapshot))
         detail = self.client.get(reverse("preflight:detail", args=[review.pk]))
         self.assertContains(detail, "The Preflight agent reviewed all 1 package photo")
-        self.assertContains(detail, "Model: gpt-5.6")
+        self.assertNotContains(detail, "Model: gpt-5.6")
         self.assertContains(detail, "condition_exhibit.jpg")
 
     @override_settings(
@@ -733,7 +733,7 @@ class PreflightTests(TestCase):
         self.assertContains(pricing, "$59/month")
         self.assertContains(pricing, "First Review Free")
         self.assertContains(pricing, "Supported UAD 3.6 XML normalization")
-        self.assertContains(pricing, "GPT-5.6 review of selected report pages and photos")
+        self.assertContains(pricing, "Preflight agent review of selected report pages and photos")
         self.assertNotContains(pricing, "Screen, support, document, and defend")
         login = self.client.get(reverse("login"))
         signup = self.client.get(reverse("accounts:signup"))
@@ -752,7 +752,7 @@ class PreflightTests(TestCase):
         self.assertEqual(faq.content.count(b"<details>"), 20)
         self.assertContains(faq, "Before you run your first Preflight")
         self.assertContains(faq, "Does it replace TOTAL, ACI, ClickFORMS")
-        self.assertContains(faq, "uses GPT-5.6 to visually review the rendered report")
+        self.assertContains(faq, "uses its multimodal agent to visually review the rendered report")
         self.assertContains(faq, "How do you measure whether Preflight works?")
         self.assertContains(faq, "resolve, defer, or mark a finding not applicable")
         self.assertNotContains(faq, "dismiss a finding")
