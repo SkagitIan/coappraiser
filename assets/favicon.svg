@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CoAppraiser">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6758ee"/><stop offset="1" stop-color="#12bce8"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <path d="M39.5 20.5a15 15 0 1 0 0 23" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <path d="m38 43 7-22 7 22M41 35h8" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

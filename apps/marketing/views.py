@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -39,3 +40,38 @@ def terms(request):
 
 def faq(request):
     return render(request, "marketing/faq.html", {"public_page": True})
+
+def robots_txt(request):
+    site_url = settings.COAPPRAISER_SITE_URL.rstrip("/")
+    body = "\n".join(
+        [
+            "User-agent: *",
+            "Allow: /",
+            "Disallow: /admin/",
+            "Disallow: /app/",
+            "Disallow: /billing/",
+            "Disallow: /accounts/",
+            "Disallow: /demo/reviews/",
+            f"Sitemap: {site_url}/sitemap.xml",
+            "",
+        ]
+    )
+    return HttpResponse(body, content_type="text/plain; charset=utf-8")
+
+
+def sitemap_xml(request):
+    site_url = settings.COAPPRAISER_SITE_URL.rstrip("/")
+    pages = (
+        ("/", "weekly", "1.0"),
+        ("/demo/", "weekly", "0.9"),
+        ("/faq/", "monthly", "0.8"),
+        ("/pricing/", "monthly", "0.7"),
+        ("/contact/", "yearly", "0.4"),
+        ("/terms/", "yearly", "0.2"),
+    )
+    urls = "".join(
+        f"<url><loc>{site_url}{path}</loc><changefreq>{frequency}</changefreq><priority>{priority}</priority></url>"
+        for path, frequency, priority in pages
+    )
+    body = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    return HttpResponse(body, content_type="application/xml; charset=utf-8")

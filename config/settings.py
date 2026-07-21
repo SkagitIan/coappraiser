@@ -24,7 +24,7 @@ MIDDLEWARE = [
 ]
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{"BACKEND":"django.template.backends.django.DjangoTemplates", "DIRS":[BASE_DIR / "templates"], "APP_DIRS":True,
-    "OPTIONS":{"context_processors":["django.template.context_processors.request", "django.contrib.auth.context_processors.auth", "django.contrib.messages.context_processors.messages"]}}]
+    "OPTIONS":{"context_processors":["django.template.context_processors.request", "django.contrib.auth.context_processors.auth", "django.contrib.messages.context_processors.messages", "apps.marketing.context_processors.seo"]}}]
 WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": dj_database_url.config(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
 AUTH_PASSWORD_VALIDATORS = []
@@ -87,6 +87,7 @@ COAPPRAISER_MULTIMODAL_TIMEOUT_SECONDS = int(os.getenv("COAPPRAISER_MULTIMODAL_T
 COAPPRAISER_ALLOW_LOCAL_UPLOADS = DEBUG or "test" in sys.argv
 COAPPRAISER_DEMO_RETENTION_HOURS = int(os.getenv("COAPPRAISER_DEMO_RETENTION_HOURS", "24"))
 COAPPRAISER_DEMO_STALE_PROCESSING_SECONDS = int(os.getenv("COAPPRAISER_DEMO_STALE_PROCESSING_SECONDS", "120"))
+COAPPRAISER_SITE_URL = os.getenv("COAPPRAISER_SITE_URL", "https://coappraiser.com").rstrip("/")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 COAPPRAISER_OPENAI_TIMEOUT_SECONDS = int(os.getenv("COAPPRAISER_OPENAI_TIMEOUT_SECONDS", "60"))
 # Accept the explicit private-key name used by Railway, while retaining the

@@ -1,6 +1,20 @@
 {% extends "base.html" %}
-{% block title %}CoAppraiser Preflight | Pre-delivery Appraisal Review{% endblock %}
-{% block extra_head %}<meta name="description" content="CoAppraiser Preflight is a pre-delivery review engine for independent residential appraisers."><link rel="canonical" href="https://coappraiser.com/">{% endblock %}
+{% block title %}CoAppraiser Preflight | Residential Appraisal Review{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "CoAppraiser Preflight",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": "https://coappraiser.com/",
+  "description": "Pre-delivery evidence review for residential appraisal packages across XML, rendered reports, commentary, and selected photos.",
+  "audience": {"@type": "ProfessionalAudience", "audienceType": "Residential appraisers"},
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "First Preflight review free"}
+}
+</script>
+{% endblock %}
 {% block content %}
 
 <section class="hero preflight-home-hero">

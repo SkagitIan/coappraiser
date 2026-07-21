@@ -3,9 +3,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="icon" href="data:,">
-  <title>{% block title %}CoAppraiser{% endblock %}</title>
-  <meta name="robots" content="index,follow"><link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+  <title>{% block title %}{{ seo.title }}{% endblock %}</title>
+  <meta name="description" content="{{ seo.description }}">
+  <meta name="robots" content="{{ seo.robots }}">
+  {% if seo.canonical_url %}<link rel="canonical" href="{{ seo.canonical_url }}">{% endif %}
+  <meta property="og:site_name" content="CoAppraiser">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="{{ seo.title }}">
+  <meta property="og:description" content="{{ seo.description }}">
+  {% if seo.canonical_url %}<meta property="og:url" content="{{ seo.canonical_url }}">{% endif %}
+  <meta property="og:image" content="{{ seo.image_url }}">
+  <meta property="og:image:secure_url" content="{{ seo.image_url }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ seo.image_alt }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ seo.title }}">
+  <meta name="twitter:description" content="{{ seo.description }}">
+  <meta name="twitter:image" content="{{ seo.image_url }}">
+  <meta name="twitter:image:alt" content="{{ seo.image_alt }}">
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>{% block extra_head %}{% endblock %}
 </head>
 <body class="{% if request.resolver_match.namespace == 'preflight_demo' %}demo-body{% elif user.is_authenticated and request.path != '/' and not public_page %}app-body{% endif %}">
