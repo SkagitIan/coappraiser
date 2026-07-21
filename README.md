@@ -59,6 +59,24 @@ Open [`/demo/`](https://coappraiser.com/demo/) in a private browser window. Choo
 
 The three packages demonstrate an aligned package, evidence that needs reconciliation, and an incomplete package. Expected outcomes and sanitization details are documented in [`docs/build_week_demo.md`](docs/build_week_demo.md).
 
+## Run locally
+
+Python 3.12 is recommended. The default development configuration uses SQLite, local file storage, mock billing, and explicit mock AI, so no paid service or API key is needed to exercise the included demo.
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+$env:DEBUG = "True"
+$env:COAPPRAISER_LLM_PROVIDER = "mock"
+$env:COAPPRAISER_STORAGE_BACKEND = "local"
+$env:COAPPRAISER_BILLING_MODE = "mock"
+python manage.py migrate
+python manage.py runserver
+```
+
+Open `http://127.0.0.1:8000/demo/`. The three synthetic packages required for the recorded demo are committed under `demo/`; they contain no borrower or confidential appraisal data. To test a live model review instead, set `COAPPRAISER_LLM_PROVIDER=openai` and provide `OPENAI_API_KEY` in the environment. The application never silently falls back to mock AI when production settings are active.
+
 ## Tests
 
 ```powershell
@@ -84,7 +102,9 @@ Use `scripts/run_evals.ps1` for the combined local gates. Live model cases are o
 
 ## Build context
 
-CoAppraiser existed before OpenAI Build Week as a Django application with authentication and an early package-upload workflow. The evidence-driven review system — Responses API integration, the strict finding schema and boundary filters, deterministic package checks, visual-source tracking, decision notes, workfile export, the evaluation stack, and the public demo — was built during the Submission Period using Codex as the engineering collaborator working directly in this repository. Codex is not part of the production review; the deployed application runs its own deterministic checks and configured Preflight agent, and the appraiser makes every decision.
+CoAppraiser entered OpenAI Build Week with Django authentication, user-scoped uploads, persisted findings and versions, appraiser decisions, a workfile-record export, private-storage and deployment support, an earlier structured OpenAI integration, tests, and professional boundaries. During the Submission Period, Codex helped extend that foundation into the current Preflight product: an exclusive GPT-5.6 Responses API path; multimodal PDF and photo review with exact source coverage; stricter finding schemas, confidence gates, duplicate suppression, and professional-boundary filters; expanded deterministic cross-source checks; preserved package state when the model fails; streamed progress; a redesigned action queue; a repeatable UAD 3.6 evaluation stack; and the controlled public demo.
+
+Codex worked directly in this repository to inspect the existing code, implement and test those changes, run the evaluation protocol, and tighten the submission experience. Codex is not part of the production review. The deployed application runs deterministic checks and its configured Preflight agent, while the appraiser verifies the evidence and makes every decision. The dated commit history after July 13, 2026, together with the submitted Codex session ID, separates this work from the pre-Build Week foundation.
 
 ## License
 
