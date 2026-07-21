@@ -1,25 +1,35 @@
-CoAppraiser Source-Available Evaluation License
+CoAppraiser Proprietary Evaluation License
 Version 1.0, July 2026
 
-Copyright (c) 2026 CoAppraiser. All rights reserved.
+Copyright (c) 2026 CoAppraiser project owner. All rights reserved.
 
-Permission is granted to view, clone, install, and run this software solely
-for non-commercial evaluation, testing, educational review, and judging,
-including evaluation for OpenAI Build Week.
+This software is proprietary and is not open-source software.
 
-You may not sell, sublicense, redistribute, publish a modified version of,
-or use this software or any substantial portion of it to provide a
-commercial product or service without prior written permission from the
-copyright holder.
+Permission is granted to view, clone, install, and run an unmodified copy of
+this software solely for non-commercial evaluation, testing, educational
+review, and hackathon judging.
 
-The synthetic demonstration packages included in this repository may be
-used only with the software for the same non-commercial purposes. They
+Without prior written permission from the copyright holder, you may not:
+
+1. use this software or any substantial portion of it for a commercial
+   product, service, internal business operation, or revenue-generating use;
+2. sell, sublicense, distribute, or otherwise provide the software to another
+   person or organization;
+3. publish or distribute a modified or derivative version of the software; or
+4. remove or alter copyright, license, or attribution notices.
+
+The synthetic demonstration packages included in this repository may be used
+only with CoAppraiser for the permitted non-commercial purposes above. They
 must not be represented as real appraisal reports or property evidence.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+No trademark rights or rights to the CoAppraiser name, logo, or branding are
+granted by this license.
+
+THE SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
-OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE SOFTWARE.
+
+For commercial licensing or other permission, contact the repository owner.
