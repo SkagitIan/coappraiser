@@ -262,6 +262,7 @@ def decision(request, pk):
     status = request.POST.get("status", "open")
     if status in dict(FindingDecision.STATUS_CHOICES):
         FindingDecision.objects.update_or_create(finding=finding, defaults={"status": status, "note": request.POST.get("note", "").strip()[:2000], "decided_by": request.user})
+    finding.refresh_from_db()
     return render(request, "preflight/partials/finding_status.html", {"finding": finding})
 
 

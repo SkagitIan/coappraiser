@@ -40,7 +40,7 @@
       <p><span>Why it matters</span>{{ finding.why_it_matters }}</p>
       {% if finding.visual_sources %}<p><span>Visual sources</span>{% for source in finding.visual_sources %}<b>{{ source }}</b>{% endfor %}</p>{% endif %}
       {% if finding.evidence|length > 2 %}<div><span>Additional evidence</span><ul>{% for item in finding.evidence|slice:"2:" %}<li>{{ item }}</li>{% endfor %}</ul></div>{% endif %}
-      {% if finding.confidence %}<small>{{ finding.confidence|title }} confidence · Appraiser judgment required</small>{% else %}<small>Appraiser judgment required</small>{% endif %}
+      {% if finding.confidence %}<small>{{ finding.confidence|title }} confidence</small>{% endif %}
     </div>
     <div id="finding-{{ finding.pk }}">
       {% include "preflight/partials/finding_status.html" %}

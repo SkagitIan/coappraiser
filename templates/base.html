@@ -82,5 +82,52 @@ document.addEventListener("submit", function(event) {
     document.body.classList.add("is-processing");
   }
 });
+
+(function() {
+  const key = "coappraiser-presentation-until";
+  const params = new URLSearchParams(window.location.search);
+  const setting = params.get("presentation");
+  if (setting === "1") {
+    sessionStorage.setItem(key, String(Date.now() + (15 * 60 * 1000)));
+  } else if (setting === "0") {
+    sessionStorage.removeItem(key);
+  }
+
+  const presentationIsActive = Number(sessionStorage.getItem(key) || 0) > Date.now();
+  if (!presentationIsActive) {
+    sessionStorage.removeItem(key);
+    return;
+  }
+
+  document.body.classList.add("presentation-highlights");
+  const cardSelector = [
+    "[data-presentation-card]",
+    ".card",
+    ".workspace-panel",
+    ".content-card",
+    ".mini-panel",
+    ".auth-card",
+    ".demo-scenario-card",
+    ".demo-package-file",
+    ".review-summary-card",
+    ".review-coverage-panel",
+    ".action-queue",
+    ".finding-queue-row",
+    ".home-workflow-bridge-card",
+    ".home-story-card",
+    ".home-judgment-card"
+  ].join(",");
+
+  document.addEventListener("click", function(event) {
+    const card = event.target.closest(cardSelector);
+    if (!card) return;
+    card.classList.remove("presentation-card-glow");
+    void card.offsetWidth;
+    card.classList.add("presentation-card-glow");
+    window.setTimeout(function() {
+      card.classList.remove("presentation-card-glow");
+    }, 1800);
+  });
+})();
 </script>
 </body></html>

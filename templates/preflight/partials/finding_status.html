@@ -1,13 +1,16 @@
 {% if demo_mode %}{% url 'preflight_demo:decision' finding.pk as decision_url %}{% else %}{% url 'preflight:decision' finding.pk as decision_url %}{% endif %}
-<form method="post" action="{{ decision_url }}" hx-post="{{ decision_url }}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) window.location.reload()" class="styled-form finding-decision-form">
+<form method="post" action="{{ decision_url }}" hx-post="{{ decision_url }}" hx-target="#finding-{{ finding.pk }}" hx-swap="innerHTML" class="styled-form finding-decision-form">
   {% csrf_token %}
   <div class="finding-decision-heading">
-    <div>
-      <strong>Record your workfile decision</strong>
-      <small>This records how you handled the item. It does not change the appraisal.</small>
-    </div>
-    <b>Current: {% if finding.decision.status == "open" %}Needs review{% else %}{{ finding.decision.get_status_display }}{% endif %}{% if finding.decision.note %} · note saved{% endif %}</b>
+    <strong>Record your workfile decision</strong>
   </div>
+  {% if finding.decision.status != "open" or finding.decision.note %}
+    <div class="finding-decision-recorded" role="status" aria-live="polite">
+      <span>Saved to workfile</span>
+      <strong>{% if finding.decision.status == "open" %}Needs review{% else %}{{ finding.decision.get_status_display }}{% endif %}</strong>
+      {% if finding.decision.note %}<p>{{ finding.decision.note }}</p>{% endif %}
+    </div>
+  {% endif %}
   <div class="finding-decision-fields">
     <p class="finding-decision-status">
       <label for="status-{{ finding.pk }}">Workfile outcome</label>

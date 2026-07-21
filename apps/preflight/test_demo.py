@@ -170,6 +170,8 @@ class PublicDemoTests(TestCase):
             {"status": "deferred", "note": "Verify the condition evidence before delivery."},
         )
         self.assertEqual(decision.status_code, 200)
+        self.assertContains(decision, "Saved to workfile")
+        self.assertContains(decision, "Verify the condition evidence before delivery.")
         finding.decision.refresh_from_db()
         self.assertEqual(finding.decision.status, "deferred")
         self.assertEqual(finding.decision.note, "Verify the condition evidence before delivery.")
