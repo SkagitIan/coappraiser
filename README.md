@@ -1,4 +1,4 @@
-#Intro
+# Intro
 I’m Ian Larsen, a residential appraiser and self-taught developer. I built CoAppraiser because I kept seeing the same problem from inside the profession: appraisal software could confirm that a report was complete, but not whether the XML, narrative, photographs, and supporting evidence all told the same story.
 
 I had the domain knowledge to recognize the gap, but not a traditional engineering team to solve it. GPT-5.6 and Codex changed that. I used GPT-5.6 to reason across complex appraisal evidence and Codex throughout development to turn my professional judgment into a working product—building the intake pipeline, evidence review, audit trail, tests, and deployment.
