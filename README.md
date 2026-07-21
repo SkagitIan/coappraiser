@@ -124,12 +124,7 @@ python manage.py evaluate_uad_regressions --strict
 ```
 
 Use `scripts/run_evals.ps1` for the combined local gates. Live model cases are opt-in because they incur API cost. The process and recorded results are documented in [`EVAL.md`](EVAL.md) and [`evals/README.md`](evals/README.md).
-
-## Build context
-
-CoAppraiser entered OpenAI Build Week with Django authentication, user-scoped uploads, persisted findings and versions, appraiser decisions, a workfile-record export, private-storage and deployment support, an earlier structured OpenAI integration, tests, and professional boundaries. During the Submission Period, Codex helped extend that foundation into the current Preflight product: an exclusive GPT-5.6 Responses API path; multimodal PDF and photo review with exact source coverage; stricter finding schemas, confidence gates, duplicate suppression, and professional-boundary filters; expanded deterministic cross-source checks; preserved package state when the model fails; streamed progress; a redesigned action queue; a repeatable UAD 3.6 evaluation stack; and the controlled public demo.
-
-Codex worked directly in this repository to inspect the existing code, implement and test those changes, run the evaluation protocol, and tighten the submission experience. Codex is not part of the production review. The deployed application runs deterministic checks and its configured Preflight agent, while the appraiser verifies the evidence and makes every decision. The dated commit history after July 13, 2026, together with the submitted Codex session ID, separates this work from the pre-Build Week foundation.
+ its configured Preflight agent, while the appraiser verifies the evidence and makes every decision. The dated commit history after July 13, 2026, together with the submitted Codex session ID, separates this work from the pre-Build Week foundation.
 
 ## License
 
