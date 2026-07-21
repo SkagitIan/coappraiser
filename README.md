@@ -2,23 +2,48 @@
 
 A pre-delivery evidence-review system for residential appraisers. Preflight opens an appraisal package, checks whether the XML, the rendered report, the commentary, and the selected photos agree with each other, and turns supported inconsistencies into a short action queue. The appraiser reviews the cited evidence, records a decision, and exports an auditable workfile record.
 
-Preflight does not determine value and does not replace professional judgment. It surfaces evidence relationships and leaves every decision to the appraiser.
+Residential appraisers rely on software that validates whether required fields are complete and properly formatted, but those systems often cannot determine whether the XML, report narrative, photographs, exhibits, and supporting data tell one consistent story.
 
-## What it catches
+As appraisal reporting becomes more structured under UAD 3.6, the number of cross-document relationships that must remain accurate and supportable increases. Inconsistencies discovered after delivery can trigger revision requests, underwriting delays, added liability, and uncompensated work.
 
-Modern appraisal packages repeat the same property fact across many places: a condition rating appears in the XML, is restated in the PDF, is discussed in an addendum, and is reflected in the photographs. Any one of those can be individually valid while contradicting another.
+Appraisers need a final pre-delivery review layer that can identify evidence conflicts across the complete appraisal package, show exactly where those conflicts occur, and preserve the appraiser’s resolution in the workfile—without replacing professional judgment.
 
-Field-completeness validation confirms nothing is empty. It cannot tell whether those sources support the same conclusion. Preflight reviews the package as a whole and reports what conflicts, where it was found, the evidence behind it, why it matters, and what to check next.
-
-## Review pipeline
+## How it Works
 
 1. Intake — the appraiser uploads a ZIP, PDF, XML file, image set, or supported combination.
-2. Extraction — Django inventories and hashes the files, extracts supported XML fields and available PDF text, and runs repeatable package checks.
+2. Extraction — Django/Python inventories and hashes the files, extracts supported XML fields and available PDF text, and runs repeatable package checks.
 3. Agent review — the Preflight agent reviews the supplied report evidence across text and selected visual sources.
 4. Validation — application code validates and filters the agent response before any finding is saved.
 5. Decision — the appraiser resolves, defers, marks not applicable, or keeps each item open, and can attach a note to the workfile.
 
 Deterministic checks and agent findings are stored separately. Exact omissions and field mismatches stay predictable and rule-based; the model is reserved for bounded cross-document relationships that fixed rules cannot describe well.
+## How we used Codex.
+
+Codex helped reposition the product around one clear workflow: upload a completed appraisal package, cross-check its evidence before delivery, resolve prioritized findings, and preserve the appraiser’s decisions in the workfile.
+
+We then hardened the Django foundation together. Codex improved ZIP and file intake, user-scoped access, private R2 storage, deployment behavior, static assets, authentication screens, and failure handling so uploaded packages would remain intact even when an AI review failed.
+
+With that foundation stable, Codex helped build deterministic package checks for missing exports, conflicting XML and PDF fields, condition and quality inconsistencies, and incomplete comparable commentary. These repeatable checks became the first layer of every review.
+
+Codex then replaced the earlier model integration with the OpenAI Responses API and configured GPT-5.6 as the production reasoning layer. It added strict structured outputs, supported reasoning parameters, request timeouts, retry behavior, and explicit prevention of production mock-AI fallback.
+
+We expanded Preflight into a multimodal workflow. Codex implemented controlled review of normalized XML evidence, extracted PDF text, a selected rendered report PDF, and prioritized appraisal photographs in one evidence package.
+
+Codex added safeguards around the model rather than trusting its response directly. These included confidence thresholds, source-filename verification, duplicate suppression, professional-boundary filters, and rejection of findings that attempted to determine value, recommend adjustments, declare USPAP compliance, or guarantee acceptance.
+
+To make the AI work traceable, Codex added review coverage records showing which files, PDF pages, and photographs were supplied to the Preflight agent, along with model metadata, response duration, accepted findings, and suppressed findings.
+
+Because confidential appraisal files could not be used for a public demonstration, Codex helped create three controlled appraisal packages using synthetic report data and sanitized owner-supplied photographs. The packages represent an aligned review, a package requiring reconciliation, and an incomplete package.
+
+Codex then built a reproducible evaluation system around paired Fannie Mae Appendix D-1 PDF/XML scenarios. We added corpus inventory, field normalization checks, controlled mutations, regression scoring, isolated live GPT-5.6 tests, telemetry, and a documented evaluation protocol.
+
+Once the review engine was measurable, Codex helped redesign the product around the evidence it produced. We added streamed progress messages, review-coverage summaries, prioritized action queues, exact citations, decision controls, real-time decision notes, version history, and downloadable workfile records.
+
+We worked through the public experience section by section. Codex aligned the homepage, signup, login, FAQ, terms, demo, dashboard, and authenticated results pages around the same Preflight message while improving desktop and mobile layouts.
+
+Near submission, I used Codex to remove retired workflows and stale documentation, scan the repository for secrets and private data, verify production settings, test the live judge path, review the Devpost requirements, and confirm that the video and repository met the submission rules.
+
+This was a continuous collaboration recorded across 73 commits after the Submission Period opened. I supplied the appraisal expertise, professional requirements, product decisions, and feedback. Codex translated that direction into implementation, tests, evaluation tooling, documentation, and a working submission-ready product.
 
 ## Model integration
 
